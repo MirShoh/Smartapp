@@ -1,448 +1,504 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuroSurge: AI Hand-Controlled Medical Sim</title>
+    <title>Bolajonlar uchun Kosmik Sanash</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050a14; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        /* UI Overlay */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-        
-        /* Loading Screen */
-        #loader { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #02040a; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 10;
-            color: #00f3ff; transition: opacity 0.5s;
+        /* Oyna burchagidagi kamera */
+        #video-element {
+            position: absolute; bottom: 20px; right: 20px; width: 160px; height: 120px;
+            z-index: 2; border-radius: 15px; border: 4px solid #FFD700;
+            transform: scaleX(-1); /* Oynani to'g'rilash */
+            box-shadow: 0 0 15px #FFD700;
         }
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid #1a2b45; 
-            border-top: 5px solid #00f3ff; border-radius: 50%; 
-            animation: spin 1s linear infinite; margin-bottom: 20px;
+
+        /* Asosiy UI qatlami */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+            pointer-events: none; display: flex; flex-direction: column; 
+            align-items: center; justify-content: flex-start; padding-top: 20px;
+        }
+
+        /* Yuklanish ekrani */
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            z-index: 100; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
+            transition: opacity 0.5s;
+        }
+        .loader {
+            border: 6px solid #f3f3f3; border-top: 6px solid #FFD700; border-radius: 50%;
+            width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* HUD Elements */
-        .hud-panel {
-            position: absolute; background: rgba(5, 15, 30, 0.85); 
-            border: 1px solid #00f3ff; color: #fff; padding: 15px; 
-            border-radius: 8px; backdrop-filter: blur(5px);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-            pointer-events: auto;
+        /* O'yin matnlari */
+        #game-title {
+            font-size: 2.5rem; color: #FFD700; text-shadow: 2px 2px 0px #000;
+            margin: 10px 0; background: rgba(0,0,0,0.5); padding: 10px 30px; border-radius: 20px;
+        }
+        
+        #instruction {
+            font-size: 1.8rem; color: white; text-shadow: 0 0 10px #00d2ff;
+            margin-top: 10px; text-align: center;
         }
 
-        #info-panel { top: 20px; right: 20px; width: 300px; }
-        #controls-panel { bottom: 20px; left: 20px; max-width: 350px; }
-        
-        h2 { margin: 0 0 10px 0; color: #00f3ff; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
-        p { font-size: 0.9rem; line-height: 1.4; color: #ccc; margin-bottom: 5px; }
-        
-        .gesture-icon { display: inline-block; width: 20px; text-align: center; margin-right: 5px; color: #ffd700; }
-        
-        /* Dynamic Label for 3D Objects */
-        #object-label {
-            position: absolute; padding: 8px 12px; background: rgba(0, 0, 0, 0.8);
-            border-left: 3px solid #00f3ff; color: #fff; font-size: 0.9rem;
-            border-radius: 0 4px 4px 0; pointer-events: none; opacity: 0;
-            transition: opacity 0.2s; transform: translate(-50%, -100%);
+        #score-board {
+            position: absolute; top: 20px; right: 20px;
+            font-size: 2rem; color: white; font-weight: bold;
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px;
         }
 
-        /* Webcam Feedback (Small) */
-        .input_video { 
-            position: absolute; bottom: 20px; right: 20px; 
-            width: 160px; height: 120px; border-radius: 8px; 
-            border: 2px solid #333; opacity: 0.7; z-index: 5; 
-            transform: scaleX(-1); /* Mirror */
+        /* Boshlash tugmasi */
+        #start-btn {
+            padding: 20px 60px; font-size: 1.5rem; 
+            background: linear-gradient(to bottom, #FFD700, #FFA500);
+            border: 4px solid white; border-radius: 50px; color: #000; font-weight: bold;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); pointer-events: auto;
+            transition: transform 0.2s; animation: pulse 2s infinite;
         }
+        #start-btn:hover { transform: scale(1.1); }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        .mode-badge {
-            display: inline-block; padding: 4px 8px; background: #00f3ff; 
-            color: #000; font-weight: bold; border-radius: 4px; font-size: 0.7rem; margin-bottom: 10px;
+        /* Qo'l kursorchasi */
+        #hand-cursor {
+            position: absolute; width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 3px solid #00ff00; border-radius: 50%;
+            transform: translate(-50%, -50%); pointer-events: none;
+            z-index: 20; display: none;
+            box-shadow: 0 0 20px #00ff00;
         }
     </style>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 </head>
 <body>
 
-    <video class="input_video" autoplay playsinline muted></video>
-
-    <div id="loader">
-        <div class="spinner"></div>
-        <h3>Initializing Neural Lab...</h3>
-        <p>Please allow camera access for gesture control.</p>
+    <!-- Yuklanish Ekrani -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <h2 id="loading-text">O'yin yuklanmoqda...</h2>
+        <button id="start-btn" style="display:none">O'YINNI BOSHLASH 🚀</button>
+        <p id="error-msg" style="color: #ffcccc; margin-top: 20px; font-size: 1.2rem; max-width: 80%; text-align: center;"></p>
     </div>
 
+    <!-- UI Qatlami -->
+    <div id="ui-layer">
+        <div id="game-title">✨ Kosmik Sanash ✨</div>
+        <div id="instruction">Kameraga qo'lingizni ko'rsating!</div>
+    </div>
+
+    <div id="hand-cursor"></div>
+    <video id="video-element" playsinline></video>
     <div id="canvas-container"></div>
 
-    <div id="ui-layer">
-        <div id="object-label">Label</div>
+    <!-- Modullar -->
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+        import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/vision_bundle.js';
 
-        <div id="info-panel" class="hud-panel">
-            <div class="mode-badge" id="current-mode">ANATOMY MODE</div>
-            <h2 id="target-name">Select an Organ</h2>
-            <p id="target-desc">Hover over an object to analyze data.</p>
-            <div id="stats" style="margin-top:10px; border-top:1px solid #333; padding-top:5px; font-size:0.8rem; color:#888;">
-                System: <span id="target-sys">--</span>
-            </div>
-        </div>
-
-        <div id="controls-panel" class="hud-panel">
-            <h2>Gesture Controls</h2>
-            <p><span class="gesture-icon">🖐</span> <strong>Open Palm:</strong> Hover / Select</p>
-            <p><span class="gesture-icon">🤏</span> <strong>Pinch (Index+Thumb):</strong> Grab & Move</p>
-            <p><span class="gesture-icon">✊</span> <strong>Fist:</strong> Pathology View (Explode)</p>
-            <p><span class="gesture-icon">👋</span> <strong>Wave:</strong> Reset Scene</p>
-        </div>
-    </div>
-
-    <script>
-        // --- CONFIGURATION ---
-        const CONFIG = {
-            cameraZ: 5,
-            grabThreshold: 0.08, // Sensitivity for pinching
-            lerpFactor: 0.2 // Smoothness of hand tracking (0.1 = slow/smooth, 1 = instant)
-        };
-
-        // --- STATE MANAGEMENT ---
-        let state = {
-            handVisible: false,
-            pinching: false,
-            fist: false,
-            hoveredObject: null,
-            grabbedObject: null,
-            handPosition: new THREE.Vector3(), // Mapped 3D position
-            previousPinchDist: 0
-        };
-
-        // --- THREE.JS SETUP ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050a14, 0.05);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = CONFIG.cameraZ;
-        camera.position.y = 1;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0x404040, 2);
-        scene.add(ambientLight);
+        // --- GLOBAL O'ZGARUVCHILAR ---
+        let scene, camera, renderer, raycaster;
+        let handLandmarker;
+        let video;
+        let lastVideoTime = -1;
         
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
-
-        const blueLight = new THREE.PointLight(0x00f3ff, 1, 10);
-        blueLight.position.set(-5, 2, 0);
-        scene.add(blueLight);
-
-        // Environment: Grid Floor
-        const gridHelper = new THREE.GridHelper(20, 20, 0x1a2b45, 0x0a1525);
-        gridHelper.position.y = -2;
-        scene.add(gridHelper);
-
-        // --- MEDICAL OBJECT GENERATION ---
-        const objects = [];
+        let blocks = []; // Raqamli kubiklar
+        let particles = []; // Portlash effektlari
         
-        // Helper to create glowing materials
-        function createMaterial(color, transparent = true) {
-            return new THREE.MeshPhysicalMaterial({
-                color: color,
-                metalness: 0.2,
-                roughness: 0.1,
-                transmission: transparent ? 0.6 : 0, 
-                opacity: transparent ? 0.8 : 1,
-                transparent: transparent,
-                side: THREE.DoubleSide
+        // O'yin holati
+        let currentTarget = 1; // Hozir topilishi kerak bo'lgan raqam
+        const MAX_NUMBER = 10;
+        let isGameWon = false;
+
+        // Qo'l ma'lumotlari
+        let handPosition = new THREE.Vector2(); // Ekran koordinatasi
+        let cursor3DPosition = new THREE.Vector3(); // 3D olamdagi o'rni
+        let cursorMesh; // 3D kursor (qo'l uchi)
+
+        // UI elementlari
+        const instructionEl = document.getElementById('instruction');
+        const cursorElement = document.getElementById('hand-cursor');
+
+        // Ranglar palitrasi (Yorqin bolalarbop ranglar)
+        const KID_COLORS = [
+            0xFF0000, // Qizil
+            0x00FF00, // Yashil
+            0x0000FF, // Ko'k
+            0xFFFF00, // Sariq
+            0xFF00FF, // Pushti
+            0x00FFFF, // Havorang
+            0xFFA500   // Zarg'aldoq (Fixed Typo: Added 'x')
+        ];
+
+        // --- BOSHLASH ---
+        async function init() {
+            const startBtn = document.getElementById('start-btn');
+            const loadingText = document.getElementById('loading-text');
+            const loader = document.querySelector('.loader');
+
+            try {
+                // MediaPipe yuklash
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                );
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numHands: 1
+                });
+
+                loadingText.innerText = "Tayyor!";
+                loader.style.display = "none";
+                startBtn.style.display = "block";
+
+                startBtn.addEventListener('click', async () => {
+                    await startWebcam();
+                    initThreeJS();
+                    
+                    // O'yinni boshlash
+                    startGame();
+
+                    // Yuklanish ekranini o'chirish
+                    const loadScreen = document.getElementById('loading-screen');
+                    loadScreen.style.opacity = 0;
+                    setTimeout(() => loadScreen.remove(), 500);
+                    
+                    animate();
+                });
+
+            } catch (error) {
+                console.error(error);
+                loadingText.innerText = "Xatolik yuz berdi";
+                document.getElementById('error-msg').innerText = "Kamerani ishga tushirib bo'lmadi. Iltimos, ruxsat bering yoki boshqa brauzerda sinab ko'ring.";
+            }
+        }
+
+        async function startWebcam() {
+            video = document.getElementById('video-element');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                await new Promise((resolve) => video.onloadedmetadata = resolve);
+                video.play();
+            } catch (err) {
+                document.getElementById('error-msg').innerText = "Kameraga ruxsat berilmadi.";
+                throw err;
+            }
+        }
+
+        // --- THREE.JS SAHNA SOZLAMALARI ---
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            
+            // Sahna
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e); // To'q ko'k koinot
+            scene.fog = new THREE.FogExp2(0x1a1a2e, 0.03);
+
+            // Kamera
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 7;
+            camera.position.y = 0;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Chiroqlar
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            // 3D Kursor (Qo'l uchi uchun shar)
+            const cursorGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const cursorMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
+            cursorMesh = new THREE.Mesh(cursorGeo, cursorMat);
+            scene.add(cursorMesh);
+
+            // Yulduzlar
+            createStars();
+            
+            // Oyna o'lchami o'zgarganda
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // --- O'YIN MANTIG'I ---
+
+        function startGame() {
+            currentTarget = 1;
+            isGameWon = false;
+            instructionEl.innerText = `${currentTarget} raqamini toping!`;
+            spawnLevelBlocks();
+        }
+
+        function spawnLevelBlocks() {
+            // Avvalgi bloklarni tozalash
+            blocks.forEach(b => scene.remove(b));
+            blocks = [];
+
+            // 1 dan 10 gacha bloklar yaratish
+            for (let i = 1; i <= MAX_NUMBER; i++) {
+                createNumberBlock(i);
+            }
+        }
+
+        function createNumberBlock(number) {
+            // Raqamli tekstura yaratish
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            // Orqa fon (Oq hoshiya bilan rangli fon)
+            ctx.fillStyle = '#' + KID_COLORS[(number - 1) % KID_COLORS.length].toString(16).padStart(6, '0');
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.lineWidth = 20;
+            ctx.strokeStyle = 'white';
+            ctx.strokeRect(0, 0, 256, 256);
+
+            // Raqamni yozish
+            ctx.font = 'bold 150px Comic Sans MS';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(number.toString(), 128, 128);
+
+            const texture = new THREE.CanvasTexture(canvas);
+
+            // Kubik
+            const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+            const material = new THREE.MeshStandardMaterial({ 
+                map: texture,
+                roughness: 0.2,
+                metalness: 0.1
             });
+
+            const block = new THREE.Mesh(geometry, material);
+
+            // Tasodifiy joylashuv (lekin ekrandan chiqib ketmasin)
+            block.position.x = (Math.random() - 0.5) * 8;
+            block.position.y = (Math.random() - 0.5) * 5;
+            block.position.z = (Math.random() - 0.5) * 3;
+
+            block.userData = {
+                number: number,
+                rotSpeed: { x: Math.random()*0.02, y: Math.random()*0.02 },
+                initialPos: block.position.clone(),
+                timeOffset: Math.random() * 100
+            };
+
+            scene.add(block);
+            blocks.push(block);
         }
 
-        // 1. Heart (Red Deformed Sphere)
-        const heartGeo = new THREE.SphereGeometry(0.6, 32, 32);
-        // Deform slightly to look like a heart (very basic abstract)
-        const heartMat = createMaterial(0xff0040);
-        const heart = new THREE.Mesh(heartGeo, heartMat);
-        heart.position.set(0, 0.5, 0);
-        heart.userData = { 
-            name: "Human Heart", 
-            desc: "Pumps blood through the circulatory system. 4 chambers.", 
-            system: "Circulatory",
-            originalColor: 0xff0040
-        };
-        scene.add(heart);
-        objects.push(heart);
-
-        // 2. Brain (Pink Torus Knot - Abstract)
-        const brainGeo = new THREE.TorusKnotGeometry(0.5, 0.2, 100, 16);
-        const brainMat = createMaterial(0xffaaee);
-        const brain = new THREE.Mesh(brainGeo, brainMat);
-        brain.position.set(-2, 0.5, 0);
-        brain.userData = { 
-            name: "Brain", 
-            desc: "Central organ of the nervous system. Controls thought & motor function.", 
-            system: "Nervous",
-            originalColor: 0xffaaee
-        };
-        scene.add(brain);
-        objects.push(brain);
-
-        // 3. Kidney (Blue Capsule)
-        const kidneyGeo = new THREE.CapsuleGeometry(0.4, 0.8, 4, 8);
-        const kidneyMat = createMaterial(0x4488ff);
-        const kidney = new THREE.Mesh(kidneyGeo, kidneyMat);
-        kidney.position.set(2, 0.5, 0);
-        kidney.rotation.z = Math.PI / 4;
-        kidney.userData = { 
-            name: "Kidney", 
-            desc: "Filters waste from blood to form urine.", 
-            system: "Excretory",
-            originalColor: 0x4488ff
-        };
-        scene.add(kidney);
-        objects.push(kidney);
-
-        // 4. Scalpel (Tool)
-        const toolGeo = new THREE.BoxGeometry(0.1, 1.5, 0.1);
-        const toolMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
-        const scalpel = new THREE.Mesh(toolGeo, toolMat);
-        scalpel.position.set(0, -1, 1);
-        scalpel.rotation.z = Math.PI / 2;
-        scalpel.userData = { 
-            name: "Surgical Scalpel", 
-            desc: "Precision instrument for tissue incisions.", 
-            system: "Instrument",
-            originalColor: 0xcccccc
-        };
-        scene.add(scalpel);
-        objects.push(scalpel);
-
-        // --- HAND TRACKING & INTERACTION ---
-        
-        // 3D Cursor (Visualizes where your hand is)
-        const cursorGeo = new THREE.SphereGeometry(0.05, 16, 16);
-        const cursorMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-        const cursor = new THREE.Mesh(cursorGeo, cursorMat);
-        scene.add(cursor);
-
-        const raycaster = new THREE.Raycaster();
-
-        // UI Elements
-        const labelEl = document.getElementById('object-label');
-        const nameEl = document.getElementById('target-name');
-        const descEl = document.getElementById('target-desc');
-        const sysEl = document.getElementById('target-sys');
-        const loader = document.getElementById('loader');
-
-        // MediaPipe Setup
-        const videoElement = document.getElementsByClassName('input_video')[0];
-        
-        function onResults(results) {
-            // Hide loader on first frame
-            if (loader.style.opacity !== '0' && results.multiHandLandmarks) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
+        function createStars() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 1000; i++) {
+                vertices.push((Math.random() - 0.5) * 50);
+                vertices.push((Math.random() - 0.5) * 50);
+                vertices.push((Math.random() - 0.5) * 50);
             }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true });
+            const stars = new THREE.Points(geometry, material);
+            scene.add(stars);
+        }
 
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                state.handVisible = true;
-                const landmarks = results.multiHandLandmarks[0];
+        function createExplosion(position, color) {
+            // Yulduzchalar sochilib ketishi
+            const particleCount = 20;
+            const geometry = new THREE.TetrahedronGeometry(0.15);
+            const material = new THREE.MeshBasicMaterial({ color: color });
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = new THREE.Mesh(geometry, material.clone());
+                particle.position.copy(position);
                 
-                // 1. Map Coordinates (Index finger tip: landmark 8)
-                // Normalize coordinates (-1 to 1) based on camera view
-                // Video is mirrored, so we invert X
-                const x = (1 - landmarks[8].x) * 2 - 1; 
-                const y = -(landmarks[8].y * 2 - 1);
-                
-                // Map to 3D world space (approximate)
-                const vector = new THREE.Vector3(x * 4, y * 3, 0); // Scale to scene size
-                
-                // Smooth movement (Lerp)
-                state.handPosition.lerp(vector, CONFIG.lerpFactor);
-                cursor.position.copy(state.handPosition);
-
-                // 2. Gesture Detection
-                const thumbTip = landmarks[4];
-                const indexTip = landmarks[8];
-                const indexPip = landmarks[6]; // Knuckle
-                const pinkyTip = landmarks[20];
-                const pinkyMcp = landmarks[17]; // Base of pinky
-
-                // Distance between thumb and index (Pinch)
-                const distance = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-                state.pinching = distance < CONFIG.grabThreshold;
-
-                // Fist Detection (Fingers curled below knuckles)
-                // Simple check: is pinky tip lower than pinky base? (y is inverted in MP sometimes, but higher value = lower on screen)
-                state.fist = (pinkyTip.y > pinkyMcp.y) && (indexTip.y > indexPip.y);
-
-                interact();
-            } else {
-                state.handVisible = false;
+                // Har tomonga sochilish
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8,
+                        (Math.random() - 0.5) * 0.8
+                    ),
+                    life: 1.0
+                };
+                scene.add(particle);
+                particles.push(particle);
             }
         }
 
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
+        // --- QO'L HARAKATINI ANIQLASH ---
+        function detectHand(landmarks) {
+            if (!landmarks || landmarks.length === 0) {
+                cursorMesh.visible = false;
+                return;
+            }
 
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
+            const lm = landmarks[0];
+            const indexTip = lm[8]; // Ko'rsatkich barmog'i uchi
 
-        hands.onResults(onResults);
+            // Koordinatalarni 3D olamga moslash
+            // MediaPipe (0 dan 1 gacha) -> Three.js (-1 dan 1 gacha)
+            const x = (1 - indexTip.x) * 2 - 1; // X ni teskari qilish (oyna effekti)
+            const y = -(indexTip.y * 2 - 1); // Y ni teskari qilish
 
-        const cameraUtils = new Camera(videoElement, {
-            onFrame: async () => {
-                await hands.send({image: videoElement});
-            },
-            width: 640,
-            height: 480
-        });
-        cameraUtils.start();
+            // 2D kursor (UI uchun)
+            cursorElement.style.left = `${(1 - indexTip.x) * 100}%`;
+            cursorElement.style.top = `${indexTip.y * 100}%`;
+            cursorElement.style.display = 'block';
 
-        // --- INTERACTION LOGIC ---
+            // 3D Kursor (Fizika uchun)
+            // Biz kursorning Z chuqurligini taxminan 0 ga yaqin deb olamiz yoki o'zgarmas qilamiz
+            // Aniqroq bo'lishi uchun raycaster ishlatamiz, lekin bolalar uchun Z-tekislikda harakat osonroq
+            const vector = new THREE.Vector3(x, y, 0.5);
+            vector.unproject(camera);
+            const dir = vector.sub(camera.position).normalize();
+            const distance = -camera.position.z / dir.z; // Z=0 tekisligiga proyeksiyalash
+            
+            const targetPos = camera.position.clone().add(dir.multiplyScalar(8)); // Kameradan 8 birlik uzoqlikda
+            
+            // Kursor harakatini silliqlash (Lerp)
+            cursorMesh.position.lerp(targetPos, 0.2);
+            cursorMesh.visible = true;
 
-        function interact() {
-            // Update Raycaster from Camera to Cursor position
-            // Since cursor is moving in 3D world z=0, we cast a ray from camera through cursor
-            const direction = state.handPosition.clone().sub(camera.position).normalize();
-            raycaster.set(camera.position, direction);
+            checkCollisions();
+        }
 
-            const intersects = raycaster.intersectObjects(objects);
+        function checkCollisions() {
+            if (isGameWon) return;
 
-            // HOVER LOGIC
-            if (intersects.length > 0 && !state.grabbedObject) {
-                const obj = intersects[0].object;
-                
-                if (state.hoveredObject !== obj) {
-                    // Reset previous
-                    if (state.hoveredObject) resetObjectVisuals(state.hoveredObject);
-                    
-                    state.hoveredObject = obj;
-                    
-                    // Highlight
-                    obj.material.emissive.setHex(0x333333);
-                    
-                    // Update UI
-                    updateUI(obj.userData, true);
-                }
-            } else if (!state.grabbedObject) {
-                if (state.hoveredObject) {
-                    resetObjectVisuals(state.hoveredObject);
-                    state.hoveredObject = null;
-                    updateUI(null, false);
+            // Kursor sferasi va kubiklar orasidagi masofani tekshirish
+            // Bu raycasterga qaraganda osonroq va "tegish" hissini beradi
+            
+            for (let i = blocks.length - 1; i >= 0; i--) {
+                const block = blocks[i];
+                const dist = cursorMesh.position.distanceTo(block.position);
+
+                // Agar kursor blokga yaqin kelsa (Tegsa)
+                if (dist < 1.0) { // To'qnashuv radiusi
+                    handleBlockTouch(block);
                 }
             }
+        }
 
-            // GRAB LOGIC
-            if (state.pinching && state.hoveredObject && !state.grabbedObject) {
-                state.grabbedObject = state.hoveredObject;
-                document.body.style.cursor = "grabbing";
-            }
+        function handleBlockTouch(block) {
+            const num = block.userData.number;
 
-            if (!state.pinching && state.grabbedObject) {
-                state.grabbedObject = null;
-                document.body.style.cursor = "default";
-            }
-
-            if (state.grabbedObject) {
-                // Move object with hand
-                state.grabbedObject.position.lerp(state.handPosition, 0.2);
+            // Agar to'g'ri raqam bo'lsa
+            if (num === currentTarget) {
+                // Portlash effekti
+                createExplosion(block.position, block.material.map ? 0xffffff : 0xffff00);
                 
-                // Add subtle rotation while holding
-                state.grabbedObject.rotation.x += 0.01;
-                state.grabbedObject.rotation.y += 0.02;
-            }
+                // Blokni o'chirish
+                scene.remove(block);
+                blocks = blocks.filter(b => b !== block);
 
-            // PATHOLOGY / FIST LOGIC
-            if (state.fist && state.hoveredObject) {
-                // Simulate "Explosion" or Pathology view
-                state.hoveredObject.scale.setScalar(1.2); // Swell
-                state.hoveredObject.material.wireframe = true; // Show structure
-                document.getElementById('current-mode').innerText = "PATHOLOGY MODE";
-                document.getElementById('current-mode').style.background = "#ff0055";
-            } else if (state.hoveredObject) {
-                state.hoveredObject.scale.setScalar(1);
-                state.hoveredObject.material.wireframe = false;
-                document.getElementById('current-mode').innerText = "ANATOMY MODE";
-                document.getElementById('current-mode').style.background = "#00f3ff";
-            }
-
-            // UPDATE LABEL POSITION
-            if (state.hoveredObject || state.grabbedObject) {
-                const activeObj = state.grabbedObject || state.hoveredObject;
-                const vector = activeObj.position.clone();
-                vector.project(camera);
+                // Keyingi raqamga o'tish
+                currentTarget++;
                 
-                const x = (vector.x * .5 + .5) * window.innerWidth;
-                const y = (-(vector.y * .5) + .5) * window.innerHeight;
-                
-                labelEl.style.left = `${x}px`;
-                labelEl.style.top = `${y - 40}px`;
-                labelEl.style.opacity = 1;
-                labelEl.innerText = activeObj.userData.name;
+                if (currentTarget > MAX_NUMBER) {
+                    winGame();
+                } else {
+                    instructionEl.innerText = `Barakalla! Endi ${currentTarget} ni toping!`;
+                    instructionEl.style.color = "#00ff00";
+                    setTimeout(() => instructionEl.style.color = "white", 500);
+                }
             } else {
-                labelEl.style.opacity = 0;
+                // Noto'g'ri raqam bo'lsa - qizil bo'lib titrasin
+                // Hozircha shunchaki e'tiborsiz qoldiramiz yoki yengil ogohlantiramiz
+                instructionEl.innerText = `Yo'q, bu ${num}. Bizga ${currentTarget} kerak!`;
+                instructionEl.style.color = "#ff6b6b";
             }
         }
 
-        function resetObjectVisuals(obj) {
-            obj.material.emissive.setHex(0x000000);
-            obj.material.wireframe = false;
-            obj.scale.setScalar(1);
+        function winGame() {
+            isGameWon = true;
+            instructionEl.innerHTML = "QOYIL! SIZ HAMMASINI TOPDINGIZ! 🎉<br>Qayta boshlash uchun sahifani yangilang.";
+            instructionEl.style.color = "#FFD700";
+            
+            // G'alaba mushakbozligi
+            setInterval(() => {
+                const randomPos = new THREE.Vector3(
+                    (Math.random()-0.5)*10, (Math.random()-0.5)*6, 0
+                );
+                createExplosion(randomPos, Math.random() * 0xffffff);
+            }, 500);
         }
 
-        function updateUI(data, isVisible) {
-            if (isVisible && data) {
-                nameEl.innerText = data.name;
-                descEl.innerText = data.desc;
-                sysEl.innerText = data.system;
-            } else {
-                nameEl.innerText = "Select an Organ";
-                descEl.innerText = "Hover over an object to analyze data.";
-                sysEl.innerText = "--";
-            }
-        }
-
-        // --- ANIMATION LOOP ---
+        // --- ANIMATSIYA ---
         function animate() {
             requestAnimationFrame(animate);
 
-            // Idle animation for objects
-            const time = Date.now() * 0.001;
-            objects.forEach((obj, index) => {
-                if (obj !== state.grabbedObject) {
-                    obj.position.y += Math.sin(time + index) * 0.002;
+            // 1. AI Qismi
+            if (video && video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                let startTimeMs = performance.now();
+                if(handLandmarker) {
+                    const results = handLandmarker.detectForVideo(video, startTimeMs);
+                    if (results.landmarks) {
+                        detectHand(results.landmarks);
+                    } else {
+                        cursorElement.style.display = 'none';
+                    }
+                }
+            }
+
+            // 2. Fizika va Effektlar
+            const time = performance.now() * 0.001;
+
+            // Bloklar harakati (Suzish)
+            blocks.forEach(block => {
+                block.rotation.x += block.userData.rotSpeed.x;
+                block.rotation.y += block.userData.rotSpeed.y;
+                block.position.y = block.userData.initialPos.y + Math.sin(time + block.userData.timeOffset) * 0.3;
+                
+                // Agar shu blok qidirilayotgan bo'lsa, uni biroz kattalashtirib ko'rsatish
+                if (block.userData.number === currentTarget) {
+                    block.scale.setScalar(1.0 + Math.sin(time * 5) * 0.1); // "Puls" effekti
+                    block.material.emissive = new THREE.Color(0x333333);
+                } else {
+                    block.scale.setScalar(1);
+                    block.material.emissive = new THREE.Color(0x000000);
+                }
+            });
+
+            // Zarrachalar harakati
+            particles.forEach((p, index) => {
+                p.position.add(p.userData.velocity);
+                p.userData.life -= 0.03;
+                p.scale.setScalar(p.userData.life);
+                p.rotation.x += 0.1;
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(index, 1);
                 }
             });
 
             renderer.render(scene, camera);
         }
 
-        // Handle Window Resize
-        window.addEventListener('resize', () => {
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        }
 
-        animate();
-
+        init();
     </script>
 </body>
 </html>
