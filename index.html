@@ -74,11 +74,29 @@
             animation: bounceIn 1s;
         }
 
+        .level-badge {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            border: 2px solid white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            margin-top: 10px;
+            display: inline-block;
+        }
+
         @media (max-width: 640px) {
             .score-board {
                 font-size: 1.5rem;
                 padding: 5px 15px;
                 border-width: 3px;
+            }
+            .level-badge {
+                font-size: 1rem;
+                padding: 4px 12px;
             }
         }
 
@@ -122,6 +140,27 @@
         .start-btn:active {
             transform: translateY(10px);
             box-shadow: 0 0 0 #E67E22, 0 0 0 rgba(0,0,0,0);
+        }
+
+        /* Level Up Overlay */
+        #level-overlay {
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #level-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        @keyframes popUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .level-text {
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         @keyframes bounceIn {
@@ -177,9 +216,16 @@
         <p id="status-text" class="mt-8 text-xl text-white font-bold hidden animate-pulse">Waking up the robots...</p>
     </div>
 
+    <!-- Level Complete Overlay -->
+    <div id="level-overlay" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="text-center">
+            <h2 id="level-title" class="text-5xl md:text-8xl font-black text-yellow-300 drop-shadow-[0_4px_0_#d97706] mb-2 level-text">AWESOME!</h2>
+            <p id="level-sub" class="text-2xl md:text-4xl font-bold text-white drop-shadow-md">Next Level Coming...</p>
+        </div>
+    </div>
+
     <!-- Webcam Feed -->
     <video id="input-video" class="hidden" playsinline></video>
-    <!-- Slightly larger preview for better visibility of pinch guide -->
     <div class="cam-preview">
         <canvas id="output-canvas" width="240" height="180"></canvas>
     </div>
@@ -187,8 +233,13 @@
     <!-- UI Overlay -->
     <div id="ui-layer" class="hidden">
         <div class="flex justify-between items-start w-full">
-            <div id="score-display" class="score-board">
-                ⭐ 0
+            <div class="flex flex-col items-start">
+                <div id="score-display" class="score-board">
+                    ⭐ 0
+                </div>
+                <div id="level-badge" class="level-badge">
+                    Level 1 • Goal: 0/3
+                </div>
             </div>
             <div id="gesture-indicator" class="gesture-bubble scale-0 transition-transform duration-200">
                 ✋ Ready!
@@ -199,7 +250,7 @@
             <div class="instructions pointer-events-auto">
                 <div class="instruction-row"><span class="emoji-icon">🤏</span> <span><b>Pinch/Tap</b> to Grab</span></div>
                 <div class="instruction-row"><span class="emoji-icon">🎯</span> <span><b>Drag</b> to Ring</span></div>
-                <div class="instruction-row"><span class="emoji-icon">✊</span> <span><b>Fist</b> to Pop</span></div>
+                <div class="instruction-row"><span class="emoji-icon">👋</span> <span><b>Release</b> to Score</span></div>
             </div>
         </div>
     </div>
@@ -210,7 +261,7 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // --- Sound Engine (Synthesizer) ---
+        // --- Sound Engine ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         const Sound = {
@@ -237,21 +288,43 @@
                 [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                     setTimeout(() => Sound.playTone(freq, 'sine', 0.4), i * 50);
                 });
+            },
+            playLevelUp: () => {
+                const now = audioCtx.currentTime;
+                // Victory fanfare
+                [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50].forEach((freq, i) => {
+                    const d = i > 3 ? 0.4 : 0.2;
+                    setTimeout(() => Sound.playTone(freq, 'square', d), i * 150);
+                });
             }
         };
 
         // --- Configuration ---
         const CONFIG = {
-            toyCount: 8,
-            colors: [0xFF6B6B, 0x4ECDC4, 0xFFD93D, 0xFF9F43, 0xA3CB38], // Kid palette
+            colors: [0xFF6B6B, 0x4ECDC4, 0xFFD93D, 0xFF9F43, 0xA3CB38],
             camZ: 8,
-            smoothing: 0.3, // Hand smoothing factor (Higher = faster response)
-            pinchThresholdStart: 0.50, // Start grabbing
-            pinchThresholdEnd: 0.85 // Release point (Sticky Grip!)
+            // Dynamic smoothing config
+            minSmoothing: 0.1, // Very smooth when slow
+            maxSmoothing: 0.5, // Responsive when fast
+            pinchThresholdStart: 0.50,
+            pinchThresholdEnd: 0.85,
+            
+            // Level Definitions
+            levels: [
+                { target: 3, ringMode: 'static', title: "Warm Up!" },
+                { target: 5, ringMode: 'horizontal', speed: 1.0, title: "Moving Target!" },
+                { target: 8, ringMode: 'circle', speed: 1.5, title: "Pro Sorter!" },
+                { target: 10, ringMode: 'figure8', speed: 2.0, title: "Master Class!" },
+                { target: 999, ringMode: 'chaos', speed: 2.5, title: "Endless!" }
+            ]
         };
 
         const state = {
-            score: 0,
+            levelIndex: 0,
+            levelCollected: 0,
+            totalScore: 0,
+            isTransitioning: false,
+
             gesture: 'NONE',
             handPosition: new THREE.Vector3(),
             prevHandPosition: new THREE.Vector3(),
@@ -261,14 +334,14 @@
             isGrabbing: false,
             grabbedObject: null,
             hoveredObject: null,
-            pinchValue: 1.0, // 0 = closed, 1 = open
-            inputType: 'camera' // 'camera' or 'touch'
+            pinchValue: 1.0, 
+            inputType: 'camera'
         };
 
         // --- Three.js Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // Sky Blue
+        scene.background = new THREE.Color(0x87CEEB); 
         scene.fog = new THREE.Fog(0x87CEEB, 10, 25);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -301,19 +374,11 @@
             
             for(let i=0; i<5; i++) {
                 const puff = new THREE.Mesh(geo, mat);
-                puff.position.set(
-                    (Math.random()-0.5)*2,
-                    (Math.random()-0.5)*1,
-                    (Math.random()-0.5)*2
-                );
+                puff.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*1, (Math.random()-0.5)*2);
                 puff.scale.setScalar(0.5 + Math.random()*0.5);
                 cloud.add(puff);
             }
-            cloud.position.set(
-                (Math.random()-0.5)*30,
-                (Math.random()-0.5)*10,
-                -10 - Math.random()*10
-            );
+            cloud.position.set((Math.random()-0.5)*30, (Math.random()-0.5)*10, -10 - Math.random()*10);
             scene.add(cloud);
             return cloud;
         }
@@ -346,15 +411,11 @@
             new THREE.TorusGeometry(0.4, 0.2, 16, 32)
         ];
 
-        const toyMaterial = new THREE.MeshStandardMaterial({
-            roughness: 0.4,
-            metalness: 0.1
-        });
+        const toyMaterial = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.1 });
 
         function spawnToy(pos) {
             const geo = geometries[Math.floor(Math.random() * geometries.length)];
             const color = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
-            
             const mat = toyMaterial.clone();
             mat.color.setHex(color);
 
@@ -383,14 +444,15 @@
             toys.push(mesh);
             return mesh;
         }
-        for(let i=0; i<CONFIG.toyCount; i++) spawnToy();
+        
+        // Spawn initial wave
+        for(let i=0; i<6; i++) spawnToy();
 
         // --- Cursor ---
         const cursorGroup = new THREE.Group();
         const cursorGeo = new THREE.SphereGeometry(0.2, 16, 16);
         const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
         const cursorMesh = new THREE.Mesh(cursorGeo, cursorMat);
-        
         const cursorRingGeo = new THREE.RingGeometry(0.25, 0.3, 32);
         const cursorRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
         const cursorRing = new THREE.Mesh(cursorRingGeo, cursorRingMat);
@@ -412,19 +474,96 @@
                 const p = new THREE.Mesh(confettiGeo, mat);
                 p.position.copy(pos);
                 p.userData.vel = new THREE.Vector3(
-                    (Math.random()-0.5)*0.3,
-                    (Math.random()*0.3) + 0.1,
-                    (Math.random()-0.5)*0.3
+                    (Math.random()-0.5)*0.3, (Math.random()*0.3) + 0.1, (Math.random()-0.5)*0.3
                 );
                 scene.add(p);
                 confetti.push(p);
             }
         }
 
+        // --- Level Logic ---
+        function updateLevelUI() {
+            const currentLevel = CONFIG.levels[Math.min(state.levelIndex, CONFIG.levels.length-1)];
+            const badge = document.getElementById('level-badge');
+            badge.innerText = `Level ${state.levelIndex + 1} • Goal: ${state.levelCollected}/${currentLevel.target}`;
+        }
+
+        function triggerLevelUp() {
+            if (state.isTransitioning) return;
+            state.isTransitioning = true;
+            Sound.playLevelUp();
+
+            const overlay = document.getElementById('level-overlay');
+            const sub = document.getElementById('level-sub');
+            
+            // Release grabbed object if any
+            state.grabbedObject = null;
+            state.gesture = 'OPEN';
+
+            // Show UI
+            overlay.classList.add('active');
+            
+            setTimeout(() => {
+                // Clear existing toys
+                toys.forEach(t => scene.remove(t));
+                toys.length = 0;
+                
+                // Increment Level
+                state.levelIndex++;
+                state.levelCollected = 0;
+                
+                // Update UI Text for new level
+                const nextLvl = CONFIG.levels[Math.min(state.levelIndex, CONFIG.levels.length-1)];
+                sub.innerText = nextLvl.title;
+                
+                updateLevelUI();
+                
+                // Hide Overlay
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    state.isTransitioning = false;
+                    
+                    // Spawn new wave
+                    for(let i=0; i<6; i++) spawnToy();
+                }, 1500);
+
+            }, 2000);
+        }
+
+        function processScore(object) {
+            const scoreEl = document.getElementById('score-display');
+            const currentLevel = CONFIG.levels[Math.min(state.levelIndex, CONFIG.levels.length-1)];
+
+            Sound.playSuccess();
+            spawnConfetti(object.position, 0xFFD700);
+            
+            state.totalScore += 10;
+            state.levelCollected++;
+            
+            scoreEl.innerText = "⭐ " + state.totalScore;
+            scoreEl.classList.remove('score-pop');
+            void scoreEl.offsetWidth; 
+            scoreEl.classList.add('score-pop');
+            
+            updateLevelUI();
+
+            scene.remove(object);
+            toys.splice(toys.indexOf(object), 1);
+            
+            // Check Level Completion
+            if (state.levelCollected >= currentLevel.target) {
+                triggerLevelUp();
+            } else {
+                setTimeout(() => spawnToy(), 500);
+            }
+        }
+
         // --- Logic Loop ---
         function updateGame() {
-            const scoreEl = document.getElementById('score-display');
+            if (state.isTransitioning) return;
+
             const bubble = document.getElementById('gesture-indicator');
+            const currentLevel = CONFIG.levels[Math.min(state.levelIndex, CONFIG.levels.length-1)];
 
             // 1. Raycast
             if (!state.grabbedObject) {
@@ -439,7 +578,6 @@
                         state.hoveredObject = obj;
                         Sound.playTone(800, 'sine', 0.05);
                     }
-                    // Pulse
                     obj.scale.setScalar(1.2 + Math.sin(Date.now()*0.01)*0.1);
                     obj.rotation.x += 0.05;
                     cursorRing.scale.setScalar(1.5);
@@ -450,6 +588,18 @@
                     cursorRing.scale.setScalar(1);
                     cursorRing.material.color.setHex(0xFFFFFF);
                 }
+
+                // Check for score on RELEASE (Drop)
+                for(let i = toys.length - 1; i >= 0; i--) {
+                    const toy = toys[i];
+                    if (toy.userData.active) {
+                        const dist = toy.position.distanceTo(goalRing.position);
+                        if (dist < 2.5) { // Generous drop zone
+                            processScore(toy);
+                        }
+                    }
+                }
+
             }
 
             // 2. State Machine
@@ -465,15 +615,29 @@
                 }
 
                 if (state.grabbedObject) {
-                    // Rigid Grabbing (No Lerp)
                     const target = state.handPosition.clone().add(state.grabOffset);
-                    state.grabbedObject.position.copy(target); // Instant follow
-                    
-                    // Add dynamic sway based on hand velocity
+                    state.grabbedObject.position.copy(target);
                     state.grabbedObject.rotation.z = -state.handVelocity.x * 2.0; 
                     state.grabbedObject.rotation.x = state.handVelocity.z * 2.0;
-                    
                     state.grabbedObject.scale.setScalar(1.2);
+
+                    // Check if over ring for feedback
+                    const dist = state.grabbedObject.position.distanceTo(goalRing.position);
+                    if (dist < 2.5) {
+                        goalRing.material.emissive.setHex(0x00FF00); // Glow Green to signal drop
+                        bubble.innerText = "👋 Release!";
+                        
+                        // AUTO-DUNK: If very close to center, score immediately
+                        if (dist < 1.2) {
+                            processScore(state.grabbedObject);
+                            state.grabbedObject = null;
+                            // Temporarily force open gesture to prevent re-grab flicker
+                            // but allow MediaPipe to correct it on next frame
+                        }
+
+                    } else {
+                        goalRing.material.emissive.setHex(0xaa6600);
+                    }
                 }
             } 
             else if (state.gesture === 'FIST') {
@@ -490,27 +654,16 @@
                 }
             }
             else {
-                // RELEASE
                 bubble.classList.add('scale-0');
                 cursorMesh.material.color.setHex(0xFFFFFF);
-
+                
+                // Reset ring glow if not holding
+                if (goalRing.material.emissive.getHex() === 0x00FF00) {
+                    goalRing.material.emissive.setHex(0xaa6600);
+                }
+                
+                // Release Object
                 if (state.grabbedObject) {
-                    // Check Drop
-                    const dist = state.grabbedObject.position.distanceTo(new THREE.Vector3(0, -1, 0));
-                    
-                    if (dist < 2.0) {
-                        Sound.playSuccess();
-                        spawnConfetti(state.grabbedObject.position, 0xFFD700);
-                        state.score += 10;
-                        scoreEl.innerText = "⭐ " + state.score;
-                        scoreEl.classList.remove('score-pop');
-                        void scoreEl.offsetWidth; 
-                        scoreEl.classList.add('score-pop');
-                        scene.remove(state.grabbedObject);
-                        toys.splice(toys.indexOf(state.grabbedObject), 1);
-                        setTimeout(() => spawnToy(), 500);
-                    }
-
                     state.grabbedObject = null;
                 }
             }
@@ -519,18 +672,40 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Store previous for velocity calc
             state.prevHandPosition.copy(state.handPosition);
-
-            // Smooth Hand Movement
-            state.handPosition.lerp(state.targetHandPosition, CONFIG.smoothing);
             
-            // Calculate Velocity (for tilt effects)
+            // Adaptive Smoothing
+            const speed = state.targetHandPosition.distanceTo(state.handPosition);
+            const alpha = THREE.MathUtils.clamp(speed * 2, CONFIG.minSmoothing, CONFIG.maxSmoothing);
+            
+            state.handPosition.lerp(state.targetHandPosition, alpha);
             state.handVelocity.subVectors(state.handPosition, state.prevHandPosition);
-
             cursorGroup.position.copy(state.handPosition);
 
             const time = Date.now() * 0.001;
+
+            // --- Level Based Ring Animation ---
+            const lvl = CONFIG.levels[Math.min(state.levelIndex, CONFIG.levels.length-1)];
+            const spd = lvl.speed || 0;
+
+            if (lvl.ringMode === 'static') {
+                goalRing.position.set(0, -1, 0);
+            } 
+            else if (lvl.ringMode === 'horizontal') {
+                goalRing.position.x = Math.sin(time * spd) * 3;
+                goalRing.position.y = -1;
+            }
+            else if (lvl.ringMode === 'circle') {
+                goalRing.position.x = Math.cos(time * spd) * 3;
+                goalRing.position.y = Math.sin(time * spd) * 1.5; 
+            }
+            else if (lvl.ringMode === 'figure8') {
+                goalRing.position.x = Math.cos(time * spd) * 4;
+                goalRing.position.y = Math.sin(time * spd * 2) * 2;
+            }
+
+            // Sync Glow
+            glowPlane.position.copy(goalRing.position);
             goalRing.rotation.z = time * 0.5;
             glowPlane.scale.setScalar(1 + Math.sin(time*2)*0.1);
 
@@ -571,32 +746,25 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 state.inputType = 'camera';
                 const landmarks = results.multiHandLandmarks[0];
-                
-                // Draw Base Skeleton
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#FFFFFF', lineWidth: 2});
                 
-                // Key Landmarks
                 const indexTip = landmarks[8];
                 const thumbTip = landmarks[4];
                 const wrist = landmarks[0];
-                const indexMCP = landmarks[5]; // Base of index finger
+                const indexMCP = landmarks[5];
 
-                // 1. Adaptive Hand Size (Reference for depth/size)
-                // Distance from Wrist to Index Base is mechanically stable
                 const handSize = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
-                
-                // 2. Pinch Distance
                 const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
-                
-                // 3. Normalized Pinch (0 to ~1.0)
-                // When tips touch, dist is small but non-zero. When open, dist is large.
-                // We divide by handSize to make it scale-invariant
                 const normalizedPinch = pinchDist / handSize; 
                 state.pinchValue = normalizedPinch;
 
-                // 4. Update 3D Cursor Target
-                const ndcX = (1 - indexTip.x) * 2 - 1;
-                const ndcY = -(indexTip.y * 2 - 1);
+                // IMPROVED CURSOR TRACKING: Use midpoint of fingers for pinch center
+                // This prevents the object from "jumping" when you close your fingers
+                const midX = (indexTip.x + thumbTip.x) / 2;
+                const midY = (indexTip.y + thumbTip.y) / 2;
+                
+                const ndcX = (1 - midX) * 2 - 1;
+                const ndcY = -(midY * 2 - 1);
                 state.ndc = {x: ndcX, y: ndcY};
                 
                 const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
@@ -604,72 +772,40 @@
                 const dir = vector.sub(camera.position).normalize();
                 const distance = -camera.position.z / dir.z;
                 const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-                state.targetHandPosition.copy(pos); // We lerp to this in animate()
+                state.targetHandPosition.copy(pos);
 
-                // 5. Logic with Hysteresis ("Stickiness")
-                // This prevents dropping items due to jitter
                 if (state.gesture === 'PINCH') {
-                    // To release, you must open your hand WIDER than the grab point
-                    if (normalizedPinch > CONFIG.pinchThresholdEnd) {
-                        state.gesture = 'OPEN';
-                    }
+                    if (normalizedPinch > CONFIG.pinchThresholdEnd) state.gesture = 'OPEN';
                 } else {
-                    // To grab, you must close closer than the threshold
-                    if (normalizedPinch < CONFIG.pinchThresholdStart) {
-                        state.gesture = 'PINCH';
-                    }
+                    if (normalizedPinch < CONFIG.pinchThresholdStart) state.gesture = 'PINCH';
                 }
 
-                // 6. Fist Detection Check (secondary)
-                const middleTip = landmarks[12];
-                const ringTip = landmarks[16];
-                const pinkyTip = landmarks[20];
-                const tips = [indexTip, middleTip, ringTip, pinkyTip];
-                let avgDist = 0;
-                tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
-                avgDist /= 4; // Average distance of tips to wrist
-                // Fist logic: if tips are very close to wrist relative to hand size
-                if (state.gesture !== 'PINCH' && (avgDist / handSize) < 0.9) {
-                    state.gesture = 'FIST';
-                }
-
-                // 7. Visual Feedback for Pinch
-                // ONLY draw guide if NOT holding an object
+                // Visual Pinch Guide (Hidden when pinching)
                 if (state.gesture !== 'PINCH') {
-                    let guideColor = '#FF4444'; // Red
+                    let guideColor = '#FF4444';
                     let guideWidth = 2;
-
-                    // Show yellow when getting close
                     if (normalizedPinch < CONFIG.pinchThresholdEnd) {
-                        guideColor = '#FFFF00'; // Yellow
+                        guideColor = '#FFFF00';
                         guideWidth = 4;
                     }
-
-                    // Draw Pinch Connector
                     canvasCtx.beginPath();
                     canvasCtx.moveTo(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height);
                     canvasCtx.lineTo(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height);
                     canvasCtx.strokeStyle = guideColor;
                     canvasCtx.lineWidth = guideWidth;
                     canvasCtx.stroke();
-
-                    // Draw Tips
+                    
                     canvasCtx.beginPath();
                     canvasCtx.arc(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height, 4, 0, 2 * Math.PI);
                     canvasCtx.arc(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height, 4, 0, 2 * Math.PI);
                     canvasCtx.fillStyle = guideColor;
                     canvasCtx.fill();
                 }
-
-            } else {
-                // If no hands, we might be using mouse/touch, so don't force NONE unless we want to reset
-                // state.gesture = 'NONE';
             }
             canvasCtx.restore();
         }
 
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        // Increased confidence slightly to reduce "ghost" hands, kept tracking loose for speed
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         hands.onResults(onResults);
 
@@ -680,43 +816,28 @@
 
         startBtn.addEventListener('click', async () => {
             if(audioCtx.state === 'suspended') await audioCtx.resume();
-            
             document.getElementById('status-text').classList.remove('hidden');
             startBtn.style.display = 'none';
 
-            // Check if mobile for camera constraints
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const constraints = {
-                video: {
-                    width: 640,
-                    height: 480,
-                    facingMode: 'user' // Prefer front camera
-                }
-            };
-
             const cameraUtils = new Camera(videoElement, {
                 onFrame: async () => { await hands.send({image: videoElement}); },
-                width: 640, height: 480,
-                facingMode: 'user'
+                width: 640, height: 480, facingMode: 'user'
             });
             
-            try {
-                await cameraUtils.start();
-            } catch(e) {
-                console.warn("Camera failed or denied. Falling back to Touch/Mouse.");
-            }
+            try { await cameraUtils.start(); } catch(e) { console.warn("Camera fallback"); }
 
             loader.style.opacity = 0;
             setTimeout(() => {
                 loader.style.display = 'none';
                 uiLayer.classList.remove('hidden');
+                updateLevelUI();
             }, 500);
 
-            handleResize(); // Initial setup for orientation
+            handleResize();
             animate();
         });
 
-        // --- Mouse & Touch Fallback Logic ---
+        // Fallback Logic
         function updatePointerInput(x, y) {
             state.inputType = 'touch';
             const ndcX = (x * 2) - 1;
@@ -730,23 +851,15 @@
             state.targetHandPosition.copy(pos);
         }
 
-        // Mouse Events
         window.addEventListener('mousemove', (e) => {
-            if (state.inputType === 'touch') { // Only override if not actively using camera
-                updatePointerInput(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
-            }
+            if (state.inputType === 'touch') updatePointerInput(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
         });
         window.addEventListener('mousedown', () => { if(state.inputType === 'touch') state.gesture = 'PINCH'; });
         window.addEventListener('mouseup', () => { if(state.inputType === 'touch') state.gesture = 'OPEN'; });
 
-        // Touch Events
         window.addEventListener('touchstart', (e) => {
-            // FIX: Allow the start button to be clicked!
-            if (e.target.id === 'start-btn' || e.target.closest('button')) {
-                return;
-            }
-
-            e.preventDefault(); // Stop scroll
+            if (e.target.id === 'start-btn' || e.target.closest('button')) return;
+            e.preventDefault();
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
                 updatePointerInput(touch.clientX / window.innerWidth, touch.clientY / window.innerHeight);
@@ -755,9 +868,7 @@
         }, {passive: false});
 
         window.addEventListener('touchmove', (e) => {
-            // Allow default behavior if touching the button (rare, but safe)
             if (e.target.id === 'start-btn') return;
-
             e.preventDefault();
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
@@ -765,30 +876,24 @@
             }
         }, {passive: false});
 
-        window.addEventListener('touchend', (e) => {
-             state.gesture = 'OPEN';
-        });
+        window.addEventListener('touchend', (e) => state.gesture = 'OPEN');
 
         function handleResize() {
             const width = window.innerWidth;
             const height = window.innerHeight;
             const aspect = width / height;
-            
             camera.aspect = aspect;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
-
-            // Portrait Mode Adjustment
             if (aspect < 1) {
-                camera.position.z = CONFIG.camZ + 8; // Zoom out significantly
-                camera.position.y = 4; // Look down a bit more
+                camera.position.z = CONFIG.camZ + 8;
+                camera.position.y = 4;
             } else {
                 camera.position.z = CONFIG.camZ;
                 camera.position.y = 2;
             }
             camera.lookAt(0, 0, 0);
         }
-
         window.addEventListener('resize', handleResize);
 
     </script>
