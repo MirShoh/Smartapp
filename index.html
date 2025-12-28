@@ -1,397 +1,672 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Bolalar uchun interaktiv 3D kosmik o'yin - qo'l harakatlari bilan boshqarish">
-    <title>Galaktika Qahramoni - 3D Interaktiv O'yin</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Toy Sort - Magic Hand Game</title>
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Fun UI Overlay */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
+        }
+
+        /* Camera Preview - Cute Frame */
+        .cam-preview {
+            position: absolute; top: 20px; right: 20px; width: 240px; height: 180px; 
+            border-radius: 20px; overflow: hidden; border: 6px solid #FFD700;
+            transform: scaleX(-1); /* Mirror effect */
+            background: #fff;
+            z-index: 20;
+            box-shadow: 0 8px 0px rgba(0,0,0,0.2);
+        }
+        
+        .score-board {
+            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid #FF6B6B;
+            border-radius: 30px;
+            padding: 10px 30px;
+            font-size: 2.5rem;
+            color: #FF6B6B;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+            animation: bounceIn 1s;
+        }
+
+        .gesture-bubble {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: #4ECDC4;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 3px solid #4ECDC4;
+            transition: transform 0.2s;
+        }
+
+        /* Loading Screen - Kid Friendly */
+        #loader {
+            position: fixed; inset: 0; background: #87CEEB; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; transition: opacity 0.5s;
+            background-image: radial-gradient(circle, #87CEEB 10%, #4FA3D1 90%);
+        }
+        
+        .start-btn {
+            background: #FFD700; color: #E67E22; border: none;
+            padding: 20px 60px; font-size: 2rem; border-radius: 50px;
+            font-weight: 900; cursor: pointer;
+            box-shadow: 0 10px 0 #E67E22, 0 20px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .start-btn:active {
+            transform: translateY(10px);
+            box-shadow: 0 0 0 #E67E22, 0 0 0 rgba(0,0,0,0);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); } 60% { transform: scale(1.1); } 100% { transform: scale(1); }
+        }
+        
+        @keyframes popScore {
+            0% { transform: scale(1); } 50% { transform: scale(1.5) rotate(-10deg); } 100% { transform: scale(1); }
+        }
+        
+        .score-pop { animation: popScore 0.3s ease-out; }
+
+        /* Instructions Panel */
+        .instructions {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 300px;
+            border: 4px solid #4ECDC4;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+        }
+        .instruction-row { display: flex; align-items: center; margin-bottom: 10px; font-size: 1.1rem; color: #555; }
+        .emoji-icon { font-size: 2rem; margin-right: 15px; width: 40px; text-align: center; }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <!-- 3D Canvas -->
-        <canvas id="canvas3d"></canvas>
-        
-        <!-- Video Camera -->
-        <video id="video" autoplay playsinline muted></video>
-        
-        <!-- Hand Cursor -->
-        <div class="hand-cursor" id="handCursor">
-            <div class="cursor-ring"></div>
-        </div>
 
-        <!-- Gesture Status Indicator -->
-        <div class="gesture-status" id="gestureStatus">
-            <div class="gesture-icon" id="gestureIcon">👋</div>
-            <div class="gesture-name" id="gestureName">Qo'lingizni ko'rsating</div>
-            <div class="gesture-confidence">
-                <div class="confidence-bar" id="confidenceBar"></div>
-            </div>
-        </div>
-
-        <!-- Loading Screen -->
-        <div id="loadingScreen" class="screen active">
-            <div class="loading-content">
-                <div class="rocket-animation">🚀</div>
-                <h1>Galaktika Qahramoni</h1>
-                <p class="loading-text">Kosmik sarguzasht yuklanmoqda...</p>
-                <div class="progress-loading">
-                    <div class="progress-loading-bar" id="loadingProgress"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Start Screen -->
-        <div id="startScreen" class="screen">
-            <div class="stars-bg"></div>
-            <div class="screen-content">
-                <div class="logo-container">
-                    <h1 class="main-title">
-                        <span class="title-icon">🚀</span>
-                        GALAKTIKA QAHRAMONI
-                        <span class="title-icon">🌟</span>
-                    </h1>
-                    <p class="subtitle">Bolajonlar uchun 3D Sarguzasht</p>
-                </div>
-                
-                <div class="menu-container">
-                    <button class="menu-button primary" onclick="game.showCharacterSelect()" data-sound="click">
-                        <span class="btn-icon">🎮</span>
-                        <span class="btn-text">Boshlash</span>
-                    </button>
-                    <button class="menu-button secondary" onclick="game.showTutorial()" data-sound="click">
-                        <span class="btn-icon">📚</span>
-                        <span class="btn-text">Qo'llanma</span>
-                    </button>
-                    <button class="menu-button secondary" onclick="game.showSettings()" data-sound="click">
-                        <span class="btn-icon">⚙️</span>
-                        <span class="btn-text">Sozlamalar</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tutorial Screen -->
-        <div id="tutorialScreen" class="screen">
-            <button class="back-button" onclick="game.showStartScreen()" aria-label="Orqaga">
-                <span>⬅️</span>
-            </button>
-            <div class="screen-content">
-                <h1>📚 Qo'llanma</h1>
-                
-                <div class="tutorial-grid">
-                    <div class="tutorial-card">
-                        <div class="tutorial-icon">👋</div>
-                        <h3>Ochiq Kaft</h3>
-                        <p>Sayyorani tanlash</p>
-                        <div class="tutorial-demo">
-                            <div class="hand-demo open"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="tutorial-card">
-                        <div class="tutorial-icon">🤏</div>
-                        <h3>Qisish</h3>
-                        <p>Ushlab sudrab borish</p>
-                        <div class="tutorial-demo">
-                            <div class="hand-demo pinch"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="tutorial-card">
-                        <div class="tutorial-icon">👍</div>
-                        <h3>Thumbs Up</h3>
-                        <p>Tasdiqlash</p>
-                        <div class="tutorial-demo">
-                            <div class="hand-demo thumbsup"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="tutorial-card">
-                        <div class="tutorial-icon">✊</div>
-                        <h3>Mushtlash</h3>
-                        <p>Maxsus harakat</p>
-                        <div class="tutorial-demo">
-                            <div class="hand-demo fist"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-box">
-                    <div class="info-icon">💡</div>
-                    <div class="info-text">
-                        <strong>Maslahat:</strong> Kamerani yaxshi yoritilgan joyda ishlating. 
-                        Qo'lingizni kameradan 30-50 cm masofada ushlab turing.
-                    </div>
-                </div>
-
-                <button class="menu-button primary" onclick="game.showCharacterSelect()" style="margin-top: 30px;">
-                    <span>Davom etish ➡️</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Character Selection -->
-        <div id="characterScreen" class="screen">
-            <button class="back-button" onclick="game.showStartScreen()">
-                <span>⬅️</span>
-            </button>
-            <div class="screen-content">
-                <h1>👨‍🚀 Qahramonni Tanlang</h1>
-                
-                <div class="character-grid">
-                    <div class="character-card" data-character="boy" onclick="game.selectCharacter('boy')">
-                        <div class="character-badge">Mashhur</div>
-                        <div class="character-icon">👦</div>
-                        <div class="character-name">Astronaut Bola</div>
-                        <div class="character-description">Jasur va qiziquvchan</div>
-                        <div class="character-stats">
-                            <span>⭐⭐⭐⭐</span>
-                        </div>
-                    </div>
-                    
-                    <div class="character-card" data-character="girl" onclick="game.selectCharacter('girl')">
-                        <div class="character-badge">Mashhur</div>
-                        <div class="character-icon">👧</div>
-                        <div class="character-name">Astronaut Qiz</div>
-                        <div class="character-description">Aqlli va dadil</div>
-                        <div class="character-stats">
-                            <span>⭐⭐⭐⭐</span>
-                        </div>
-                    </div>
-                    
-                    <div class="character-card" data-character="robot" onclick="game.selectCharacter('robot')">
-                        <div class="character-badge new">Yangi</div>
-                        <div class="character-icon">🤖</div>
-                        <div class="character-name">Robot Do'st</div>
-                        <div class="character-description">Aqlli maslahatchi</div>
-                        <div class="character-stats">
-                            <span>⭐⭐⭐⭐⭐</span>
-                        </div>
-                    </div>
-                    
-                    <div class="character-card" data-character="alien" onclick="game.selectCharacter('alien')">
-                        <div class="character-badge new">Yangi</div>
-                        <div class="character-icon">👽</div>
-                        <div class="character-name">Do'st Alien</div>
-                        <div class="character-description">Kuchli va do'stona</div>
-                        <div class="character-stats">
-                            <span>⭐⭐⭐⭐⭐</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="menu-button primary" id="continueButton" onclick="game.showMissionSelect()" style="margin-top: 30px; display: none;">
-                    <span>Davom etish ➡️</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mission Selection -->
-        <div id="missionScreen" class="screen">
-            <button class="back-button" onclick="game.showCharacterSelect()">
-                <span>⬅️</span>
-            </button>
-            <div class="screen-content">
-                <h1>🎯 Missiyani Tanlang</h1>
-                
-                <div class="mission-list">
-                    <div class="mission-card" data-mission="drag" onclick="game.startMission('drag')">
-                        <div class="mission-icon">🎨</div>
-                        <div class="mission-info">
-                            <h3>Drag & Drop</h3>
-                            <p>Sayyoralarni to'g'ri joyiga qo'ying</p>
-                            <div class="mission-details">
-                                <span class="mission-difficulty easy">Oson</span>
-                                <span class="mission-reward">💎 +150 ball</span>
-                                <span class="mission-time">⏱️ 5 daqiqa</span>
-                            </div>
-                        </div>
-                        <div class="mission-arrow">→</div>
-                    </div>
-                    
-                    <div class="mission-card" data-mission="quiz" onclick="game.startMission('quiz')">
-                        <div class="mission-icon">🧠</div>
-                        <div class="mission-info">
-                            <h3>Tanlash Quiz</h3>
-                            <p>10 ta savolga javob bering</p>
-                            <div class="mission-details">
-                                <span class="mission-difficulty medium">O'rta</span>
-                                <span class="mission-reward">💎 +100 ball</span>
-                                <span class="mission-time">⏱️ 10 daqiqa</span>
-                            </div>
-                        </div>
-                        <div class="mission-arrow">→</div>
-                    </div>
-                    
-                    <div class="mission-card" data-mission="movement" onclick="game.startMission('movement')">
-                        <div class="mission-icon">🎮</div>
-                        <div class="mission-info">
-                            <h3>Harakatli Javob</h3>
-                            <p>Qo'l bilan to'g'ri javobni ko'rsating</p>
-                            <div class="mission-details">
-                                <span class="mission-difficulty hard">Qiyin</span>
-                                <span class="mission-reward">💎 +120 ball</span>
-                                <span class="mission-time">⏱️ 7 daqiqa</span>
-                            </div>
-                        </div>
-                        <div class="mission-arrow">→</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Game UI -->
-        <div id="gameUI">
-            <button class="back-button" onclick="game.exitGame()">
-                <span>⬅️</span>
-            </button>
-            
-            <!-- Game Header -->
-            <div class="game-header">
-                <div class="stat-card">
-                    <span class="stat-icon">⭐</span>
-                    <div class="stat-info">
-                        <span class="stat-label">Ball</span>
-                        <span class="stat-value" id="scoreDisplay">0</span>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-icon">💎</span>
-                    <div class="stat-info">
-                        <span class="stat-label">Level</span>
-                        <span class="stat-value" id="levelDisplay">1</span>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-icon">❤️</span>
-                    <div class="stat-info">
-                        <span class="stat-label">Jon</span>
-                        <span class="stat-value" id="livesDisplay">3</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar">
-                        <span class="progress-text">0/10</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Drag & Drop Targets -->
-            <div class="drag-targets" id="dragTargets">
-                <div class="drop-zone" data-planet="sun">
-                    <div class="drop-zone-icon">☀️</div>
-                    <div class="drop-zone-label">Quyosh</div>
-                </div>
-                <div class="drop-zone" data-planet="earth">
-                    <div class="drop-zone-icon">🌍</div>
-                    <div class="drop-zone-label">Yer</div>
-                </div>
-                <div class="drop-zone" data-planet="mars">
-                    <div class="drop-zone-icon">🔴</div>
-                    <div class="drop-zone-label">Mars</div>
-                </div>
-                <div class="drop-zone" data-planet="jupiter">
-                    <div class="drop-zone-icon">🪐</div>
-                    <div class="drop-zone-label">Yupiter</div>
-                </div>
-                <div class="drop-zone" data-planet="saturn">
-                    <div class="drop-zone-icon">💍</div>
-                    <div class="drop-zone-label">Saturn</div>
-                </div>
-                <div class="drop-zone" data-planet="moon">
-                    <div class="drop-zone-icon">🌙</div>
-                    <div class="drop-zone-label">Oy</div>
-                </div>
-            </div>
-
-            <!-- Quiz Panel -->
-            <div class="question-panel" id="questionPanel">
-                <div class="question-number" id="questionNumber">Savol 1/10</div>
-                <div class="question-text" id="questionText"></div>
-                <div class="answers-grid" id="answersGrid"></div>
-                <div class="question-timer">
-                    <div class="timer-icon">⏱️</div>
-                    <div class="timer-text" id="timerText">30s</div>
-                </div>
-            </div>
-
-            <!-- Movement Game -->
-            <div class="movement-game" id="movementGame">
-                <div class="movement-instruction" id="movementInstruction">
-                    Qo'lingizni ko'rsating!
-                </div>
-                <div class="movement-options" id="movementOptions"></div>
-            </div>
-
-            <!-- Result Screen -->
-            <div class="result-screen" id="resultScreen">
-                <div class="result-content">
-                    <div class="result-icon" id="resultIcon">🏆</div>
-                    <h2 class="result-title" id="resultTitle">Ajoyib!</h2>
-                    <div class="result-stars" id="resultStars">⭐⭐⭐</div>
-                    
-                    <div class="result-stats">
-                        <div class="result-stat">
-                            <span class="result-stat-icon">⭐</span>
-                            <div class="result-stat-info">
-                                <span class="result-stat-label">Yig'ilgan ballar</span>
-                                <span class="result-stat-value" id="finalScore">0</span>
-                            </div>
-                        </div>
-                        <div class="result-stat">
-                            <span class="result-stat-icon">✅</span>
-                            <div class="result-stat-info">
-                                <span class="result-stat-label">To'g'ri javoblar</span>
-                                <span class="result-stat-value" id="correctAnswers">0/10</span>
-                            </div>
-                        </div>
-                        <div class="result-stat">
-                            <span class="result-stat-icon">⚡</span>
-                            <div class="result-stat-info">
-                                <span class="result-stat-label">Aniqlik</span>
-                                <span class="result-stat-value" id="accuracyPercent">0%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="result-actions">
-                        <button class="menu-button primary" onclick="game.restartMission()">
-                            <span class="btn-icon">🔄</span>
-                            <span class="btn-text">Qayta o'ynash</span>
-                        </button>
-                        <button class="menu-button secondary" onclick="game.showMissionSelect()">
-                            <span class="btn-icon">🎯</span>
-                            <span class="btn-text">Boshqa missiya</span>
-                        </button>
-                        <button class="menu-button secondary" onclick="game.showStartScreen()">
-                            <span class="btn-icon">🏠</span>
-                            <span class="btn-text">Bosh menyu</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Particles Effect -->
-        <div class="particles" id="particles"></div>
-
-        <!-- Toast Notifications -->
-        <div class="toast-container" id="toastContainer"></div>
+    <!-- Loading / Start Screen -->
+    <div id="loader">
+        <h1 class="text-6xl font-black mb-4 text-white drop-shadow-lg tracking-wider" style="-webkit-text-stroke: 3px #333;">SKY TOY SORT</h1>
+        <div class="text-2xl text-white mb-10 font-bold bg-white/20 px-6 py-2 rounded-full">Use your hands to clean up the sky!</div>
+        <button id="start-btn" class="start-btn">PLAY!</button>
+        <p id="status-text" class="mt-8 text-xl text-white font-bold hidden animate-pulse">Waking up the robots...</p>
     </div>
 
-    <!-- External Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    
-    <!-- Game Script -->
-    <script src="script.js"></script>
+    <!-- Webcam Feed -->
+    <video id="input-video" class="hidden" playsinline></video>
+    <!-- Slightly larger preview for better visibility of pinch guide -->
+    <div class="cam-preview">
+        <canvas id="output-canvas" width="240" height="180"></canvas>
+    </div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer" class="hidden">
+        <div class="flex justify-between items-start w-full">
+            <div id="score-display" class="score-board">
+                ⭐ 0
+            </div>
+            <div id="gesture-indicator" class="gesture-bubble scale-0 transition-transform duration-200">
+                ✋ Ready!
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-end w-full">
+            <div class="instructions pointer-events-auto">
+                <div class="instruction-row"><span class="emoji-icon">🤏</span> <span><b>Pinch</b> to Grab Toys</span></div>
+                <div class="instruction-row"><span class="emoji-icon">🎯</span> <span><b>Drag</b> to Ring</span></div>
+                <div class="instruction-row"><span class="emoji-icon">✊</span> <span><b>Fist</b> to Pop Bubbles</span></div>
+                <div class="text-xs text-gray-400 mt-2">Tip: Keep your hand visible!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- Sound Engine (Synthesizer) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const Sound = {
+            playTone: (freq, type, duration) => {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            },
+            playPop: () => {
+                Sound.playTone(400 + Math.random()*200, 'sine', 0.1);
+                setTimeout(() => Sound.playTone(600 + Math.random()*200, 'triangle', 0.1), 50);
+            },
+            playGrab: () => Sound.playTone(300, 'sine', 0.1),
+            playSuccess: () => {
+                const now = audioCtx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => Sound.playTone(freq, 'sine', 0.4), i * 50);
+                });
+            }
+        };
+
+        // --- Configuration ---
+        const CONFIG = {
+            toyCount: 8,
+            colors: [0xFF6B6B, 0x4ECDC4, 0xFFD93D, 0xFF9F43, 0xA3CB38], // Kid palette
+            camZ: 8,
+            smoothing: 0.3, // Hand smoothing factor (Higher = faster response)
+            pinchThresholdStart: 0.50, // Start grabbing
+            pinchThresholdEnd: 0.85 // Release point (Sticky Grip!)
+        };
+
+        const state = {
+            score: 0,
+            gesture: 'NONE',
+            handPosition: new THREE.Vector3(),
+            prevHandPosition: new THREE.Vector3(),
+            targetHandPosition: new THREE.Vector3(),
+            handVelocity: new THREE.Vector3(),
+            rawHandPos: { x: 0, y: 0 },
+            isGrabbing: false,
+            grabbedObject: null,
+            hoveredObject: null,
+            pinchValue: 1.0 // 0 = closed, 1 = open
+        };
+
+        // --- Three.js Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky Blue
+        scene.fog = new THREE.Fog(0x87CEEB, 10, 25);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = CONFIG.camZ;
+        camera.position.y = 2;
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // --- Lights ---
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+        scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        // --- Environment ---
+        function createCloud() {
+            const geo = new THREE.SphereGeometry(1, 7, 7);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+            const cloud = new THREE.Group();
+            
+            for(let i=0; i<5; i++) {
+                const puff = new THREE.Mesh(geo, mat);
+                puff.position.set(
+                    (Math.random()-0.5)*2,
+                    (Math.random()-0.5)*1,
+                    (Math.random()-0.5)*2
+                );
+                puff.scale.setScalar(0.5 + Math.random()*0.5);
+                cloud.add(puff);
+            }
+            cloud.position.set(
+                (Math.random()-0.5)*30,
+                (Math.random()-0.5)*10,
+                -10 - Math.random()*10
+            );
+            scene.add(cloud);
+            return cloud;
+        }
+        for(let i=0; i<10; i++) createCloud();
+
+        // The Goal Ring
+        const ringGeo = new THREE.TorusGeometry(1.5, 0.2, 16, 50);
+        const ringMat = new THREE.MeshPhongMaterial({ color: 0xFFD700, shininess: 100, emissive: 0xaa6600, emissiveIntensity: 0.2 });
+        const goalRing = new THREE.Mesh(ringGeo, ringMat);
+        goalRing.position.set(0, -1, 0);
+        goalRing.rotation.x = -Math.PI / 2;
+        goalRing.castShadow = true;
+        goalRing.receiveShadow = true;
+        scene.add(goalRing);
+
+        const glowGeo = new THREE.CircleGeometry(1.5, 32);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0xFFD700, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+        const glowPlane = new THREE.Mesh(glowGeo, glowMat);
+        glowPlane.rotation.x = -Math.PI / 2;
+        glowPlane.position.y = -1;
+        scene.add(glowPlane);
+
+        // --- Toy System ---
+        const toys = [];
+        const geometries = [
+            new THREE.BoxGeometry(0.8, 0.8, 0.8),
+            new THREE.SphereGeometry(0.5, 32, 32),
+            new THREE.ConeGeometry(0.5, 1, 32),
+            new THREE.IcosahedronGeometry(0.5, 0),
+            new THREE.TorusGeometry(0.4, 0.2, 16, 32)
+        ];
+
+        const toyMaterial = new THREE.MeshStandardMaterial({
+            roughness: 0.4,
+            metalness: 0.1
+        });
+
+        function spawnToy(pos) {
+            const geo = geometries[Math.floor(Math.random() * geometries.length)];
+            const color = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
+            
+            const mat = toyMaterial.clone();
+            mat.color.setHex(color);
+
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            if (pos) {
+                mesh.position.copy(pos);
+            } else {
+                mesh.position.set(
+                    (Math.random() - 0.5) * 8, // X
+                    (Math.random() * 4) + 0,   // Y
+                    (Math.random() - 0.5) * 3  // Z
+                );
+            }
+            
+            mesh.userData = {
+                velocity: new THREE.Vector3((Math.random()-0.5)*0.01, (Math.random()-0.5)*0.01, 0),
+                rotSpeed: new THREE.Vector3(Math.random()*0.02, Math.random()*0.02, Math.random()*0.02),
+                id: Math.random().toString(),
+                active: true
+            };
+
+            scene.add(mesh);
+            toys.push(mesh);
+            return mesh;
+        }
+        for(let i=0; i<CONFIG.toyCount; i++) spawnToy();
+
+        // --- Cursor ---
+        const cursorGroup = new THREE.Group();
+        const cursorGeo = new THREE.SphereGeometry(0.2, 16, 16);
+        const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+        const cursorMesh = new THREE.Mesh(cursorGeo, cursorMat);
+        
+        const cursorRingGeo = new THREE.RingGeometry(0.25, 0.3, 32);
+        const cursorRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+        const cursorRing = new THREE.Mesh(cursorRingGeo, cursorRingMat);
+        
+        cursorGroup.add(cursorMesh);
+        cursorGroup.add(cursorRing);
+        scene.add(cursorGroup);
+
+        // --- Confetti ---
+        const confetti = [];
+        const confettiGeo = new THREE.PlaneGeometry(0.1, 0.1);
+        
+        function spawnConfetti(pos, color) {
+            for(let i=0; i<20; i++) {
+                const mat = new THREE.MeshBasicMaterial({ 
+                    color: color || CONFIG.colors[Math.floor(Math.random()*CONFIG.colors.length)], 
+                    side: THREE.DoubleSide 
+                });
+                const p = new THREE.Mesh(confettiGeo, mat);
+                p.position.copy(pos);
+                p.userData.vel = new THREE.Vector3(
+                    (Math.random()-0.5)*0.3,
+                    (Math.random()*0.3) + 0.1,
+                    (Math.random()-0.5)*0.3
+                );
+                scene.add(p);
+                confetti.push(p);
+            }
+        }
+
+        // --- Logic Loop ---
+        function updateGame() {
+            const scoreEl = document.getElementById('score-display');
+            const bubble = document.getElementById('gesture-indicator');
+
+            // 1. Raycast
+            if (!state.grabbedObject) {
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(state.ndc || {x:0, y:0}, camera);
+                const intersects = raycaster.intersectObjects(toys);
+                
+                if (intersects.length > 0) {
+                    const obj = intersects[0].object;
+                    if (state.hoveredObject !== obj) {
+                        if (state.hoveredObject) state.hoveredObject.scale.setScalar(1);
+                        state.hoveredObject = obj;
+                        Sound.playTone(800, 'sine', 0.05);
+                    }
+                    // Pulse
+                    obj.scale.setScalar(1.2 + Math.sin(Date.now()*0.01)*0.1);
+                    obj.rotation.x += 0.05;
+                    cursorRing.scale.setScalar(1.5);
+                    cursorRing.material.color.setHex(0x00FF00);
+                } else {
+                    if (state.hoveredObject) state.hoveredObject.scale.setScalar(1);
+                    state.hoveredObject = null;
+                    cursorRing.scale.setScalar(1);
+                    cursorRing.material.color.setHex(0xFFFFFF);
+                }
+            }
+
+            // 2. State Machine
+            if (state.gesture === 'PINCH') {
+                bubble.innerText = "✊ Grabbing!";
+                bubble.classList.remove('scale-0');
+                cursorMesh.material.color.setHex(0x00FF00);
+
+                if (!state.grabbedObject && state.hoveredObject) {
+                    state.grabbedObject = state.hoveredObject;
+                    state.grabOffset = state.grabbedObject.position.clone().sub(state.handPosition);
+                    Sound.playGrab();
+                }
+
+                if (state.grabbedObject) {
+                    // Rigid Grabbing (No Lerp)
+                    const target = state.handPosition.clone().add(state.grabOffset);
+                    state.grabbedObject.position.copy(target); // Instant follow
+                    
+                    // Add dynamic sway based on hand velocity
+                    state.grabbedObject.rotation.z = -state.handVelocity.x * 2.0; 
+                    state.grabbedObject.rotation.x = state.handVelocity.z * 2.0;
+                    
+                    state.grabbedObject.scale.setScalar(1.2);
+                }
+            } 
+            else if (state.gesture === 'FIST') {
+                bubble.innerText = "💥 POP!";
+                bubble.classList.remove('scale-0');
+                
+                if (state.hoveredObject && !state.grabbedObject) {
+                    spawnConfetti(state.hoveredObject.position, state.hoveredObject.material.color);
+                    Sound.playPop();
+                    scene.remove(state.hoveredObject);
+                    toys.splice(toys.indexOf(state.hoveredObject), 1);
+                    state.hoveredObject = null;
+                    setTimeout(() => spawnToy(), 1000);
+                }
+            }
+            else {
+                // RELEASE
+                bubble.classList.add('scale-0');
+                cursorMesh.material.color.setHex(0xFFFFFF);
+
+                if (state.grabbedObject) {
+                    // Check Drop
+                    const dist = state.grabbedObject.position.distanceTo(new THREE.Vector3(0, -1, 0));
+                    
+                    if (dist < 2.0) {
+                        Sound.playSuccess();
+                        spawnConfetti(state.grabbedObject.position, 0xFFD700);
+                        state.score += 10;
+                        scoreEl.innerText = "⭐ " + state.score;
+                        scoreEl.classList.remove('score-pop');
+                        void scoreEl.offsetWidth; 
+                        scoreEl.classList.add('score-pop');
+                        scene.remove(state.grabbedObject);
+                        toys.splice(toys.indexOf(state.grabbedObject), 1);
+                        setTimeout(() => spawnToy(), 500);
+                    } else {
+                        // Release without score - Reset rotation smoothly?
+                        // Just leave it
+                    }
+
+                    state.grabbedObject = null;
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Store previous for velocity calc
+            state.prevHandPosition.copy(state.handPosition);
+
+            // Smooth Hand Movement
+            state.handPosition.lerp(state.targetHandPosition, CONFIG.smoothing);
+            
+            // Calculate Velocity (for tilt effects)
+            state.handVelocity.subVectors(state.handPosition, state.prevHandPosition);
+
+            cursorGroup.position.copy(state.handPosition);
+
+            const time = Date.now() * 0.001;
+            goalRing.rotation.z = time * 0.5;
+            glowPlane.scale.setScalar(1 + Math.sin(time*2)*0.1);
+
+            toys.forEach(toy => {
+                if (toy !== state.grabbedObject) {
+                    toy.position.y += Math.sin(time + parseFloat(toy.userData.id))*0.005;
+                    toy.rotation.x += toy.userData.rotSpeed.x;
+                    toy.rotation.y += toy.userData.rotSpeed.y;
+                }
+            });
+
+            for(let i=confetti.length-1; i>=0; i--) {
+                const c = confetti[i];
+                c.position.add(c.userData.vel);
+                c.userData.vel.y -= 0.01;
+                c.rotation.x += 0.1;
+                c.scale.multiplyScalar(0.95);
+                if(c.scale.x < 0.01) {
+                    scene.remove(c);
+                    confetti.splice(i, 1);
+                }
+            }
+
+            updateGame();
+            renderer.render(scene, camera);
+        }
+
+        // --- MediaPipe Handling ---
+        const videoElement = document.getElementById('input-video');
+        const canvasElement = document.getElementById('output-canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                
+                // Draw Base Skeleton
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#FFFFFF', lineWidth: 2});
+                
+                // Key Landmarks
+                const indexTip = landmarks[8];
+                const thumbTip = landmarks[4];
+                const wrist = landmarks[0];
+                const indexMCP = landmarks[5]; // Base of index finger
+
+                // 1. Adaptive Hand Size (Reference for depth/size)
+                // Distance from Wrist to Index Base is mechanically stable
+                const handSize = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
+                
+                // 2. Pinch Distance
+                const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+                
+                // 3. Normalized Pinch (0 to ~1.0)
+                // When tips touch, dist is small but non-zero. When open, dist is large.
+                // We divide by handSize to make it scale-invariant
+                const normalizedPinch = pinchDist / handSize; 
+                state.pinchValue = normalizedPinch;
+
+                // 4. Update 3D Cursor Target
+                const ndcX = (1 - indexTip.x) * 2 - 1;
+                const ndcY = -(indexTip.y * 2 - 1);
+                state.ndc = {x: ndcX, y: ndcY};
+                
+                const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
+                vector.unproject(camera);
+                const dir = vector.sub(camera.position).normalize();
+                const distance = -camera.position.z / dir.z;
+                const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+                state.targetHandPosition.copy(pos); // We lerp to this in animate()
+
+                // 5. Logic with Hysteresis ("Stickiness")
+                // This prevents dropping items due to jitter
+                if (state.gesture === 'PINCH') {
+                    // To release, you must open your hand WIDER than the grab point
+                    if (normalizedPinch > CONFIG.pinchThresholdEnd) {
+                        state.gesture = 'OPEN';
+                    }
+                } else {
+                    // To grab, you must close closer than the threshold
+                    if (normalizedPinch < CONFIG.pinchThresholdStart) {
+                        state.gesture = 'PINCH';
+                    }
+                }
+
+                // 6. Fist Detection Check (secondary)
+                const middleTip = landmarks[12];
+                const ringTip = landmarks[16];
+                const pinkyTip = landmarks[20];
+                const tips = [indexTip, middleTip, ringTip, pinkyTip];
+                let avgDist = 0;
+                tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
+                avgDist /= 4; // Average distance of tips to wrist
+                // Fist logic: if tips are very close to wrist relative to hand size
+                if (state.gesture !== 'PINCH' && (avgDist / handSize) < 0.9) {
+                    state.gesture = 'FIST';
+                }
+
+                // 7. Visual Feedback for Pinch
+                // ONLY draw guide if NOT holding an object
+                if (state.gesture !== 'PINCH') {
+                    let guideColor = '#FF4444'; // Red
+                    let guideWidth = 2;
+
+                    // Show yellow when getting close
+                    if (normalizedPinch < CONFIG.pinchThresholdEnd) {
+                        guideColor = '#FFFF00'; // Yellow
+                        guideWidth = 4;
+                    }
+
+                    // Draw Pinch Connector
+                    canvasCtx.beginPath();
+                    canvasCtx.moveTo(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height);
+                    canvasCtx.lineTo(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height);
+                    canvasCtx.strokeStyle = guideColor;
+                    canvasCtx.lineWidth = guideWidth;
+                    canvasCtx.stroke();
+
+                    // Draw Tips
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height, 4, 0, 2 * Math.PI);
+                    canvasCtx.arc(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height, 4, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = guideColor;
+                    canvasCtx.fill();
+                }
+
+            } else {
+                state.gesture = 'NONE';
+            }
+            canvasCtx.restore();
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        // Increased confidence slightly to reduce "ghost" hands, kept tracking loose for speed
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
+
+        // --- Init ---
+        const startBtn = document.getElementById('start-btn');
+        const loader = document.getElementById('loader');
+        const uiLayer = document.getElementById('ui-layer');
+
+        startBtn.addEventListener('click', async () => {
+            if(audioCtx.state === 'suspended') await audioCtx.resume();
+            
+            document.getElementById('status-text').classList.remove('hidden');
+            startBtn.style.display = 'none';
+
+            const cameraUtils = new Camera(videoElement, {
+                onFrame: async () => { await hands.send({image: videoElement}); },
+                width: 640, height: 480
+            });
+            await cameraUtils.start();
+
+            loader.style.opacity = 0;
+            setTimeout(() => {
+                loader.style.display = 'none';
+                uiLayer.classList.remove('hidden');
+            }, 500);
+
+            animate();
+        });
+
+        // Mouse Fallback
+        window.addEventListener('mousemove', (e) => {
+            if(state.gesture === 'NONE') {
+                const x = e.clientX / window.innerWidth;
+                const y = e.clientY / window.innerHeight;
+                const ndcX = (x * 2) - 1;
+                const ndcY = -(y * 2) + 1;
+                state.ndc = {x: ndcX, y: ndcY};
+                const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
+                vector.unproject(camera);
+                const dir = vector.sub(camera.position).normalize();
+                const distance = -camera.position.z / dir.z;
+                const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+                state.targetHandPosition.copy(pos); // Mouse also uses lerp now
+            }
+        });
+        window.addEventListener('mousedown', () => { if(state.gesture === 'NONE') state.gesture = 'PINCH'; });
+        window.addEventListener('mouseup', () => { if(state.gesture === 'NONE') state.gesture = 'OPEN'; });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
 </body>
 </html>
