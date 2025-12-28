@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Sky Toy Sort - Magic Hand Game</title>
     <!-- Tailwind CSS for UI -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,7 +22,15 @@
     </script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #87CEEB; 
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            touch-action: none; /* Prevent scroll on mobile */
+            user-select: none;
+            -webkit-user-select: none;
+        }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
         /* Fun UI Overlay */
@@ -39,6 +47,18 @@
             background: #fff;
             z-index: 20;
             box-shadow: 0 8px 0px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        /* Mobile adjustments for preview */
+        @media (max-width: 640px) {
+            .cam-preview {
+                width: 120px;
+                height: 90px;
+                top: 10px;
+                right: 10px;
+                border-width: 3px;
+            }
         }
         
         .score-board {
@@ -54,6 +74,14 @@
             animation: bounceIn 1s;
         }
 
+        @media (max-width: 640px) {
+            .score-board {
+                font-size: 1.5rem;
+                padding: 5px 15px;
+                border-width: 3px;
+            }
+        }
+
         .gesture-bubble {
             background: white;
             padding: 15px 30px;
@@ -66,12 +94,22 @@
             transition: transform 0.2s;
         }
 
+        @media (max-width: 640px) {
+            .gesture-bubble {
+                padding: 8px 16px;
+                font-size: 1rem;
+                border-width: 2px;
+            }
+        }
+
         /* Loading Screen - Kid Friendly */
         #loader {
             position: fixed; inset: 0; background: #87CEEB; z-index: 50;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; transition: opacity 0.5s;
             background-image: radial-gradient(circle, #87CEEB 10%, #4FA3D1 90%);
+            padding: 20px;
+            text-align: center;
         }
         
         .start-btn {
@@ -107,15 +145,35 @@
         }
         .instruction-row { display: flex; align-items: center; margin-bottom: 10px; font-size: 1.1rem; color: #555; }
         .emoji-icon { font-size: 2rem; margin-right: 15px; width: 40px; text-align: center; }
+
+        @media (max-width: 640px) {
+            .instructions {
+                padding: 10px;
+                max-width: 100%;
+                width: 100%;
+                margin-top: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-around;
+            }
+            .instruction-row {
+                font-size: 0.8rem;
+                margin-bottom: 0;
+            }
+            .emoji-icon {
+                font-size: 1.2rem;
+                margin-right: 5px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <!-- Loading / Start Screen -->
     <div id="loader">
-        <h1 class="text-6xl font-black mb-4 text-white drop-shadow-lg tracking-wider" style="-webkit-text-stroke: 3px #333;">SKY TOY SORT</h1>
-        <div class="text-2xl text-white mb-10 font-bold bg-white/20 px-6 py-2 rounded-full">Use your hands to clean up the sky!</div>
-        <button id="start-btn" class="start-btn">PLAY!</button>
+        <h1 class="text-4xl md:text-6xl font-black mb-4 text-white drop-shadow-lg tracking-wider" style="-webkit-text-stroke: 2px #333;">SKY TOY SORT</h1>
+        <div class="text-lg md:text-2xl text-white mb-10 font-bold bg-white/20 px-6 py-2 rounded-full">Use your hands or touch screen!</div>
+        <button id="start-btn" class="start-btn text-xl md:text-3xl px-8 py-4 md:px-16 md:py-6">PLAY!</button>
         <p id="status-text" class="mt-8 text-xl text-white font-bold hidden animate-pulse">Waking up the robots...</p>
     </div>
 
@@ -137,12 +195,11 @@
             </div>
         </div>
         
-        <div class="flex justify-between items-end w-full">
+        <div class="flex flex-col-reverse md:flex-row justify-between items-end w-full">
             <div class="instructions pointer-events-auto">
-                <div class="instruction-row"><span class="emoji-icon">🤏</span> <span><b>Pinch</b> to Grab Toys</span></div>
+                <div class="instruction-row"><span class="emoji-icon">🤏</span> <span><b>Pinch/Tap</b> to Grab</span></div>
                 <div class="instruction-row"><span class="emoji-icon">🎯</span> <span><b>Drag</b> to Ring</span></div>
-                <div class="instruction-row"><span class="emoji-icon">✊</span> <span><b>Fist</b> to Pop Bubbles</span></div>
-                <div class="text-xs text-gray-400 mt-2">Tip: Keep your hand visible!</div>
+                <div class="instruction-row"><span class="emoji-icon">✊</span> <span><b>Fist</b> to Pop</span></div>
             </div>
         </div>
     </div>
@@ -204,7 +261,8 @@
             isGrabbing: false,
             grabbedObject: null,
             hoveredObject: null,
-            pinchValue: 1.0 // 0 = closed, 1 = open
+            pinchValue: 1.0, // 0 = closed, 1 = open
+            inputType: 'camera' // 'camera' or 'touch'
         };
 
         // --- Three.js Setup ---
@@ -451,9 +509,6 @@
                         scene.remove(state.grabbedObject);
                         toys.splice(toys.indexOf(state.grabbedObject), 1);
                         setTimeout(() => spawnToy(), 500);
-                    } else {
-                        // Release without score - Reset rotation smoothly?
-                        // Just leave it
                     }
 
                     state.grabbedObject = null;
@@ -514,6 +569,7 @@
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                state.inputType = 'camera';
                 const landmarks = results.multiHandLandmarks[0];
                 
                 // Draw Base Skeleton
@@ -606,7 +662,8 @@
                 }
 
             } else {
-                state.gesture = 'NONE';
+                // If no hands, we might be using mouse/touch, so don't force NONE unless we want to reset
+                // state.gesture = 'NONE';
             }
             canvasCtx.restore();
         }
@@ -627,11 +684,27 @@
             document.getElementById('status-text').classList.remove('hidden');
             startBtn.style.display = 'none';
 
+            // Check if mobile for camera constraints
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const constraints = {
+                video: {
+                    width: 640,
+                    height: 480,
+                    facingMode: 'user' // Prefer front camera
+                }
+            };
+
             const cameraUtils = new Camera(videoElement, {
                 onFrame: async () => { await hands.send({image: videoElement}); },
-                width: 640, height: 480
+                width: 640, height: 480,
+                facingMode: 'user'
             });
-            await cameraUtils.start();
+            
+            try {
+                await cameraUtils.start();
+            } catch(e) {
+                console.warn("Camera failed or denied. Falling back to Touch/Mouse.");
+            }
 
             loader.style.opacity = 0;
             setTimeout(() => {
@@ -639,33 +712,76 @@
                 uiLayer.classList.remove('hidden');
             }, 500);
 
+            handleResize(); // Initial setup for orientation
             animate();
         });
 
-        // Mouse Fallback
+        // --- Mouse & Touch Fallback Logic ---
+        function updatePointerInput(x, y) {
+            state.inputType = 'touch';
+            const ndcX = (x * 2) - 1;
+            const ndcY = -(y * 2) + 1;
+            state.ndc = {x: ndcX, y: ndcY};
+            const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
+            vector.unproject(camera);
+            const dir = vector.sub(camera.position).normalize();
+            const distance = -camera.position.z / dir.z;
+            const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+            state.targetHandPosition.copy(pos);
+        }
+
+        // Mouse Events
         window.addEventListener('mousemove', (e) => {
-            if(state.gesture === 'NONE') {
-                const x = e.clientX / window.innerWidth;
-                const y = e.clientY / window.innerHeight;
-                const ndcX = (x * 2) - 1;
-                const ndcY = -(y * 2) + 1;
-                state.ndc = {x: ndcX, y: ndcY};
-                const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
-                vector.unproject(camera);
-                const dir = vector.sub(camera.position).normalize();
-                const distance = -camera.position.z / dir.z;
-                const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-                state.targetHandPosition.copy(pos); // Mouse also uses lerp now
+            if (state.inputType === 'touch') { // Only override if not actively using camera
+                updatePointerInput(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
             }
         });
-        window.addEventListener('mousedown', () => { if(state.gesture === 'NONE') state.gesture = 'PINCH'; });
-        window.addEventListener('mouseup', () => { if(state.gesture === 'NONE') state.gesture = 'OPEN'; });
+        window.addEventListener('mousedown', () => { if(state.inputType === 'touch') state.gesture = 'PINCH'; });
+        window.addEventListener('mouseup', () => { if(state.inputType === 'touch') state.gesture = 'OPEN'; });
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // Touch Events
+        window.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Stop scroll
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                updatePointerInput(touch.clientX / window.innerWidth, touch.clientY / window.innerHeight);
+                state.gesture = 'PINCH';
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                updatePointerInput(touch.clientX / window.innerWidth, touch.clientY / window.innerHeight);
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchend', (e) => {
+             state.gesture = 'OPEN';
         });
+
+        function handleResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const aspect = width / height;
+            
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+
+            // Portrait Mode Adjustment
+            if (aspect < 1) {
+                camera.position.z = CONFIG.camZ + 8; // Zoom out significantly
+                camera.position.y = 4; // Look down a bit more
+            } else {
+                camera.position.z = CONFIG.camZ;
+                camera.position.y = 2;
+            }
+            camera.lookAt(0, 0, 0);
+        }
+
+        window.addEventListener('resize', handleResize);
 
     </script>
 </body>
