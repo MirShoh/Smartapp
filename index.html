@@ -741,6 +741,11 @@
 
         // Touch Events
         window.addEventListener('touchstart', (e) => {
+            // FIX: Allow the start button to be clicked!
+            if (e.target.id === 'start-btn' || e.target.closest('button')) {
+                return;
+            }
+
             e.preventDefault(); // Stop scroll
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
@@ -750,6 +755,9 @@
         }, {passive: false});
 
         window.addEventListener('touchmove', (e) => {
+            // Allow default behavior if touching the button (rare, but safe)
+            if (e.target.id === 'start-btn') return;
+
             e.preventDefault();
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
