@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Bolalar uchun interaktiv 3D kosmik o'yin - qo'l harakatlari bilan boshqarish">
+    <title>Galaktika Qahramoni - 3D Interaktiv O'yin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 3D Canvas -->
+        <canvas id="canvas3d"></canvas>
+        
+        <!-- Video Camera -->
+        <video id="video" autoplay playsinline muted></video>
+        
+        <!-- Hand Cursor -->
+        <div class="hand-cursor" id="handCursor">
+            <div class="cursor-ring"></div>
+        </div>
+
+        <!-- Gesture Status Indicator -->
+        <div class="gesture-status" id="gestureStatus">
+            <div class="gesture-icon" id="gestureIcon">👋</div>
+            <div class="gesture-name" id="gestureName">Qo'lingizni ko'rsating</div>
+            <div class="gesture-confidence">
+                <div class="confidence-bar" id="confidenceBar"></div>
+            </div>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="screen active">
+            <div class="loading-content">
+                <div class="rocket-animation">🚀</div>
+                <h1>Galaktika Qahramoni</h1>
+                <p class="loading-text">Kosmik sarguzasht yuklanmoqda...</p>
+                <div class="progress-loading">
+                    <div class="progress-loading-bar" id="loadingProgress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen">
+            <div class="stars-bg"></div>
+            <div class="screen-content">
+                <div class="logo-container">
+                    <h1 class="main-title">
+                        <span class="title-icon">🚀</span>
+                        GALAKTIKA QAHRAMONI
+                        <span class="title-icon">🌟</span>
+                    </h1>
+                    <p class="subtitle">Bolajonlar uchun 3D Sarguzasht</p>
+                </div>
+                
+                <div class="menu-container">
+                    <button class="menu-button primary" onclick="game.showCharacterSelect()" data-sound="click">
+                        <span class="btn-icon">🎮</span>
+                        <span class="btn-text">Boshlash</span>
+                    </button>
+                    <button class="menu-button secondary" onclick="game.showTutorial()" data-sound="click">
+                        <span class="btn-icon">📚</span>
+                        <span class="btn-text">Qo'llanma</span>
+                    </button>
+                    <button class="menu-button secondary" onclick="game.showSettings()" data-sound="click">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-text">Sozlamalar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Screen -->
+        <div id="tutorialScreen" class="screen">
+            <button class="back-button" onclick="game.showStartScreen()" aria-label="Orqaga">
+                <span>⬅️</span>
+            </button>
+            <div class="screen-content">
+                <h1>📚 Qo'llanma</h1>
+                
+                <div class="tutorial-grid">
+                    <div class="tutorial-card">
+                        <div class="tutorial-icon">👋</div>
+                        <h3>Ochiq Kaft</h3>
+                        <p>Sayyorani tanlash</p>
+                        <div class="tutorial-demo">
+                            <div class="hand-demo open"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-card">
+                        <div class="tutorial-icon">🤏</div>
+                        <h3>Qisish</h3>
+                        <p>Ushlab sudrab borish</p>
+                        <div class="tutorial-demo">
+                            <div class="hand-demo pinch"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-card">
+                        <div class="tutorial-icon">👍</div>
+                        <h3>Thumbs Up</h3>
+                        <p>Tasdiqlash</p>
+                        <div class="tutorial-demo">
+                            <div class="hand-demo thumbsup"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-card">
+                        <div class="tutorial-icon">✊</div>
+                        <h3>Mushtlash</h3>
+                        <p>Maxsus harakat</p>
+                        <div class="tutorial-demo">
+                            <div class="hand-demo fist"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-icon">💡</div>
+                    <div class="info-text">
+                        <strong>Maslahat:</strong> Kamerani yaxshi yoritilgan joyda ishlating. 
+                        Qo'lingizni kameradan 30-50 cm masofada ushlab turing.
+                    </div>
+                </div>
+
+                <button class="menu-button primary" onclick="game.showCharacterSelect()" style="margin-top: 30px;">
+                    <span>Davom etish ➡️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Character Selection -->
+        <div id="characterScreen" class="screen">
+            <button class="back-button" onclick="game.showStartScreen()">
+                <span>⬅️</span>
+            </button>
+            <div class="screen-content">
+                <h1>👨‍🚀 Qahramonni Tanlang</h1>
+                
+                <div class="character-grid">
+                    <div class="character-card" data-character="boy" onclick="game.selectCharacter('boy')">
+                        <div class="character-badge">Mashhur</div>
+                        <div class="character-icon">👦</div>
+                        <div class="character-name">Astronaut Bola</div>
+                        <div class="character-description">Jasur va qiziquvchan</div>
+                        <div class="character-stats">
+                            <span>⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                    
+                    <div class="character-card" data-character="girl" onclick="game.selectCharacter('girl')">
+                        <div class="character-badge">Mashhur</div>
+                        <div class="character-icon">👧</div>
+                        <div class="character-name">Astronaut Qiz</div>
+                        <div class="character-description">Aqlli va dadil</div>
+                        <div class="character-stats">
+                            <span>⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                    
+                    <div class="character-card" data-character="robot" onclick="game.selectCharacter('robot')">
+                        <div class="character-badge new">Yangi</div>
+                        <div class="character-icon">🤖</div>
+                        <div class="character-name">Robot Do'st</div>
+                        <div class="character-description">Aqlli maslahatchi</div>
+                        <div class="character-stats">
+                            <span>⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                    
+                    <div class="character-card" data-character="alien" onclick="game.selectCharacter('alien')">
+                        <div class="character-badge new">Yangi</div>
+                        <div class="character-icon">👽</div>
+                        <div class="character-name">Do'st Alien</div>
+                        <div class="character-description">Kuchli va do'stona</div>
+                        <div class="character-stats">
+                            <span>⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="menu-button primary" id="continueButton" onclick="game.showMissionSelect()" style="margin-top: 30px; display: none;">
+                    <span>Davom etish ➡️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mission Selection -->
+        <div id="missionScreen" class="screen">
+            <button class="back-button" onclick="game.showCharacterSelect()">
+                <span>⬅️</span>
+            </button>
+            <div class="screen-content">
+                <h1>🎯 Missiyani Tanlang</h1>
+                
+                <div class="mission-list">
+                    <div class="mission-card" data-mission="drag" onclick="game.startMission('drag')">
+                        <div class="mission-icon">🎨</div>
+                        <div class="mission-info">
+                            <h3>Drag & Drop</h3>
+                            <p>Sayyoralarni to'g'ri joyiga qo'ying</p>
+                            <div class="mission-details">
+                                <span class="mission-difficulty easy">Oson</span>
+                                <span class="mission-reward">💎 +150 ball</span>
+                                <span class="mission-time">⏱️ 5 daqiqa</span>
+                            </div>
+                        </div>
+                        <div class="mission-arrow">→</div>
+                    </div>
+                    
+                    <div class="mission-card" data-mission="quiz" onclick="game.startMission('quiz')">
+                        <div class="mission-icon">🧠</div>
+                        <div class="mission-info">
+                            <h3>Tanlash Quiz</h3>
+                            <p>10 ta savolga javob bering</p>
+                            <div class="mission-details">
+                                <span class="mission-difficulty medium">O'rta</span>
+                                <span class="mission-reward">💎 +100 ball</span>
+                                <span class="mission-time">⏱️ 10 daqiqa</span>
+                            </div>
+                        </div>
+                        <div class="mission-arrow">→</div>
+                    </div>
+                    
+                    <div class="mission-card" data-mission="movement" onclick="game.startMission('movement')">
+                        <div class="mission-icon">🎮</div>
+                        <div class="mission-info">
+                            <h3>Harakatli Javob</h3>
+                            <p>Qo'l bilan to'g'ri javobni ko'rsating</p>
+                            <div class="mission-details">
+                                <span class="mission-difficulty hard">Qiyin</span>
+                                <span class="mission-reward">💎 +120 ball</span>
+                                <span class="mission-time">⏱️ 7 daqiqa</span>
+                            </div>
+                        </div>
+                        <div class="mission-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game UI -->
+        <div id="gameUI">
+            <button class="back-button" onclick="game.exitGame()">
+                <span>⬅️</span>
+            </button>
+            
+            <!-- Game Header -->
+            <div class="game-header">
+                <div class="stat-card">
+                    <span class="stat-icon">⭐</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Ball</span>
+                        <span class="stat-value" id="scoreDisplay">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-icon">💎</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Level</span>
+                        <span class="stat-value" id="levelDisplay">1</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-icon">❤️</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Jon</span>
+                        <span class="stat-value" id="livesDisplay">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar">
+                        <span class="progress-text">0/10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drag & Drop Targets -->
+            <div class="drag-targets" id="dragTargets">
+                <div class="drop-zone" data-planet="sun">
+                    <div class="drop-zone-icon">☀️</div>
+                    <div class="drop-zone-label">Quyosh</div>
+                </div>
+                <div class="drop-zone" data-planet="earth">
+                    <div class="drop-zone-icon">🌍</div>
+                    <div class="drop-zone-label">Yer</div>
+                </div>
+                <div class="drop-zone" data-planet="mars">
+                    <div class="drop-zone-icon">🔴</div>
+                    <div class="drop-zone-label">Mars</div>
+                </div>
+                <div class="drop-zone" data-planet="jupiter">
+                    <div class="drop-zone-icon">🪐</div>
+                    <div class="drop-zone-label">Yupiter</div>
+                </div>
+                <div class="drop-zone" data-planet="saturn">
+                    <div class="drop-zone-icon">💍</div>
+                    <div class="drop-zone-label">Saturn</div>
+                </div>
+                <div class="drop-zone" data-planet="moon">
+                    <div class="drop-zone-icon">🌙</div>
+                    <div class="drop-zone-label">Oy</div>
+                </div>
+            </div>
+
+            <!-- Quiz Panel -->
+            <div class="question-panel" id="questionPanel">
+                <div class="question-number" id="questionNumber">Savol 1/10</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="answers-grid" id="answersGrid"></div>
+                <div class="question-timer">
+                    <div class="timer-icon">⏱️</div>
+                    <div class="timer-text" id="timerText">30s</div>
+                </div>
+            </div>
+
+            <!-- Movement Game -->
+            <div class="movement-game" id="movementGame">
+                <div class="movement-instruction" id="movementInstruction">
+                    Qo'lingizni ko'rsating!
+                </div>
+                <div class="movement-options" id="movementOptions"></div>
+            </div>
+
+            <!-- Result Screen -->
+            <div class="result-screen" id="resultScreen">
+                <div class="result-content">
+                    <div class="result-icon" id="resultIcon">🏆</div>
+                    <h2 class="result-title" id="resultTitle">Ajoyib!</h2>
+                    <div class="result-stars" id="resultStars">⭐⭐⭐</div>
+                    
+                    <div class="result-stats">
+                        <div class="result-stat">
+                            <span class="result-stat-icon">⭐</span>
+                            <div class="result-stat-info">
+                                <span class="result-stat-label">Yig'ilgan ballar</span>
+                                <span class="result-stat-value" id="finalScore">0</span>
+                            </div>
+                        </div>
+                        <div class="result-stat">
+                            <span class="result-stat-icon">✅</span>
+                            <div class="result-stat-info">
+                                <span class="result-stat-label">To'g'ri javoblar</span>
+                                <span class="result-stat-value" id="correctAnswers">0/10</span>
+                            </div>
+                        </div>
+                        <div class="result-stat">
+                            <span class="result-stat-icon">⚡</span>
+                            <div class="result-stat-info">
+                                <span class="result-stat-label">Aniqlik</span>
+                                <span class="result-stat-value" id="accuracyPercent">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="menu-button primary" onclick="game.restartMission()">
+                            <span class="btn-icon">🔄</span>
+                            <span class="btn-text">Qayta o'ynash</span>
+                        </button>
+                        <button class="menu-button secondary" onclick="game.showMissionSelect()">
+                            <span class="btn-icon">🎯</span>
+                            <span class="btn-text">Boshqa missiya</span>
+                        </button>
+                        <button class="menu-button secondary" onclick="game.showStartScreen()">
+                            <span class="btn-icon">🏠</span>
+                            <span class="btn-text">Bosh menyu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Particles Effect -->
+        <div class="particles" id="particles"></div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    
+    <!-- Game Script -->
+    <script src="script.js"></script>
+</body>
+</html>
