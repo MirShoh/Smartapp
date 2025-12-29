@@ -1,532 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Hand Controller - 3D Interactive</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
-        
-        /* Webcam Preview (Mirrored) */
-        #video-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 200px;
-            height: 150px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            z-index: 10;
-            background: #222;
-        }
-        #webcam {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror effect */
-        }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>3D Model Playground</title>
+        <link rel="stylesheet" href="styles.css">
 
-        /* UI Overlays */
-        #loading {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify_content: center;
-            z-index: 20;
-            transition: opacity 0.5s;
-        }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        <!-- Primary Meta Tags -->
+        <meta name="title" content="3D Model Playground">
+        <meta name="description" content="Control 3D models with hand gestures & voice commands">
 
-        #instructions {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: rgba(255, 255, 255, 0.8);
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 8px;
-            pointer-events: none;
-            user-select: none;
-            max-width: 300px;
-        }
-        h1 { margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; color: #8ecae6; }
-        ul { padding-left: 20px; margin: 0; font-size: 0.9rem; }
-        li { margin-bottom: 5px; }
-        .gesture { color: #ffb703; font-weight: bold; }
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://collidingscopes.github.io/3d-model-playground/">
+        <meta property="og:title" content="3D Model Playground">
+        <meta property="og:description" content="Control 3D models with hand gestures & voice commands">
+        <meta property="og:image" content="https://raw.githubusercontent.com/collidingScopes/3d-model-playground/main/assets/siteOGImage.jpg">
 
-        /* Cursor helper */
-        #cursor-tracker {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            display: none; /* We use 3D cursor, but keeping this for debug if needed */
-            z-index: 5;
-        }
-    </style>
-</head>
-<body>
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://collidingscopes.github.io/3d-model-playground/">
+        <meta property="twitter:title" content="3D Model Playground">
+        <meta property="twitter:description" content="Control 3D models with hand gestures & voice commands">
+        <meta property="twitter:image" content="https://raw.githubusercontent.com/collidingScopes/3d-model-playground/main/assets/siteOGImage.jpg">
 
-    <!-- 3D Canvas -->
-    <div id="canvas-container"></div>
-
-    <!-- Webcam Feed -->
-    <div id="video-container">
-        <video id="webcam" playsinline></video>
-    </div>
-
-    <!-- Loading Screen -->
-    <div id="loading">
-        <div class="loader"></div>
-        <h2>Initializing AI Vision...</h2>
-        <p>Please allow camera access.</p>
-    </div>
-
-    <!-- Instructions -->
-    <div id="instructions">
-        <h1>Cosmic Controls</h1>
-        <ul>
-            <li><span class="gesture">Open Palm:</span> Hover & Select</li>
-            <li><span class="gesture">Pinch (Thumb+Index):</span> Grab & Drag</li>
-            <li><span class="gesture">Rotate Wrist:</span> Spin Block</li>
-            <li><span class="gesture">Fist:</span> Explode Block!</li>
-            <li><span class="gesture">Thumbs Up:</span> Duplicate Block</li>
-            <li><span class="gesture">Wave (Edge):</span> Pan Camera</li>
-        </ul>
-    </div>
-
-    <!-- Main Application Logic -->
-    <script type="module">
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-        import { FilesetResolver, HandLandmarker } from 'https://unpkg.com/@mediapipe/tasks-vision@0.10.0/vision_bundle.js';
-
-        // --- Configuration ---
-        const CONFIG = {
-            blockCount: 15,
-            colors: [0x4CC9F0, 0x4361EE, 0x3A0CA3, 0x7209B7, 0xF72585], // Cyberpunk/Cosmic palette
-            starCount: 1000,
-            pinchThreshold: 0.05, // Distance between thumb and index to trigger pinch
-            cameraSpeed: 0.1
-        };
-
-        // --- Global Variables ---
-        let scene, camera, renderer;
-        let blocks = [];
-        let particles = [];
-        let handLandmarker = undefined;
-        let webcam = null;
-        let lastVideoTime = -1;
-        let results = undefined;
-        
-        // State Machine
-        let state = {
-            isPinched: false,
-            isFist: false,
-            isThumbsUp: false,
-            grabbedObject: null,
-            handPosition: new THREE.Vector2(), // Normalized screen coordinates
-            hand3DPos: new THREE.Vector3(),
-            lastGestureTime: 0
-        };
-
-        // --- 1. Three.js Setup (The Virtual World) ---
-        function initThreeJS() {
-            const container = document.getElementById('canvas-container');
-            
-            // Scene
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x050510, 0.02); // Deep space fog
-
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 10;
-
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            container.appendChild(renderer.domElement);
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft white light
-            scene.add(ambientLight);
-
-            const pointLight = new THREE.PointLight(0xffffff, 2, 50);
-            pointLight.position.set(0, 10, 10);
-            scene.add(pointLight);
-            
-            // Add a light that follows the camera/hand roughly
-            const handLight = new THREE.PointLight(0xaaeeff, 1, 20);
-            handLight.position.set(0,0,5);
-            scene.add(handLight);
-            state.handLight = handLight;
-
-            // Background Stars
-            createStars();
-
-            // Floating Blocks
-            createBlocks(CONFIG.blockCount);
-
-            // 3D Cursor (Visual feedback for hand)
-            const cursorGeo = new THREE.RingGeometry(0.15, 0.2, 32);
-            const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
-            state.cursorMesh = new THREE.Mesh(cursorGeo, cursorMat);
-            scene.add(state.cursorMesh);
-
-            // Resize Handler
-            window.addEventListener('resize', onWindowResize);
-            
-            animate();
-        }
-
-        function createStars() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < CONFIG.starCount; i++) {
-                vertices.push(
-                    (Math.random() - 0.5) * 100,
-                    (Math.random() - 0.5) * 100,
-                    (Math.random() - 0.5) * 50 - 20 // Mostly in background
-                );
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-            const stars = new THREE.Points(geometry, material);
-            scene.add(stars);
-        }
-
-        function createBlocks(count) {
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            
-            for (let i = 0; i < count; i++) {
-                spawnBlock(geometry);
-            }
-        }
-
-        function spawnBlock(geometry, pos = null) {
-            // Iridescent Material
-            const color = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
-            const material = new THREE.MeshPhysicalMaterial({
-                color: color,
-                metalness: 0.1,
-                roughness: 0.2,
-                transmission: 0.6, // Glass-like
-                thickness: 0.5,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.1,
-            });
-
-            const mesh = new THREE.Mesh(geometry || new THREE.BoxGeometry(1,1,1), material);
-            
-            if (pos) {
-                mesh.position.copy(pos);
-            } else {
-                mesh.position.x = (Math.random() - 0.5) * 12;
-                mesh.position.y = (Math.random() - 0.5) * 8;
-                mesh.position.z = (Math.random() - 0.5) * 5;
-            }
-
-            // Random rotation speed
-            mesh.userData = {
-                rotSpeed: { x: (Math.random()-0.5)*0.01, y: (Math.random()-0.5)*0.01 },
-                floatSpeed: Math.random() * 0.005 + 0.002,
-                floatOffset: Math.random() * Math.PI * 2,
-                originalColor: color
-            };
-
-            // Glow outline (using a slightly larger mesh with backface culling inverted? Or just wireframe)
-            const edgeGeo = new THREE.EdgesGeometry(mesh.geometry);
-            const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
-            const wireframe = new THREE.LineSegments(edgeGeo, edgeMat);
-            mesh.add(wireframe);
-            mesh.userData.wireframe = wireframe;
-
-            blocks.push(mesh);
-            scene.add(mesh);
-            return mesh;
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- 2. AI Hand Tracking (MediaPipe) ---
-        async function initHandTracking() {
-            const vision = await FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-            );
-            
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-                    delegate: "GPU"
-                },
-                runningMode: "VIDEO",
-                numHands: 1
-            });
-
-            startWebcam();
-        }
-
-        function startWebcam() {
-            webcam = document.getElementById("webcam");
-            const constraints = { video: { width: 640, height: 480 } };
-
-            navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-                webcam.srcObject = stream;
-                webcam.addEventListener("loadeddata", () => {
-                    document.getElementById('loading').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loading').remove(), 500);
-                    predictWebcam();
-                });
-            }).catch(err => {
-                document.getElementById('loading').innerHTML = `<h2>Error</h2><p>Webcam access denied.</p>`;
-            });
-        }
-
-        async function predictWebcam() {
-            if (lastVideoTime !== webcam.currentTime) {
-                lastVideoTime = webcam.currentTime;
-                results = handLandmarker.detectForVideo(webcam, performance.now());
-            }
-            
-            processHandData(); // Logic glue
-            
-            requestAnimationFrame(predictWebcam);
-        }
-
-        // --- 3. Interaction Logic (The Brains) ---
-        function processHandData() {
-            if (!results || !results.landmarks || results.landmarks.length === 0) {
-                // No hand detected
-                state.cursorMesh.visible = false;
-                state.handLight.intensity = 0;
-                return;
-            }
-
-            const landmarks = results.landmarks[0]; // Get first hand
-            
-            // 1. Calculate Hand Position (Index Base/MCP)
-            // Landmarks are 0-1. 0,0 is Top-Left. 
-            // We mirror X because webcam is mirrored.
-            const x = 1 - landmarks[9].x; 
-            const y = 1 - landmarks[9].y; // Invert Y for 3D mapping later logic often easier with 0-1
-            
-            // Convert to Screen Coordinates for Raycaster (-1 to +1)
-            state.handPosition.x = (x * 2) - 1;
-            state.handPosition.y = (y * 2) - 1; // Actually ThreeJS Y is up, so (1-y)*2 -1
-            state.handPosition.y = -((1 - y) * 2 - 1); // Flip Y logic: MediaPipe Y is top-down (0->1). ThreeJS is bottom-up (-1->1).
-
-            // Update 3D Cursor
-            updateCursorVisuals(state.handPosition.x, state.handPosition.y);
-
-            // 2. Gesture Recognition
-            const thumbTip = landmarks[4];
-            const indexTip = landmarks[8];
-            const middleTip = landmarks[12];
-            const ringTip = landmarks[16];
-            const pinkyTip = landmarks[20];
-            const wrist = landmarks[0];
-
-            // Distance Utility
-            const dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-
-            // A. Pinch Detection (Grab)
-            const pinchDist = dist(thumbTip, indexTip);
-            state.isPinched = pinchDist < CONFIG.pinchThreshold;
-
-            // B. Fist Detection (Explode)
-            // Check if fingertips are close to wrist
-            const tips = [indexTip, middleTip, ringTip, pinkyTip];
-            let foldedCount = 0;
-            tips.forEach(tip => { if (dist(tip, wrist) < 0.15) foldedCount++; });
-            state.isFist = foldedCount >= 3;
-
-            // C. Thumbs Up (Duplicate)
-            // Thumb tip is significantly higher (lower y value) than index knuckle, and other fingers folded
-            state.isThumbsUp = (thumbTip.y < landmarks[5].y - 0.05) && (foldedCount >= 3);
-
-            // D. Wrist Rotation (Spin)
-            // Calculate angle of Index MCP (5) relative to Wrist (0)
-            const dx = landmarks[5].x - wrist.x;
-            const dy = landmarks[5].y - wrist.y;
-            state.wristAngle = Math.atan2(dy, dx);
-
-            // Interaction Loop
-            handleInteractions();
-        }
-
-        function updateCursorVisuals(nx, ny) {
-            // Project screen coords to 3D plane at Z=0
-            const vec = new THREE.Vector3(nx, ny, 0.5);
-            vec.unproject(camera);
-            const dir = vec.sub(camera.position).normalize();
-            const distance = -camera.position.z / dir.z; // Intersection with Z=0 plane
-            const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-            
-            state.hand3DPos.copy(pos);
-            state.cursorMesh.position.copy(pos);
-            state.cursorMesh.visible = true;
-            
-            state.handLight.position.copy(pos);
-            state.handLight.position.z += 2;
-            state.handLight.intensity = 1.5;
-
-            // Change cursor color based on state
-            if (state.isPinched) state.cursorMesh.material.color.setHex(0x00ff00);
-            else if (state.isFist) state.cursorMesh.material.color.setHex(0xff0000);
-            else if (state.isThumbsUp) state.cursorMesh.material.color.setHex(0xffff00);
-            else state.cursorMesh.material.color.setHex(0xffffff);
-        }
-
-        function handleInteractions() {
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(state.handPosition, camera);
-            const intersects = raycaster.intersectObjects(blocks);
-
-            // --- Camera Panning (Wave/Edge Hover) ---
-            if (state.handPosition.x > 0.8) camera.position.x += CONFIG.cameraSpeed;
-            if (state.handPosition.x < -0.8) camera.position.x -= CONFIG.cameraSpeed;
-
-            // --- Logic Flow ---
-
-            // 1. If holding an object (Drag)
-            if (state.grabbedObject && state.isPinched) {
-                // Lerp object position to hand position (smooth drag)
-                state.grabbedObject.position.lerp(new THREE.Vector3(state.hand3DPos.x, state.hand3DPos.y, state.grabbedObject.position.z), 0.2);
-                
-                // Rotation based on wrist
-                state.grabbedObject.rotation.z = -state.wristAngle;
-                
-                state.grabbedObject.userData.wireframe.material.color.setHex(0x00ff00);
-                state.grabbedObject.userData.wireframe.material.opacity = 0.8;
-                return; // Exit, don't select new things
-            } else {
-                // Drop object
-                if (state.grabbedObject) {
-                    state.grabbedObject.userData.wireframe.material.color.setHex(0xffffff);
-                    state.grabbedObject.userData.wireframe.material.opacity = 0.3;
-                    state.grabbedObject = null;
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="eb59c81c-27cb-4e1d-9e8c-bfbe70c48cd9"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+                    "three/examples/": "https://unpkg.com/three@0.161.0/examples/jsm/",
+                    "three/loaders/": "https://unpkg.com/three@0.161.0/examples/jsm/loaders/"
                 }
             }
+        </script>
+    </head>
+    <body style="width: 100%; height: 100%; overflow: hidden; margin: 0;">
+        <div id="renderDiv" style="width: 100%; height: 100%; margin: 0;">
+            <div id="instruction-text" class="text-box"></div>
+            <div id="video-link" class="text-box">
+                <a href="https://youtu.be/_I1E44Fp1Es?si=lR2otqR_-ZGdIGXT" target="_blank">Video Demo</a>
+            </div>
+            <div id="social-links" class="text-box">
+                <a href="https://www.x.com/measure_plan/" target="_blank">Twitter</a><br>
+                <a href="https://www.instagram.com/stereo.drift/" target="_blank">Instagram</a><br>
+                <a href="https://www.youtube.com/@funwithcomputervision" target="_blank">Youtube</a>
+            </div>
+            <div id="coffee-link" class="text-box">
+                <span id="logo">🪬</span><br>
+                <a href="https://www.funwithcomputervision.com/" target="_blank">code & tutorials here</a>
+            </div>
+        </div>
+        <script type="module" src="main.js"></script>
 
-            // 2. Hover & Select
-            if (intersects.length > 0) {
-                const target = intersects[0].object;
-                
-                // Highlight
-                target.userData.wireframe.material.opacity = 1;
-                target.scale.setScalar(1.1);
-
-                // Actions
-                if (state.isPinched && !state.grabbedObject) {
-                    state.grabbedObject = target;
-                }
-                
-                const now = Date.now();
-                if (now - state.lastGestureTime > 500) { // Cooldown
-                    
-                    if (state.isFist) {
-                        explodeBlock(target);
-                        state.lastGestureTime = now;
-                    }
-                    
-                    if (state.isThumbsUp) {
-                        spawnBlock(target.geometry, target.position.clone().add(new THREE.Vector3(1.5, 0, 0)));
-                        state.lastGestureTime = now;
-                    }
-                }
-            } else {
-                // Reset scales of all blocks not hovered
-                blocks.forEach(b => {
-                    if (b !== state.grabbedObject) {
-                        b.scale.lerp(new THREE.Vector3(1,1,1), 0.1);
-                        b.userData.wireframe.material.opacity = 0.3;
-                    }
-                });
-            }
-        }
-
-        function explodeBlock(block) {
-            // Create particles
-            const pCount = 20;
-            const geo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            const mat = block.material.clone();
-            
-            for(let i=0; i<pCount; i++) {
-                const p = new THREE.Mesh(geo, mat);
-                p.position.copy(block.position);
-                p.position.x += (Math.random()-0.5);
-                p.position.y += (Math.random()-0.5);
-                
-                p.userData = {
-                    vel: new THREE.Vector3((Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2),
-                    life: 1.0
-                };
-                particles.push(p);
-                scene.add(p);
-            }
-
-            // Remove block
-            scene.remove(block);
-            blocks = blocks.filter(b => b !== block);
-        }
-
-        // --- 4. Animation Loop ---
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Floating Physics for Blocks
-            const time = Date.now() * 0.001;
-            blocks.forEach(b => {
-                if (b !== state.grabbedObject) {
-                    b.rotation.x += b.userData.rotSpeed.x;
-                    b.rotation.y += b.userData.rotSpeed.y;
-                    b.position.y += Math.sin(time + b.userData.floatOffset) * b.userData.floatSpeed;
-                }
-            });
-
-            // Particle Physics
-            particles.forEach((p, index) => {
-                p.position.add(p.userData.vel);
-                p.rotation.x += 0.1;
-                p.userData.life -= 0.02;
-                p.scale.setScalar(p.userData.life);
-                
-                if (p.userData.life <= 0) {
-                    scene.remove(p);
-                    particles.splice(index, 1);
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        // Initialize
-        initThreeJS();
-        initHandTracking();
-
-    </script>
-</body>
+    </body>
 </html>
