@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Vaqt Sinovi</title>
+    <title>Kosmik Sayohat: Adolatli Vaqt</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,12 +28,10 @@
             z-index: 10; pointer-events: none; 
         }
 
-        /* Interaktiv elementlar */
         #music-icon, .btn, #restart-btn, #player-name-input {
             pointer-events: auto !important;
         }
 
-        /* Kamera O'ng Pastda */
         #video-container {
             position: absolute; bottom: 20px; right: 20px; 
             width: 220px; height: 165px;
@@ -54,7 +52,6 @@
             width: 100%; height: 100%; z-index: 2;
         }
 
-        /* Xabarlar */
         #status-message {
             position: absolute; 
             bottom: 200px; 
@@ -82,7 +79,6 @@
         }
         .message-bubble.visible { opacity: 1; transform: translateY(0); }
 
-        /* Sarlavha */
         #title-container {
             position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
             text-align: center;
@@ -98,7 +94,6 @@
             display: inline-block;
         }
 
-        /* Chap Panel */
         #left-panel {
             position: absolute; top: 30px; left: 30px;
             display: flex; flex-direction: column; gap: 20px;
@@ -106,7 +101,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Vaqt Displeyi */
         #timer-display {
             font-family: 'Fredoka One', cursive;
             color: #ffd700;
@@ -116,6 +110,8 @@
             padding: 10px 20px;
             border-radius: 15px;
             border: 2px solid #ffd700;
+            min-width: 120px;
+            text-align: center;
         }
 
         #steps-container { display: flex; gap: 10px; }
@@ -149,17 +145,15 @@
             box-shadow: 0 0 10px #00ff00;
         }
 
-        /* Countdown */
         #countdown-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 60;
+            background: rgba(0,0,0,0.8); z-index: 60;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-family: 'Fredoka One', cursive;
             font-size: 12rem; text-shadow: 0 0 40px #00ffcc;
             pointer-events: none; opacity: 0; transition: opacity 0.3s;
         }
 
-        /* Ovoz ikonkasi */
         #music-icon {
             position: absolute; bottom: 20px; left: 20px;
             font-size: 2.5rem; cursor: pointer; color: rgba(255,255,255,0.8);
@@ -172,7 +166,6 @@
         #music-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
         #music-icon:active { transform: scale(0.95); }
 
-        /* Screens */
         .overlay-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(20, 10, 40, 0.95); z-index: 50; 
@@ -190,7 +183,6 @@
         }
         .btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
         
-        /* Ism Kiritish Inputi */
         #player-name-input {
             padding: 15px 25px;
             font-size: 1.5rem;
@@ -212,7 +204,6 @@
         }
         #player-name-input::placeholder { color: rgba(255,255,255,0.5); }
 
-        /* Leaderboard Table */
         #leaderboard {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -257,7 +248,6 @@
         .hidden { display: none !important; }
         .fade-out { opacity: 0; pointer-events: none; }
 
-        /* Responsive */
         @media (max-width: 768px) {
             #video-container { width: 120px; height: 90px; bottom: 10px; right: 10px; top: auto; border-width: 2px; }
             #status-message { bottom: 110px; top: auto; right: 10px; width: 150px; }
@@ -272,9 +262,6 @@
             .lb-row { font-size: 1rem; }
             #player-name-input { font-size: 1.2rem; }
             #timer-display { font-size: 1.5rem; padding: 5px 15px; }
-        }
-        @media (max-height: 500px) and (orientation: landscape) {
-            #title-container { top: 10px; } h1 { font-size: 1.2rem; } #left-panel { transform: scale(0.7); } #status-message { bottom: 110px; }
         }
     </style>
     
@@ -291,12 +278,9 @@
     <div id="start-screen" class="overlay-screen">
         <h1 style="font-size: 3.5rem; margin-top: 0;">KOSMIK SARGUZASHT</h1>
         <p style="font-size: 1.3rem; color: #ddd; margin: 10px; line-height: 1.4;">
-            Ismingizni kiriting va barcha bosqichlarni eng tez vaqtda bajaring! 🚀
+            Ismingizni kiriting va eng tezkor fazogir bo'ling! 🚀
         </p>
-        
-        <!-- Ism kiritish -->
         <input type="text" id="player-name-input" placeholder="Ismingiz..." maxlength="12" autocomplete="off">
-        
         <div id="loading-container">
             <div class="loader"></div>
             <div>Tizim yuklanmoqda...</div>
@@ -313,7 +297,6 @@
                     <div id="progress-fill"></div>
                 </div>
             </div>
-            <!-- Vaqt Displeyi -->
             <div id="timer-display">00:00</div>
         </div>
 
@@ -330,15 +313,11 @@
     
     <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.95);">
         <h1 style="font-size: 3rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
-        
-        <!-- Faqat finalda ko'rinadi -->
         <div id="leaderboard" style="display:none;">
             <h2>🏆 TEZ KUNLAR REYTINGI</h2>
             <div id="lb-content"></div>
         </div>
-
         <p id="next-level-msg" style="font-size: 1.5rem; margin-top: 20px; display: none;">Keyingi bosqichga tayyormisiz?</p>
-
         <button id="restart-btn" class="btn" style="display:none;">QAYTA O'YNASH 🔄</button>
     </div>
 
@@ -357,11 +336,13 @@
     let noteIndex = 0;
     let hands; 
     let isHandProcessing = false; 
-    
-    // VAQT O'ZGARUVCHILARI
-    let gameStartTime = 0;
-    let timerInterval = null;
     let playerName = "O'yinchi"; 
+
+    // Time Control
+    let totalPlayedTime = 0; // ms
+    let lastFrameTime = 0;
+    let isTimerRunning = false;
+    let slowMoFactor = 1.0;
 
     const melody = [523.25, 659.25, 783.99, 1046.50, 523.25, 587.33, 783.99, 880.00];
 
@@ -461,18 +442,27 @@
         scene.add(cursorSprite);
     }
 
-    // --- TIMER FUNKSIYALARI ---
+    // --- TIMER SYSTEM (YANGI) ---
     function startTimer() {
-        if(timerInterval) clearInterval(timerInterval);
-        gameStartTime = Date.now();
-        timerInterval = setInterval(() => {
-            const elapsed = Date.now() - gameStartTime;
-            ui.timer.innerText = formatTime(elapsed);
-        }, 1000);
+        if (!isTimerRunning) {
+            isTimerRunning = true;
+            lastFrameTime = Date.now();
+        }
     }
 
     function stopTimer() {
-        if(timerInterval) clearInterval(timerInterval);
+        isTimerRunning = false;
+    }
+
+    function updateTimerDisplay() {
+        if (isTimerRunning) {
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            lastFrameTime = now;
+            // Slow motionda timer sekinlashmasligi kerak, bu real vaqt
+            totalPlayedTime += delta; 
+            ui.timer.innerText = formatTime(totalPlayedTime);
+        }
     }
 
     function formatTime(ms) {
@@ -586,6 +576,14 @@
                 g.gain.exponentialRampToValueAtTime(0.001, now + 3);
                 o.start(now); o.stop(now + 3);
             });
+        } else if (type === 'slowmo') {
+             // Past chastotali sekinlashish ovozi
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
         }
     }
 
@@ -676,6 +674,7 @@
 
     function initLevel(idx) {
         state.isTransitioning = true;
+        slowMoFactor = 1.0; // Reset speed
         
         while(piecesGroup.children.length > 0) { 
             const obj = piecesGroup.children[0];
@@ -693,11 +692,6 @@
         state.levelIdx = idx;
         state.lockedCount = 0;
         const lvl = LEVELS[idx];
-        
-        // Agar birinchi bosqich bo'lsa va hali timer boshlanmagan bo'lsa
-        if(idx === 0 && !timerInterval) {
-            startTimer();
-        }
         
         ui.title.innerText = lvl.title;
         updateStepsUI();
@@ -759,6 +753,8 @@
         
         state.totalPieces = piecesGroup.children.length;
         state.isTransitioning = false;
+        
+        // Bu yerda timer boshlanmaydi. Faqat countdown tugagach boshlanadi.
     }
 
     function spawnTrail(pos) {
@@ -805,11 +801,8 @@
     // --- LEADERBOARD LOGIC (TIME ATTACK) ---
     function saveTime(name, timeMs) {
         let scores = JSON.parse(localStorage.getItem('kosmik_times') || '[]');
-        
-        // Eski rekordni tekshirish
         const existingIndex = scores.findIndex(p => p.name === name);
         if (existingIndex !== -1) {
-            // Agar yangi vaqt yaxshiroq (kamroq) bo'lsa yangilaymiz
             if (timeMs < scores[existingIndex].time) {
                 scores[existingIndex].time = timeMs;
                 scores[existingIndex].date = new Date().toLocaleTimeString();
@@ -817,29 +810,21 @@
         } else {
             scores.push({ name: name, time: timeMs, date: new Date().toLocaleTimeString() });
         }
-        
-        // Vaqt bo'yicha o'sish tartibida saralash (Eng kami = Eng yaxshisi)
         scores.sort((a, b) => a.time - b.time);
-        scores = scores.slice(0, 10); // TOP 10
+        scores = scores.slice(0, 10); 
         localStorage.setItem('kosmik_times', JSON.stringify(scores));
     }
 
     function showLeaderboard() {
-        const totalTimeMs = Date.now() - gameStartTime;
         stopTimer();
-        
-        saveTime(playerName, totalTimeMs);
-        
+        saveTime(playerName, totalPlayedTime);
         const scores = JSON.parse(localStorage.getItem('kosmik_times') || '[]');
         
         let html = '';
         scores.forEach((p, i) => {
             const isCurrent = (p.name === playerName);
-            // Agar joriy o'yinchi bo'lsa, vaqtini taqqoslash orqali aniqlash qiyin bo'lishi mumkin (agar rekord yangilanmasa)
-            // Shuning uchun ism bo'yicha highlight qilamiz
             const cls = isCurrent ? 'lb-row lb-highlight' : 'lb-row';
             const icon = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
-            
             html += `
                 <div class="${cls}">
                     <div class="lb-rank">${i+1} ${icon}</div>
@@ -848,7 +833,6 @@
                 </div>
             `;
         });
-        
         ui.lbContent.innerHTML = html;
         ui.winScreen.querySelector('h1').innerText = "NATIJALAR";
         ui.winScreen.classList.remove('hidden');
@@ -894,12 +878,15 @@
         if(state.isTransitioning) return;
         updateParticles();
         updateTrail();
+        updateTimerDisplay(); // Timerni yangilash
 
-        const time = Date.now() * 0.002;
+        // Slow motion effekti uchun vaqtni o'zgartirish
+        const timeDelta = 0.002 * slowMoFactor;
+        const time = Date.now() * timeDelta;
 
         slotsGroup.children.forEach(slot => {
             if(slot.userData.isSlot) {
-                slot.rotation.z = Math.sin(time * 0.5) * 0.1; 
+                slot.rotation.z = Math.sin(Date.now() * 0.001) * 0.1; 
             }
         });
 
@@ -907,19 +894,24 @@
             if(!obj.userData.isLocked && obj !== state.grabbedObj) {
                 if (state.levelIdx >= 2) {
                     const vel = obj.userData.velocity;
-                    obj.position.add(vel);
+                    // Slow mo paytida sekinlashadi
+                    obj.position.x += vel.x * slowMoFactor;
+                    obj.position.y += vel.y * slowMoFactor;
+
                     const limitX = (state.worldSize.width / 2) - 1;
                     const limitY = (state.worldSize.height / 2) - 1;
                     if (obj.position.x > limitX || obj.position.x < -limitX) vel.x *= -1;
                     if (obj.position.y > limitY || obj.position.y < -limitY) vel.y *= -1;
-                    obj.rotation.z += 0.01; obj.rotation.x += 0.01; obj.rotation.y += 0.01;
+                    obj.rotation.z += 0.01 * slowMoFactor; 
+                    obj.rotation.x += 0.01 * slowMoFactor; 
+                    obj.rotation.y += 0.01 * slowMoFactor;
                 } else {
-                    obj.position.y += Math.sin(time + obj.userData.floatOffset) * 0.005;
-                    obj.rotation.z = Math.sin(time * 0.5 + obj.userData.floatOffset) * 0.1;
+                    obj.position.y += Math.sin(Date.now() * 0.002 + obj.userData.floatOffset) * 0.005 * slowMoFactor;
+                    obj.rotation.z = Math.sin(Date.now() * 0.001 + obj.userData.floatOffset) * 0.1 * slowMoFactor;
                 }
                 obj.position.z = obj.userData.baseZ; 
             } else if (obj.userData.isLocked) {
-                obj.rotation.z = Math.sin(time) * 0.1; obj.rotation.x = Math.PI/2; obj.rotation.y = 0;
+                obj.rotation.z = Math.sin(Date.now() * 0.002) * 0.1; obj.rotation.x = Math.PI/2; obj.rotation.y = 0;
             }
         });
 
@@ -965,36 +957,46 @@
                     const light = new THREE.PointLight(0xffff00, 1, 5);
                     obj.add(light);
                     
-                    playSound('pop');
-                    createConfetti();
-                    
                     state.lockedCount++;
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     
-                    if(state.lockedCount >= state.totalPieces) {
-                        playSound('win');
-                        state.isTransitioning = true;
-                        
-                        if(state.levelIdx < LEVELS.length - 1) {
-                             ui.winScreen.classList.remove('hidden');
-                             ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
-                             ui.leaderboard.style.display = 'none';
-                             ui.nextMsg.style.display = 'block';
-                             ui.restartBtn.style.display = 'none';
-                             
-                             setTimeout(() => {
-                                ui.winScreen.classList.add('hidden');
-                                startCountdown();
-                             }, 2000);
-                        } else {
-                            // FINAL
-                            showLeaderboard();
-                            ui.winScreen.classList.remove('hidden');
-                            ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
-                            ui.leaderboard.style.display = 'block';
-                            ui.nextMsg.style.display = 'none';
-                            ui.restartBtn.style.display = 'block';
-                        }
+                    // Oxirgi element joyiga tushayotganda sekinlashuv
+                    if (state.lockedCount === state.totalPieces) {
+                        playSound('slowmo');
+                        slowMoFactor = 0.2; // Vaqtni sekinlashtirish
+                        setTimeout(() => {
+                            slowMoFactor = 1.0;
+                            playSound('pop');
+                            createConfetti();
+                            
+                            playSound('win');
+                            state.isTransitioning = true;
+                            stopTimer(); // Vaqtni to'xtatish
+
+                            if(state.levelIdx < LEVELS.length - 1) {
+                                 ui.winScreen.classList.remove('hidden');
+                                 ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
+                                 ui.leaderboard.style.display = 'none';
+                                 ui.nextMsg.style.display = 'block';
+                                 ui.restartBtn.style.display = 'none';
+                                 
+                                 setTimeout(() => {
+                                    ui.winScreen.classList.add('hidden');
+                                    startCountdown(); // Davom ettirish (timer ham shunda davom etadi)
+                                 }, 3000); // 3 soniya kuting
+                            } else {
+                                // Final
+                                showLeaderboard();
+                                ui.winScreen.classList.remove('hidden');
+                                ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
+                                ui.leaderboard.style.display = 'block';
+                                ui.nextMsg.style.display = 'none';
+                                ui.restartBtn.style.display = 'block';
+                            }
+                        }, 800); // 0.8s sekinlikdan keyin
+                    } else {
+                        playSound('pop');
+                        createConfetti();
                     }
                 }
                 state.grabbedObj = null;
@@ -1072,6 +1074,7 @@
                     state.levelIdx++;
                     if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
                     initLevel(state.levelIdx);
+                    startTimer(); // Vaqt davom etadi
                 }, 1000);
             }
         }, 1000);
@@ -1125,10 +1128,13 @@
             ui.video.srcObject = stream;
             ui.video.onloadeddata = () => {
                 ui.startScreen.classList.add('fade-out');
-                setTimeout(() => ui.startScreen.classList.add('hidden'), 500);
+                setTimeout(() => {
+                    ui.startScreen.classList.add('hidden');
+                    startCountdown(); // Boshlang'ich countdown
+                }, 500);
                 ui.uiLayer.classList.remove('hidden');
                 updateLayout();
-                initLevel(0);
+                initLevel(0); // Birinchi levelni yaratish (lekin vaqt countdown dan keyin boshlanadi)
                 animate();
             };
         } catch(e) {
@@ -1141,14 +1147,16 @@
         ui.winScreen.classList.add('hidden');
         state.levelIdx = 0;
         
-        // Reset timer only if it was running or finished
+        // Reset timer
         stopTimer();
+        totalPlayedTime = 0;
+        ui.timer.innerText = "00:00";
         
-        ui.timer.innerText = "00:00"; // Reset UI
         ui.leaderboard.style.display = 'none';
         ui.restartBtn.style.display = 'none';
         
         initLevel(0);
+        startCountdown(); // Qayta boshlashda ham sanash kerak
     });
 
     window.addEventListener('resize', () => {
