@@ -224,7 +224,7 @@
         </p>
         <div id="loading-container">
             <div class="loader"></div>
-            <div>AI Yuklanmoqda...</div>
+            <div>AI Yuklanmoqda... (Aniq Rejim)</div>
         </div>
         <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
     </div>
@@ -273,7 +273,7 @@
     let nextNoteTime = 0;
     let noteIndex = 0;
     let hands; 
-    let isHandProcessing = false; // Tiqilib qolishni oldini olish
+    let isHandProcessing = false; 
 
     const melody = [
         523.25, 659.25, 783.99, 1046.50,
@@ -624,10 +624,11 @@
             const faceTex = createPieceTexture(item.emoji, lvl.color);
             const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, side: THREE.DoubleSide });
             
+            // --- FIX: Z-Fightingni oldini olish uchun masofani oshirish (0.11 -> 0.12) ---
             const frontFace = new THREE.Mesh(faceGeo, faceMat);
-            frontFace.position.y = 0.11; frontFace.rotation.x = -Math.PI / 2; piece.add(frontFace);
+            frontFace.position.y = 0.12; frontFace.rotation.x = -Math.PI / 2; piece.add(frontFace);
             const backFace = new THREE.Mesh(faceGeo, faceMat);
-            backFace.position.y = -0.11; backFace.rotation.x = Math.PI / 2; piece.add(backFace);
+            backFace.position.y = -0.12; backFace.rotation.x = Math.PI / 2; piece.add(backFace);
             
             const uniqueZ = 0.5 + (i * 0.1);
             const spread = isMobile ? 1.5 : 3.0;
@@ -835,13 +836,18 @@
             if (realObj && realObj.userData && !realObj.userData.isLocked) {
                 state.hoveredObj = realObj;
                 realObj.scale.setScalar(1.1);
-                realObj.children.forEach(c => { if(c.material) c.material.emissive = new THREE.Color(0x333333); });
+                // --- FIX: Nur taratish faqat 'material' bor bolalarga ---
+                realObj.children.forEach(c => { 
+                    if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); 
+                });
                 if(state.gesture !== 'PINCH') { showMessage("CHIMCHILANG (👌)", "#ffff00"); }
             }
         } else {
             if (state.hoveredObj && state.hoveredObj !== state.grabbedObj) {
                 state.hoveredObj.scale.setScalar(1);
-                state.hoveredObj.children.forEach(c => { if(c.material) c.material.emissive = new THREE.Color(0x000000); });
+                state.hoveredObj.children.forEach(c => { 
+                    if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x000000); 
+                });
             }
             state.hoveredObj = null;
             if(state.gesture !== 'PINCH') hideMessage();
@@ -850,6 +856,10 @@
         if (state.grabbedObj) {
             state.grabbedObj.position.lerp(worldPos, 0.4);
             state.grabbedObj.position.z = 2; 
+            
+            state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
+            state.grabbedObj.scale.setScalar(1.2); 
+
             const target = state.grabbedObj.userData.targetPos;
             const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
             if (dist2D < CONFIG.snapDistance) {
