@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Adolatli Vaqt</title>
+    <title>Kosmik Sayohat: Final Random</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -339,7 +339,7 @@
     let playerName = "O'yinchi"; 
 
     // Time Control
-    let totalPlayedTime = 0; // ms
+    let totalPlayedTime = 0; 
     let lastFrameTime = 0;
     let isTimerRunning = false;
     let slowMoFactor = 1.0;
@@ -442,7 +442,7 @@
         scene.add(cursorSprite);
     }
 
-    // --- TIMER SYSTEM (YANGI) ---
+    // --- TIMER SYSTEM ---
     function startTimer() {
         if (!isTimerRunning) {
             isTimerRunning = true;
@@ -459,7 +459,6 @@
             const now = Date.now();
             const delta = now - lastFrameTime;
             lastFrameTime = now;
-            // Slow motionda timer sekinlashmasligi kerak, bu real vaqt
             totalPlayedTime += delta; 
             ui.timer.innerText = formatTime(totalPlayedTime);
         }
@@ -577,7 +576,6 @@
                 o.start(now); o.stop(now + 3);
             });
         } else if (type === 'slowmo') {
-             // Past chastotali sekinlashish ovozi
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(100, now);
             osc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
@@ -659,6 +657,14 @@
         return tex;
     }
 
+    // --- RANDOM SHUFFLE ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
     function updateLayout() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -674,7 +680,7 @@
 
     function initLevel(idx) {
         state.isTransitioning = true;
-        slowMoFactor = 1.0; // Reset speed
+        slowMoFactor = 1.0; 
         
         while(piecesGroup.children.length > 0) { 
             const obj = piecesGroup.children[0];
@@ -705,9 +711,16 @@
         const radius = isMobile ? 2.2 : 3.5; 
         const angleStep = (Math.PI*2)/lvl.items.length;
 
-        lvl.items.forEach((item, i) => {
+        // --- RANDOM JOYLASHUV (SLOTS) ---
+        let positions = [];
+        for(let i=0; i<lvl.items.length; i++) {
             const angle = i * angleStep - Math.PI/2;
-            const targetPos = new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
+            positions.push(new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0));
+        }
+        shuffleArray(positions); // Har doim har xil joyga tushishi uchun
+
+        lvl.items.forEach((item, i) => {
+            const targetPos = positions[i];
 
             // SLOT
             const slotGeo = new THREE.PlaneGeometry(3.0, 3.5); 
@@ -740,6 +753,7 @@
             const spread = isMobile ? 1.5 : 3.0;
             const velocity = new THREE.Vector3((Math.random()-0.5)*0.03, (Math.random()-0.5)*0.03, 0);
 
+            // Piece joylashuvi (tasodifiy)
             piece.position.set((Math.random()-0.5)*spread*2, (Math.random()-0.5)*spread, uniqueZ);
             piece.renderOrder = 10 + i; 
 
@@ -753,8 +767,6 @@
         
         state.totalPieces = piecesGroup.children.length;
         state.isTransitioning = false;
-        
-        // Bu yerda timer boshlanmaydi. Faqat countdown tugagach boshlanadi.
     }
 
     function spawnTrail(pos) {
@@ -878,9 +890,8 @@
         if(state.isTransitioning) return;
         updateParticles();
         updateTrail();
-        updateTimerDisplay(); // Timerni yangilash
+        updateTimerDisplay();
 
-        // Slow motion effekti uchun vaqtni o'zgartirish
         const timeDelta = 0.002 * slowMoFactor;
         const time = Date.now() * timeDelta;
 
@@ -894,7 +905,6 @@
             if(!obj.userData.isLocked && obj !== state.grabbedObj) {
                 if (state.levelIdx >= 2) {
                     const vel = obj.userData.velocity;
-                    // Slow mo paytida sekinlashadi
                     obj.position.x += vel.x * slowMoFactor;
                     obj.position.y += vel.y * slowMoFactor;
 
@@ -960,10 +970,9 @@
                     state.lockedCount++;
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     
-                    // Oxirgi element joyiga tushayotganda sekinlashuv
                     if (state.lockedCount === state.totalPieces) {
                         playSound('slowmo');
-                        slowMoFactor = 0.2; // Vaqtni sekinlashtirish
+                        slowMoFactor = 0.2; 
                         setTimeout(() => {
                             slowMoFactor = 1.0;
                             playSound('pop');
@@ -971,7 +980,7 @@
                             
                             playSound('win');
                             state.isTransitioning = true;
-                            stopTimer(); // Vaqtni to'xtatish
+                            stopTimer(); 
 
                             if(state.levelIdx < LEVELS.length - 1) {
                                  ui.winScreen.classList.remove('hidden');
@@ -982,10 +991,9 @@
                                  
                                  setTimeout(() => {
                                     ui.winScreen.classList.add('hidden');
-                                    startCountdown(); // Davom ettirish (timer ham shunda davom etadi)
-                                 }, 3000); // 3 soniya kuting
+                                    startCountdown(true); // Increment level for next
+                                 }, 3000);
                             } else {
-                                // Final
                                 showLeaderboard();
                                 ui.winScreen.classList.remove('hidden');
                                 ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
@@ -993,7 +1001,7 @@
                                 ui.nextMsg.style.display = 'none';
                                 ui.restartBtn.style.display = 'block';
                             }
-                        }, 800); // 0.8s sekinlikdan keyin
+                        }, 800);
                     } else {
                         playSound('pop');
                         createConfetti();
@@ -1054,7 +1062,7 @@
         ui.hintBubble.classList.remove('visible');
     }
     
-    function startCountdown() {
+    function startCountdown(isNextLevel = false) {
         let count = 3;
         ui.countdown.classList.remove('hidden');
         ui.countdown.style.opacity = 1;
@@ -1071,10 +1079,12 @@
                 ui.countdown.innerText = "KETDIK! 🚀";
                 setTimeout(() => {
                     ui.countdown.classList.add('hidden');
-                    state.levelIdx++;
-                    if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
-                    initLevel(state.levelIdx);
-                    startTimer(); // Vaqt davom etadi
+                    if (isNextLevel) {
+                        state.levelIdx++;
+                        if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
+                        initLevel(state.levelIdx);
+                    }
+                    startTimer(); 
                 }, 1000);
             }
         }, 1000);
@@ -1130,11 +1140,11 @@
                 ui.startScreen.classList.add('fade-out');
                 setTimeout(() => {
                     ui.startScreen.classList.add('hidden');
-                    startCountdown(); // Boshlang'ich countdown
+                    initLevel(0); // Dastlabki yuklash
+                    startCountdown(false); // Sanashni boshlash (level oshirmaydi)
                 }, 500);
                 ui.uiLayer.classList.remove('hidden');
                 updateLayout();
-                initLevel(0); // Birinchi levelni yaratish (lekin vaqt countdown dan keyin boshlanadi)
                 animate();
             };
         } catch(e) {
@@ -1146,17 +1156,14 @@
     ui.restartBtn.addEventListener('click', () => {
         ui.winScreen.classList.add('hidden');
         state.levelIdx = 0;
-        
-        // Reset timer
         stopTimer();
         totalPlayedTime = 0;
         ui.timer.innerText = "00:00";
-        
         ui.leaderboard.style.display = 'none';
         ui.restartBtn.style.display = 'none';
         
         initLevel(0);
-        startCountdown(); // Qayta boshlashda ham sanash kerak
+        startCountdown(false); 
     });
 
     window.addEventListener('resize', () => {
