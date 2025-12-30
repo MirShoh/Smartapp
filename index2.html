@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Smart</title>
+    <title>Kosmik Sayohat: Smart Voice</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -276,11 +276,14 @@
     // --- O'ZGARUVCHILAR ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMusicPlaying = false;
-    let isSpeechEnabled = true; // Boshlanishida yoqilgan
+    let isSpeechEnabled = true;
     let nextNoteTime = 0;
     let noteIndex = 0;
     let hands; 
     let isHandProcessing = false; 
+    
+    // Muhim: Speech Garbage Collection uchun global o'zgaruvchi
+    let currentUtterance = null; 
 
     // Pentatonic scale
     const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
@@ -331,17 +334,43 @@
     
     const canvasCtx = ui.outCanvas.getContext('2d');
 
-    // --- TEXT TO SPEECH (Ovozli Hamroh) ---
+    // --- TEXT TO SPEECH (TUZATILGAN) ---
     function speak(text) {
         if (!isSpeechEnabled || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel(); // Avvalgi gapni to'xtatish
+        window.speechSynthesis.cancel(); // Avvalgisini to'xtatish
         
+        // Yangi utterance yaratish
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'uz-UZ'; // O'zbek tili
-        utterance.rate = 0.9; // Biroz sekinroq
-        utterance.pitch = 1.1; // Bolalarbop
         
+        // Ovoz tanlash (iloji bo'lsa)
+        const voices = window.speechSynthesis.getVoices();
+        // O'zbek tili yo'q bo'lsa, birinchi mavjud ovozni olamiz, lekin lang='uz-UZ' deb belgilaymiz
+        // Brauzer o'zi moslashga harakat qiladi
+        utterance.lang = 'uz-UZ'; 
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        
+        // --- GARBAGE COLLECTION FIX ---
+        // O'zgaruvchini globalga saqlab qo'yamiz, aks holda Chrome uni gapirib bo'lmasdan o'chirib yuboradi
+        currentUtterance = utterance;
+        
+        utterance.onend = function() {
+            currentUtterance = null; // Tugagach bo'shatamiz
+        };
+        
+        utterance.onerror = function(e) {
+            console.error('Speech error:', e);
+            currentUtterance = null;
+        };
+
         window.speechSynthesis.speak(utterance);
+    }
+
+    // Ovozlar yuklanishini kutish (ba'zi brauzerlar uchun)
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
     }
 
     function toggleSpeech() {
@@ -351,7 +380,7 @@
             icon.innerText = '🗣️';
             icon.style.opacity = '1';
             icon.style.borderColor = '#00ffcc';
-            speak("Ovozli yordamchi yoqildi");
+            speak("Ovoz yoqildi");
         } else {
             icon.innerText = '🔇';
             icon.style.opacity = '0.6';
@@ -410,7 +439,7 @@
         scene.add(cursorSprite);
     }
 
-    // --- AUDIO FUNC ---
+    // --- AUDIO FUNC (MUSIC BOX) ---
     function playNote(freq, time) {
         if (!isMusicPlaying) return;
         const osc = audioCtx.createOscillator();
@@ -628,8 +657,8 @@
         updateProgress(0); 
         
         // --- GAPIRISH (Boshlanishida) ---
-        speak(lvl.title + " bosqichi.");
-
+        // Foydalanuvchi interaksiyasidan keyin chaqirilishi shart (Click ichida)
+        
         // --- MAVZULI MUHIT (Dynamic Theme) ---
         const targetColor = new THREE.Color(lvl.color).lerp(new THREE.Color(0x000000), 0.7);
         scene.background = targetColor;
@@ -855,15 +884,16 @@
                              ui.winScreen.classList.remove('hidden');
                              ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
                              ui.winScreen.querySelector('p').innerText = "Keyingi bosqichga tayyormisiz?";
+                             speak("Barakalla! Barchasini topdingiz. Keyingi bosqichga o'tamiz.");
                              setTimeout(() => {
                                 ui.winScreen.classList.add('hidden');
                                 startCountdown();
-                             }, 2000);
+                             }, 3000);
                         } else {
                             ui.winScreen.classList.remove('hidden');
                             ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
                             ui.winScreen.querySelector('p').innerText = "Siz barcha bosqichlarni tugatdingiz!";
-                            speak("Tabriklayman! Siz barcha bosqichlarni muvaffaqiyatli tugatdingiz.");
+                            speak("Tabriklayman! Siz barcha bosqichlarni muvaffaqiyatli tugatdingiz. Siz haqiqiy bilimdonsiz!");
                         }
                     }
                 }
@@ -993,6 +1023,9 @@
                 updateLayout();
                 initLevel(0);
                 animate();
+                
+                // --- Ovozli xabarni boshlash ---
+                speak(LEVELS[0].title + " bosqichi boshlandi. " + LEVELS[0].items[0].name + "ni toping!");
             };
         } catch(e) {
             alert("Kamera xatosi: " + e.message);
