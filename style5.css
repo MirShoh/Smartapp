@@ -17,7 +17,7 @@ body {
 }
 
 /* Interaktiv elementlar */
-#music-icon, .btn, #restart-btn, #player-name-input, .key {
+#music-icon, #speech-icon, .btn, #restart-btn, #player-name-input, .key {
     pointer-events: auto !important;
 }
 
@@ -167,18 +167,23 @@ h1 {
     pointer-events: none; opacity: 0; transition: opacity 0.3s;
 }
 
-/* Ovoz ikonkasi */
-#music-icon {
+/* Boshqaruv tugmalari */
+.controls-container {
     position: absolute; bottom: 20px; left: 20px;
-    font-size: 2.5rem; cursor: pointer; color: rgba(255,255,255,0.8);
-    z-index: 150; transition: all 0.3s;
-    background: rgba(0,0,0,0.4); padding: 15px; border-radius: 50%;
-    width: 50px; height: 50px;
+    display: flex; gap: 15px;
+    z-index: 150;
+}
+
+.control-icon {
+    font-size: 2rem; cursor: pointer; color: rgba(255,255,255,0.8);
+    transition: all 0.3s;
+    background: rgba(0,0,0,0.4); padding: 12px; border-radius: 50%;
+    width: 55px; height: 55px;
     display: flex; align-items: center; justify-content: center;
     border: 2px solid rgba(255,255,255,0.2);
 }
-#music-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
-#music-icon:active { transform: scale(0.95); }
+.control-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
+.control-icon:active { transform: scale(0.95); }
 
 /* Screens */
 .overlay-screen {
@@ -196,7 +201,6 @@ h1 {
     color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px;
     box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
     font-family: 'Fredoka One', cursive;
-    transition: all 0.1s;
 }
 .btn:active, .btn.clicked { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
 
@@ -306,7 +310,8 @@ h1 {
     #title-container { top: 80px; }
     #countdown-overlay { font-size: 6rem !important; }
     .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
-    #music-icon { width: 40px; height: 40px; font-size: 1.8rem; bottom: 10px; left: 10px; }
+    .controls-container { bottom: 10px; left: 10px; gap: 10px; }
+    .control-icon { width: 45px; height: 45px; font-size: 1.5rem; }
     #leaderboard { width: 95%; padding: 10px; }
     .lb-row { font-size: 1rem; }
     #player-name-input { font-size: 1.2rem; }

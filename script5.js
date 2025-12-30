@@ -1,5 +1,6 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let isMusicPlaying = false;
+let isSpeechEnabled = true;
 let nextNoteTime = 0;
 let noteIndex = 0;
 let hands; 
@@ -16,11 +17,11 @@ let lastFrameTime = 0;
 let isTimerRunning = false;
 let slowMoFactor = 1.0;
 
-const melody = [523.25, 659.25, 783.99, 1046.50, 523.25, 587.33, 783.99, 880.00];
+const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
 
 const CONFIG = {
-    sensitivityX: 3.0, 
-    sensitivityY: 2.2,
+    sensitivityX: 2.5, // Mobil uchun biroz kamaytirildi
+    sensitivityY: 2.0,
     snapDistance: 1.5,
 };
 
@@ -34,8 +35,8 @@ const LEVELS = [
 
 const state = {
     levelIdx: 0,
-    handPos: { x: 0, y: 0 }, // 3D World Pos (-X to +X)
-    screenHandPos: { x: 0, y: 0 }, // Screen Pixel Pos
+    handPos: { x: 0, y: 0 },
+    screenHandPos: { x: 0, y: 0 },
     gesture: 'IDLE',
     handVisible: false,
     handLabel: 'Right',
@@ -58,6 +59,7 @@ const ui = {
     startScreen: document.getElementById('start-screen'),
     winScreen: document.getElementById('win-screen'),
     uiLayer: document.getElementById('ui-layer'),
+    loadingText: document.getElementById('loading-text'),
     video: document.getElementById('input-video'),
     outCanvas: document.getElementById('output-canvas'),
     title: document.getElementById('task-title'),
@@ -69,7 +71,8 @@ const ui = {
     lbContent: document.getElementById('lb-content'),
     leaderboard: document.getElementById('leaderboard'),
     nextMsg: document.getElementById('next-level-msg'),
-    loadingText: document.getElementById('loading-text')
+    musicIcon: document.getElementById('music-icon'),
+    speechIcon: document.getElementById('speech-icon')
 };
 
 const canvasCtx = ui.outCanvas.getContext('2d');
@@ -80,14 +83,14 @@ function createKeyboard() {
     ui.keyboard.innerHTML = '';
     chars.forEach(char => {
         const key = document.createElement('div');
-        key.className = 'key';
+        key.className = 'key interactive-ui';
         key.innerText = char;
         key.dataset.val = char;
         key.onclick = () => handleKeyClick(char);
         ui.keyboard.appendChild(key);
     });
     const back = document.createElement('div');
-    back.className = 'key action-key';
+    back.className = 'key action-key interactive-ui';
     back.innerText = '⌫';
     back.dataset.val = 'BACK';
     back.onclick = () => handleKeyClick('BACK');
@@ -99,27 +102,28 @@ function handleKeyClick(val) {
     let current = ui.nameInput.value;
     if (val === 'BACK') {
         ui.nameInput.value = current.slice(0, -1);
-    } else if (current.length < 12) {
+    } else if (current.length < 10) {
         ui.nameInput.value = current + val;
     }
-    playSound('select');
     playerName = ui.nameInput.value;
+    playSound('select');
 }
 
-// Inputni klaviatura bilan sinxronlash
 ui.nameInput.addEventListener('input', (e) => {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
     playerName = e.target.value;
 });
 
-// --- UI INTERACTION (HAND) ---
+// --- UI INTERACTION (HAND & TOUCH) ---
 function checkUiInteraction() {
     if (!state.handVisible) {
         ui.handCursor.style.display = 'none';
         return;
     }
     
-    // Ekranni koordinatalariga o'tkazish
+    // MediaPipe: x [0..1] chapdan o'ngga. Selfida x ko'zgu bo'ladi.
+    // CSSda oyna effekti (scaleX -1) bor.
+    // Ekranni koordinatalariga o'tkazish:
     const sx = (1 - state.screenHandPos.x) * window.innerWidth;
     const sy = state.screenHandPos.y * window.innerHeight;
     
@@ -133,25 +137,42 @@ function checkUiInteraction() {
             // Elementni topish
             const el = document.elementFromPoint(sx, sy);
             if (el) {
-                if (el.classList.contains('key')) {
-                    handleKeyClick(el.dataset.val);
-                    el.classList.add('clicked');
-                    setTimeout(() => el.classList.remove('clicked'), 150);
+                if (el.classList.contains('interactive-ui')) {
+                    el.classList.add('hovered');
+                    
+                    // Click trigger
+                    if (el.dataset.val) { // Klaviatura
+                        handleKeyClick(el.dataset.val);
+                        el.classList.add('clicked');
+                        setTimeout(() => el.classList.remove('clicked'), 150);
+                    } else { // Buttonlar
+                        el.click();
+                    }
+                    
                     triggerCooldown();
-                } else if (el.id === 'start-btn' || el.id === 'restart-btn' || el.id === 'enable-cam-btn' || el.id === 'music-icon') {
-                    el.click();
-                    triggerCooldown(1000);
                 }
             }
         }
     } else {
         ui.handCursor.classList.remove('active');
+        document.querySelectorAll('.hovered').forEach(el => el.classList.remove('hovered'));
     }
 }
 
-function triggerCooldown(ms = 300) {
+function triggerCooldown(ms = 400) {
     isClickCooldown = true;
     setTimeout(() => isClickCooldown = false, ms);
+}
+
+// --- TEXT TO SPEECH ---
+function speak(text) {
+    if (!isSpeechEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'uz-UZ'; 
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    window.speechSynthesis.speak(utterance);
 }
 
 // --- THREE.JS INIT ---
@@ -185,6 +206,7 @@ scene.add(slotsGroup);
 scene.add(particlesGroup);
 scene.add(trailsGroup);
 
+// Cursor
 let cursorSprite;
 let texHandOpen, texHandPinch;
 
@@ -198,36 +220,7 @@ function initCursor() {
     scene.add(cursorSprite);
 }
 
-// --- TIMER SYSTEM ---
-function startTimer() {
-    if (!isTimerRunning) {
-        isTimerRunning = true;
-        lastFrameTime = Date.now();
-    }
-}
-
-function stopTimer() {
-    isTimerRunning = false;
-}
-
-function updateTimerDisplay() {
-    if (isTimerRunning) {
-        const now = Date.now();
-        const delta = now - lastFrameTime;
-        lastFrameTime = now;
-        totalPlayedTime += delta; 
-        ui.timer.innerText = formatTime(totalPlayedTime);
-    }
-}
-
-function formatTime(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-// --- AUDIO FUNC ---
+// --- AUDIO (MUSIC BOX) ---
 function playNote(freq, time) {
     if (!isMusicPlaying) return;
     const osc = audioCtx.createOscillator();
@@ -235,7 +228,7 @@ function playNote(freq, time) {
     osc.type = 'sine'; 
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(0.08, time + 0.05); 
+    gain.gain.linearRampToValueAtTime(0.1, time + 0.02); 
     gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); 
     osc.connect(gain);
     gain.connect(audioCtx.destination);
@@ -245,25 +238,13 @@ function playNote(freq, time) {
 
 function scheduleMusic() {
     if (!isMusicPlaying) return;
-    const tempo = 0.4; 
     const currentTime = audioCtx.currentTime;
     while (nextNoteTime < currentTime + 0.1) {
-        const freq = melody[noteIndex];
+        const freq = melody[Math.floor(Math.random() * melody.length)];
         playNote(freq, nextNoteTime);
-        if(Math.random() > 0.7) playNote(freq * 1.5, nextNoteTime); 
-        nextNoteTime += tempo;
-        noteIndex = (noteIndex + 1) % melody.length;
+        nextNoteTime += 0.4 + Math.random() * 0.4; 
     }
     requestAnimationFrame(scheduleMusic);
-}
-
-function startAmbientMusic() {
-    if (isMusicPlaying) return;
-    isMusicPlaying = true;
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    nextNoteTime = audioCtx.currentTime + 0.1;
-    scheduleMusic();
-    updateMusicIcon();
 }
 
 function toggleMusic() {
@@ -272,27 +253,28 @@ function toggleMusic() {
         if(audioCtx.state === 'suspended') audioCtx.resume();
         nextNoteTime = audioCtx.currentTime + 0.1;
         scheduleMusic();
-    }
-    updateMusicIcon();
-}
-
-function updateMusicIcon() {
-    const icon = document.getElementById('music-icon');
-    if (isMusicPlaying) {
-        icon.innerText = '🔊';
-        icon.style.opacity = '1';
-        icon.style.borderColor = '#00ffcc';
+        ui.musicIcon.innerText = '🔊';
+        ui.musicIcon.style.opacity = '1';
     } else {
-        icon.innerText = '🔇';
-        icon.style.opacity = '0.6';
-        icon.style.borderColor = 'rgba(255,255,255,0.2)';
+        ui.musicIcon.innerText = '🔇';
+        ui.musicIcon.style.opacity = '0.6';
     }
 }
+ui.musicIcon.onclick = toggleMusic;
 
-document.getElementById('music-icon').addEventListener('click', (e) => {
-    // e.preventDefault(); (Click eventini bloklamaslik uchun olib tashladim, handleUiInteraction boshqaradi)
-    toggleMusic();
-});
+function toggleSpeech() {
+    isSpeechEnabled = !isSpeechEnabled;
+    if(isSpeechEnabled) {
+        ui.speechIcon.innerText = '🗣️';
+        ui.speechIcon.style.opacity = '1';
+        speak("Ovoz yoqildi");
+    } else {
+        ui.speechIcon.innerText = '🔇';
+        ui.speechIcon.style.opacity = '0.6';
+        window.speechSynthesis.cancel();
+    }
+}
+ui.speechIcon.onclick = toggleSpeech;
 
 function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -332,27 +314,18 @@ function playSound(type) {
             g.gain.exponentialRampToValueAtTime(0.001, now + 3);
             o.start(now); o.stop(now + 3);
         });
-    } else if (type === 'slowmo') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(100, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        osc.start(now); osc.stop(now + 0.5);
     }
 }
 
-// --- TEXTURES ---
+// --- TEXTURE HELPERS ---
 function createCursorTexture(emoji) {
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, 128, 128);
     ctx.font = '100px Arial';
-    ctx.textAlign = 'center'; 
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = "rgba(0,255,204,0.8)";
-    ctx.shadowBlur = 15;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = "rgba(0,255,204,0.8)"; ctx.shadowBlur = 15;
     ctx.fillText(emoji, 64, 70);
     return new THREE.CanvasTexture(canvas);
 }
@@ -362,23 +335,22 @@ function createSlotTexture(text, name, colorHex) {
     canvas.width = 512; canvas.height = 600; 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, 512, 600);
-
     const centerX = 256; const centerY = 256; const radius = 200;
     const hex = '#' + new THREE.Color(colorHex).getHexString();
     
-    ctx.beginPath(); 
-    ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
-    ctx.fillStyle = "rgba(255,255,255,0.05)"; 
-    ctx.fill();
+    // Dumaloq
+    ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
     ctx.strokeStyle = hex; ctx.lineWidth = 15;
     ctx.shadowColor = hex; ctx.shadowBlur = 30; 
-    ctx.setLineDash([30, 20]); ctx.stroke();
-    ctx.setLineDash([]); ctx.shadowBlur = 0;
+    ctx.setLineDash([30, 20]); ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
 
+    // Emoji
     ctx.font = 'bold 200px "Segoe UI Emoji", Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.globalAlpha = 0.3; ctx.fillText(text, centerX, centerY + 20); ctx.globalAlpha = 1.0;
     
+    // Nomi
     let fontSize = 80; ctx.font = `bold ${fontSize}px "Fredoka One", sans-serif`;
     let textWidth = ctx.measureText(name).width; const maxWidth = 450;
     while (textWidth > maxWidth && fontSize > 20) {
@@ -386,6 +358,7 @@ function createSlotTexture(text, name, colorHex) {
     }
     ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 8;
     const textY = 560; ctx.strokeText(name, centerX, textY); ctx.fillText(name, centerX, textY);
+    
     const tex = new THREE.CanvasTexture(canvas);
     tex.encoding = THREE.sRGBEncoding;
     return tex;
@@ -398,27 +371,21 @@ function createPieceTexture(text, colorHex) {
     ctx.clearRect(0, 0, 256, 256);
     const centerX = 128; const centerY = 128; const radius = 120;
     const hex = '#' + new THREE.Color(colorHex).getHexString();
+    
     const grad = ctx.createRadialGradient(centerX,centerY,10, centerX,centerY,radius);
     grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.3, hex); grad.addColorStop(1, '#000000');
     
-    ctx.beginPath(); 
-    ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
     ctx.fillStyle = grad; ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke();
+    
     ctx.font = 'bold 130px "Segoe UI Emoji", Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = '#fff'; ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=10;
     ctx.fillText(text, centerX, centerY + 10);
+    
     const tex = new THREE.CanvasTexture(canvas);
     tex.encoding = THREE.sRGBEncoding;
     return tex;
-}
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
 }
 
 function updateLayout() {
@@ -434,22 +401,20 @@ function updateLayout() {
     state.worldSize = { width, height };
 }
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 function initLevel(idx) {
     state.isTransitioning = true;
     slowMoFactor = 1.0; 
     
-    while(piecesGroup.children.length > 0) { 
-        const obj = piecesGroup.children[0];
-        piecesGroup.remove(obj);
-        if(obj.geometry) obj.geometry.dispose();
-        if(obj.material) { if(Array.isArray(obj.material)) obj.material.forEach(m=>m.dispose()); else obj.material.dispose(); }
-    }
-    while(slotsGroup.children.length > 0) { 
-        const obj = slotsGroup.children[0];
-        slotsGroup.remove(obj);
-        if(obj.geometry) obj.geometry.dispose();
-        if(obj.material) obj.material.dispose();
-    }
+    // Tozalash
+    while(piecesGroup.children.length) piecesGroup.remove(piecesGroup.children[0]);
+    while(slotsGroup.children.length) slotsGroup.remove(slotsGroup.children[0]);
     
     state.levelIdx = idx;
     state.lockedCount = 0;
@@ -458,6 +423,7 @@ function initLevel(idx) {
     ui.title.innerText = lvl.title;
     updateStepsUI();
     updateProgress(0); 
+    speak(lvl.title + " bosqichi");
 
     const targetColor = new THREE.Color(lvl.color).lerp(new THREE.Color(0x000000), 0.7);
     scene.background = targetColor;
@@ -468,9 +434,7 @@ function initLevel(idx) {
     let radius = minDim * 0.35; 
     if(radius < 2.5) radius = 2.5;
 
-    // --- RANDOM JOYLASHUV (SLOTS) ---
     const angleStep = (Math.PI * 2) / lvl.items.length;
-    
     let positions = [];
     for(let i=0; i<lvl.items.length; i++) {
             let angle = i * angleStep;
@@ -533,48 +497,28 @@ function initLevel(idx) {
     state.isTransitioning = false;
 }
 
-function spawnTrail(pos) {
-    if(Math.random() > 0.3) return;
-    const el = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true }));
-    el.position.copy(pos); el.position.z = 2.5; el.userData = { life: 20 }; trailsGroup.add(el);
-}
-function updateTrail() {
-    for(let i=trailsGroup.children.length-1; i>=0; i--) {
-        const t = trailsGroup.children[i]; t.userData.life--; t.material.opacity = t.userData.life/20; t.scale.setScalar(t.userData.life/20); if(t.userData.life<=0) trailsGroup.remove(t);
-    }
-}
-function createConfetti() {
-    const count = 80; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(count*3); const velArr = [];
-    for(let i=0; i<count; i++) {
-        posArr[i*3] = (Math.random()-0.5)*2; posArr[i*3+1] = (Math.random()-0.5)*2; posArr[i*3+2] = 0;
-        velArr.push({x: (Math.random()-0.5)*0.5, y: (Math.random()-0.5)*0.5+0.2, z: (Math.random()-0.5)*0.5});
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3 });
-    const sys = new THREE.Points(geo, mat); sys.userData = { vels: velArr, life: 100 }; particlesGroup.add(sys);
-}
-function updateParticles() {
-    for(let i=particlesGroup.children.length-1; i>=0; i--) {
-        const p = particlesGroup.children[i]; p.userData.life--;
-        const pos = p.geometry.attributes.position.array;
-        for(let j=0; j<p.userData.vels.length; j++) {
-            pos[j*3] += p.userData.vels[j].x; pos[j*3+1] += p.userData.vels[j].y; pos[j*3+2] += p.userData.vels[j].z; p.userData.vels[j].y -= 0.01; 
-        }
-        p.geometry.attributes.position.needsUpdate = true; p.scale.setScalar(p.userData.life/100); if(p.userData.life<=0) particlesGroup.remove(p);
-    }
-}
-function updateStepsUI() {
-    ui.stepsContainer.innerHTML = '';
-    LEVELS.forEach((lvl, idx) => {
-        const dot = document.createElement('div'); dot.className = 'step-dot'; dot.innerText = idx + 1;
-        if (idx < state.levelIdx) { dot.classList.add('completed'); dot.innerText = '✓'; } 
-        else if (idx === state.levelIdx) { dot.classList.add('active'); }
-        ui.stepsContainer.appendChild(dot);
-    });
-}
-function updateProgress(percent) { ui.progressFill.style.width = percent + '%'; }
+// ... (Particle va Trail funksiyalari o'zgarishsiz qoldi)
+function spawnTrail(pos) { if(Math.random()>0.3) return; const el=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.15),new THREE.MeshBasicMaterial({color:0xffff00,transparent:true})); el.position.copy(pos); el.position.z=2.5; el.userData={life:20}; trailsGroup.add(el); }
+function updateTrail() { for(let i=trailsGroup.children.length-1; i>=0; i--) { const t=trailsGroup.children[i]; t.userData.life--; t.material.opacity=t.userData.life/20; t.scale.setScalar(t.userData.life/20); if(t.userData.life<=0) trailsGroup.remove(t); } }
+function createConfetti() { const count=80; const geo=new THREE.BufferGeometry(); const posArr=new Float32Array(count*3); for(let i=0; i<count; i++) { posArr[i*3]=(Math.random()-0.5)*2; posArr[i*3+1]=(Math.random()-0.5)*2; posArr[i*3+2]=0; } geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3)); const mat=new THREE.PointsMaterial({color:0xffffff,size:0.3}); const sys=new THREE.Points(geo, mat); sys.userData={vels:[],life:100}; for(let i=0;i<count;i++) sys.userData.vels.push({x:(Math.random()-0.5)*0.5,y:(Math.random()-0.5)*0.5+0.2,z:(Math.random()-0.5)*0.5}); particlesGroup.add(sys); }
+function updateParticles() { for(let i=particlesGroup.children.length-1; i>=0; i--) { const p=particlesGroup.children[i]; p.userData.life--; const pos=p.geometry.attributes.position.array; for(let j=0; j<p.userData.vels.length; j++) { pos[j*3]+=p.userData.vels[j].x; pos[j*3+1]+=p.userData.vels[j].y; pos[j*3+2]+=p.userData.vels[j].z; p.userData.vels[j].y-=0.01; } p.geometry.attributes.position.needsUpdate=true; p.scale.setScalar(p.userData.life/100); if(p.userData.life<=0) particlesGroup.remove(p); } }
 
-// --- LEADERBOARD LOGIC ---
+// --- TIMER & LEADERBOARD ---
+function startTimer() { if (!isTimerRunning) { isTimerRunning = true; lastFrameTime = Date.now(); } }
+function stopTimer() { isTimerRunning = false; }
+function updateTimerDisplay() { 
+    if (isTimerRunning) { 
+        const now = Date.now(); totalPlayedTime += now - lastFrameTime; lastFrameTime = now; 
+        ui.timer.innerText = formatTime(totalPlayedTime); 
+    } 
+}
+function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function saveTime(name, timeMs) {
     let scores = JSON.parse(localStorage.getItem('kosmik_times') || '[]');
     const existingIndex = scores.findIndex(p => p.name === name);
@@ -600,19 +544,12 @@ function showLeaderboard() {
         const isCurrent = (p.name === playerName);
         const cls = isCurrent ? 'lb-row lb-highlight' : 'lb-row';
         const icon = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
-        html += `
-            <div class="${cls}">
-                <div class="lb-rank">${i+1} ${icon}</div>
-                <div class="lb-name">${p.name}</div>
-                <div class="lb-time">${formatTime(p.time)}</div>
-            </div>
-        `;
+        html += `<div class="${cls}"><div class="lb-rank">${i+1} ${icon}</div><div class="lb-name">${p.name}</div><div class="lb-time">${formatTime(p.time)}</div></div>`;
     });
     ui.lbContent.innerHTML = html;
-    ui.winScreen.querySelector('h1').innerText = "NATIJALAR";
-    ui.winScreen.classList.remove('hidden');
 }
 
+// --- MEDIAPIPE ---
 function onResults(results) {
     ui.outCanvas.width = ui.video.videoWidth;
     ui.outCanvas.height = ui.video.videoHeight;
@@ -629,12 +566,9 @@ function onResults(results) {
         state.handVisible = true;
         const x = (1 - lm[9].x) * 2 - 1; 
         const y = (1 - lm[9].y) * 2 - 1;
-        
-        // Raw screen coordinates for UI
         state.screenHandPos.x = 1 - lm[9].x; 
         state.screenHandPos.y = lm[9].y;
 
-        // 3D coordinates
         state.handPos.x += (x * CONFIG.sensitivityX - state.handPos.x) * 0.5;
         state.handPos.y += (y * CONFIG.sensitivityY - state.handPos.y) * 0.5;
 
@@ -642,8 +576,7 @@ function onResults(results) {
         const index = lm[8];
         const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
         
-        if (dist < 0.06) state.gesture = 'PINCH';
-        else state.gesture = 'IDLE';
+        if (dist < 0.06) state.gesture = 'PINCH'; else state.gesture = 'IDLE';
     } else {
         state.handVisible = false;
     }
@@ -651,9 +584,7 @@ function onResults(results) {
     isHandProcessing = false; 
 }
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
+// --- GAME LOOP ---
 function updateGame() {
     if(state.isTransitioning) return;
     updateParticles();
@@ -661,45 +592,34 @@ function updateGame() {
     updateTimerDisplay();
 
     if (gameState === 'INTRO') {
-        checkUiInteraction(); // Allow hand interaction on start screen
+        checkUiInteraction(); // Bosh menyuda UI boshqaruvi
         return; 
     }
 
-    const timeDelta = 0.002 * slowMoFactor;
-    const time = Date.now() * timeDelta;
-
-    slotsGroup.children.forEach(slot => {
-        if(slot.userData.isSlot) {
-            slot.rotation.z = Math.sin(Date.now() * 0.001) * 0.1; 
-        }
-    });
-    
-    // Agar o'yin oxirida bo'lsa (Win screen)
+    // Win screen restart interaction
     if (!ui.winScreen.classList.contains('hidden')) {
-        checkUiInteraction(); // Restart button click
+        checkUiInteraction();
     }
+
+    const timeDelta = 0.002 * slowMoFactor;
+    slotsGroup.children.forEach(slot => { if(slot.userData.isSlot) slot.rotation.z = Math.sin(Date.now()*0.001)*0.1; });
 
     piecesGroup.children.forEach(obj => {
         if(!obj.userData.isLocked && obj !== state.grabbedObj) {
-            if (state.levelIdx >= 2) {
+            if (state.levelIdx >= 2) { // 3-bosqichdan uchish
                 const vel = obj.userData.velocity;
-                obj.position.x += vel.x * slowMoFactor;
-                obj.position.y += vel.y * slowMoFactor;
-
-                const limitX = (state.worldSize.width / 2) - 1;
-                const limitY = (state.worldSize.height / 2) - 1;
-                if (obj.position.x > limitX || obj.position.x < -limitX) vel.x *= -1;
-                if (obj.position.y > limitY || obj.position.y < -limitY) vel.y *= -1;
-                obj.rotation.z += 0.01 * slowMoFactor; 
-                obj.rotation.x += 0.01 * slowMoFactor; 
-                obj.rotation.y += 0.01 * slowMoFactor;
+                obj.position.x += vel.x * slowMoFactor; obj.position.y += vel.y * slowMoFactor;
+                const limitX = (state.worldSize.width/2)-1; const limitY = (state.worldSize.height/2)-1;
+                if(obj.position.x>limitX||obj.position.x<-limitX) vel.x*=-1;
+                if(obj.position.y>limitY||obj.position.y<-limitY) vel.y*=-1;
+                obj.rotation.z+=0.01*slowMoFactor; obj.rotation.x+=0.01*slowMoFactor; obj.rotation.y+=0.01*slowMoFactor;
             } else {
-                obj.position.y += Math.sin(Date.now() * 0.002 + obj.userData.floatOffset) * 0.005 * slowMoFactor;
-                obj.rotation.z = Math.sin(Date.now() * 0.001 + obj.userData.floatOffset) * 0.1 * slowMoFactor;
+                obj.position.y += Math.sin(Date.now()*0.002+obj.userData.floatOffset)*0.005*slowMoFactor;
+                obj.rotation.z = Math.sin(Date.now()*0.001+obj.userData.floatOffset)*0.1*slowMoFactor;
             }
             obj.position.z = obj.userData.baseZ; 
         } else if (obj.userData.isLocked) {
-            obj.rotation.z = Math.sin(Date.now() * 0.002) * 0.1; obj.rotation.x = Math.PI/2; obj.rotation.y = 0;
+            obj.rotation.z = Math.sin(Date.now()*0.002)*0.1; obj.rotation.x=Math.PI/2; obj.rotation.y=0;
         }
     });
 
@@ -717,9 +637,7 @@ function updateGame() {
     const worldPos = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(distZ));
     
     if(cursorSprite) {
-        cursorSprite.position.copy(worldPos);
-        cursorSprite.position.z = 3; 
-        cursorSprite.visible = true;
+        cursorSprite.position.copy(worldPos); cursorSprite.position.z = 3; cursorSprite.visible = true;
         if (state.handLabel === 'Left') cursorSprite.scale.x = 1.5; else cursorSprite.scale.x = -1.5; 
         if (state.gesture === 'PINCH') cursorSprite.material.map = texHandPinch; else cursorSprite.material.map = texHandOpen;
         spawnTrail(cursorSprite.position);
@@ -741,11 +659,11 @@ function updateGame() {
                 obj.position.copy(target);
                 obj.position.z = 0.5; 
                 obj.userData.isLocked = true;
-                
                 const light = new THREE.PointLight(0xffff00, 1, 5);
                 obj.add(light);
                 
                 playSound('pop');
+                speak("Ofarin! Bu " + obj.userData.name);
                 createConfetti();
                 
                 state.lockedCount++;
@@ -758,7 +676,6 @@ function updateGame() {
                         slowMoFactor = 1.0;
                         playSound('pop');
                         createConfetti();
-                        
                         playSound('win');
                         state.isTransitioning = true;
                         stopTimer(); 
@@ -769,6 +686,7 @@ function updateGame() {
                              ui.leaderboard.style.display = 'none';
                              ui.nextMsg.style.display = 'block';
                              ui.restartBtn.style.display = 'none';
+                             speak("Barakalla! Keyingi bosqichga o'tamiz");
                              
                              setTimeout(() => {
                                 ui.winScreen.classList.add('hidden');
@@ -781,6 +699,7 @@ function updateGame() {
                             ui.leaderboard.style.display = 'block';
                             ui.nextMsg.style.display = 'none';
                             ui.restartBtn.style.display = 'block';
+                            speak("Tabriklayman! Siz g'olib bo'ldingiz!");
                         }
                     }, 800);
                 } else {
@@ -800,17 +719,13 @@ function updateGame() {
         if (realObj && realObj.userData && !realObj.userData.isLocked) {
             state.hoveredObj = realObj;
             realObj.scale.setScalar(1.1 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
-            realObj.children.forEach(c => { 
-                if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); 
-            });
+            realObj.children.forEach(c => { if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); });
             if(state.gesture !== 'PINCH') { showMessage("CHIMCHILANG (👌)", "#ffff00"); }
         }
     } else {
         if (state.hoveredObj && state.hoveredObj !== state.grabbedObj) {
             state.hoveredObj.scale.setScalar(1.0 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
-            state.hoveredObj.children.forEach(c => { 
-                if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x000000); 
-            });
+            state.hoveredObj.children.forEach(c => { if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x000000); });
         }
         state.hoveredObj = null;
         if(state.gesture !== 'PINCH') hideMessage();
@@ -819,10 +734,8 @@ function updateGame() {
     if (state.grabbedObj) {
         state.grabbedObj.position.lerp(worldPos, 0.4);
         state.grabbedObj.position.z = 2; 
-        
         state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
         state.grabbedObj.scale.setScalar(1.2 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
-
         const target = state.grabbedObj.userData.targetPos;
         const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
         if (dist2D < CONFIG.snapDistance) {
@@ -832,32 +745,25 @@ function updateGame() {
     }
 }
 
-function showMessage(text, color) {
-    ui.hintBubble.innerText = text;
-    ui.hintBubble.style.color = color;
-    ui.hintBubble.style.borderColor = color;
-    ui.hintBubble.classList.add('visible');
-}
-
-function hideMessage() {
-    ui.hintBubble.classList.remove('visible');
-}
+function showMessage(text, color) { ui.hintBubble.innerText = text; ui.hintBubble.style.color = color; ui.hintBubble.style.borderColor = color; ui.hintBubble.classList.add('visible'); }
+function hideMessage() { ui.hintBubble.classList.remove('visible'); }
 
 function startCountdown(isNextLevel = false) {
     let count = 3;
     ui.countdown.classList.remove('hidden');
     ui.countdown.style.opacity = 1;
     ui.countdown.innerText = count;
-    playSound('count');
+    playSound('count'); speak(count.toString());
 
     const interval = setInterval(() => {
         count--;
         if(count > 0) {
             ui.countdown.innerText = count;
-            playSound('count');
+            playSound('count'); speak(count.toString());
         } else {
             clearInterval(interval);
-            ui.countdown.innerText = "KETDIK! 🚀";
+            ui.countdown.innerText = "KETDIK!";
+            speak("Ketdik!");
             setTimeout(() => {
                 ui.countdown.classList.add('hidden');
                 if (isNextLevel) {
@@ -882,9 +788,9 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// --- INIT ---
 window.addEventListener('load', () => {
     ui.loading.style.display = 'none';
-    
     hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
     hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     hands.onResults(onResults);
@@ -893,8 +799,8 @@ window.addEventListener('load', () => {
     updateLayout(); 
 });
 
-document.getElementById('enable-cam-btn').addEventListener('click', async () => {
-    document.getElementById('enable-cam-btn').innerText = "Yuklanmoqda...";
+ui.enableBtn.addEventListener('click', async () => {
+    ui.enableBtn.innerText = "Yuklanmoqda...";
     try {
         startAmbientMusic();
         const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
@@ -905,28 +811,23 @@ document.getElementById('enable-cam-btn').addEventListener('click', async () => 
                 ui.permScreen.classList.add('hidden');
                 ui.startScreen.classList.remove('hidden');
                 gameState = 'INTRO';
+                speak("Xush kelibsiz! Ismingizni kiriting.");
             }, 500);
-            
             ui.uiLayer.classList.remove('hidden');
             animate();
         };
     } catch(e) {
         alert("Kamera xatosi: " + e.message);
-        document.getElementById('enable-cam-btn').innerText = "Qayta urinish";
+        ui.enableBtn.innerText = "Qayta urinish";
     }
 });
 
 ui.startBtn.addEventListener('click', () => {
-    const name = ui.nameInput.value.trim();
-    if (!name) {
+    if (!playerName) {
         ui.nameInput.style.borderColor = 'red';
-        ui.nameInput.placeholder = "Ism kiritish shart!";
+        setTimeout(() => ui.nameInput.style.borderColor = '#00ffcc', 500);
         return;
     }
-    playerName = name;
-    ui.nameInput.style.display = 'none'; 
-    ui.keyboard.style.display = 'none'; // Klaviaturani yashirish
-    
     ui.startScreen.classList.add('fade-out');
     setTimeout(() => {
         ui.startScreen.classList.add('hidden');
@@ -943,11 +844,8 @@ ui.restartBtn.addEventListener('click', () => {
     ui.timer.innerText = "00:00";
     ui.leaderboard.style.display = 'none';
     ui.restartBtn.style.display = 'none';
-    
     initLevel(0);
     startCountdown(false); 
 });
 
-window.addEventListener('resize', () => {
-    updateLayout();
-});
+window.addEventListener('resize', () => { updateLayout(); });
