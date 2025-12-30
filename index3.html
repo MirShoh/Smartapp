@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Chempionlar</title>
+    <title>Kosmik Sayohat: Chempionlar Ligasi</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,7 @@
         }
 
         /* Interaktiv elementlar */
-        #music-icon, .btn, #restart-btn {
+        #music-icon, .btn, #restart-btn, #player-name-input {
             pointer-events: auto !important;
         }
 
@@ -179,12 +179,34 @@
         
         .btn {
             background: linear-gradient(45deg, #00ccff, #0066ff); border: none; padding: 18px 50px;
-            color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 30px;
+            color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px;
             box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
             font-family: 'Fredoka One', cursive;
         }
         .btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
         
+        /* Ism Kiritish Inputi */
+        #player-name-input {
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            border-radius: 30px;
+            border: 3px solid #00ffcc;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            text-align: center;
+            outline: none;
+            margin-bottom: 10px;
+            font-family: 'Nunito', sans-serif;
+            width: 80%;
+            max-width: 300px;
+            transition: all 0.3s;
+        }
+        #player-name-input:focus {
+            box-shadow: 0 0 20px #00ffcc;
+            transform: scale(1.05);
+        }
+        #player-name-input::placeholder { color: rgba(255,255,255,0.5); }
+
         /* Leaderboard Table */
         #leaderboard {
             background: rgba(255, 255, 255, 0.1);
@@ -195,6 +217,8 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             width: 80%;
             max-width: 500px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
         #leaderboard h2 {
@@ -213,10 +237,10 @@
             color: #fff;
         }
         .lb-row:last-child { border-bottom: none; }
-        .lb-rank { font-weight: bold; color: #00ffcc; width: 30px; }
+        .lb-rank { font-weight: bold; color: #00ffcc; width: 40px; text-align: left; }
         .lb-name { flex-grow: 1; text-align: left; padding-left: 10px; }
         .lb-score { font-weight: bold; color: #ffd700; }
-        .lb-highlight { background: rgba(0, 255, 204, 0.2); border-radius: 10px; }
+        .lb-highlight { background: rgba(0, 255, 204, 0.3); border-radius: 10px; border: 1px solid #00ffcc; }
 
         .loader {
             border: 5px solid #f3f3f3; border-top: 5px solid #00ffcc;
@@ -241,6 +265,7 @@
             #music-icon { width: 40px; height: 40px; font-size: 1.8rem; bottom: 10px; left: 10px; }
             #leaderboard { width: 90%; padding: 10px; }
             .lb-row { font-size: 1rem; }
+            #player-name-input { font-size: 1.2rem; }
         }
     </style>
     
@@ -256,16 +281,18 @@
 
     <div id="start-screen" class="overlay-screen">
         <h1 style="font-size: 3.5rem; margin-top: 0;">KOSMIK SARGUZASHT</h1>
-        <p style="font-size: 1.3rem; color: #ddd; margin: 20px; line-height: 1.6;">
-            O'ng pastda o'zingizni ko'rasiz ↘️<br>
-            ✋ <b>Ochiq qo'l:</b> Tanlash<br>
-            👌 <b>Chimchilash:</b> Ushlash
+        <p style="font-size: 1.3rem; color: #ddd; margin: 10px; line-height: 1.4;">
+            Ismingizni kiriting va sehrli dunyoga sayohat qiling! 🚀
         </p>
+        
+        <!-- Ism kiritish -->
+        <input type="text" id="player-name-input" placeholder="Ismingiz..." maxlength="12" autocomplete="off">
+        
         <div id="loading-container">
             <div class="loader"></div>
-            <div>AI Yuklanmoqda... (Aniq Rejim)</div>
+            <div>Tizim yuklanmoqda...</div>
         </div>
-        <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
+        <button id="start-btn" class="btn hidden">BOSHLASH</button>
     </div>
 
     <div id="ui-layer" class="hidden">
@@ -291,11 +318,11 @@
         <div id="music-icon" title="Ovozni o'chirish/yoqish">🔊</div>
     </div>
     
-    <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.9);">
+    <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.95);">
         <h1 style="font-size: 3rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
         
         <div id="leaderboard">
-            <h2>🏆 TOP O'YINCHILAR</h2>
+            <h2>🏆 REYTING</h2>
             <div id="lb-content">
                 <!-- JS orqali to'ldiriladi -->
             </div>
@@ -321,6 +348,7 @@
     let isHandProcessing = false; 
     let startTime = 0;
     let totalScore = 0;
+    let playerName = "O'yinchi"; // Default ism
 
     const melody = [523.25, 659.25, 783.99, 1046.50, 523.25, 587.33, 783.99, 880.00];
 
@@ -355,6 +383,7 @@
     const ui = {
         hintBubble: document.getElementById('hint-bubble'),
         startBtn: document.getElementById('start-btn'),
+        nameInput: document.getElementById('player-name-input'),
         startScreen: document.getElementById('start-screen'),
         winScreen: document.getElementById('win-screen'),
         uiLayer: document.getElementById('ui-layer'),
@@ -417,7 +446,7 @@
         scene.add(cursorSprite);
     }
 
-    // --- AUDIO FUNC (MUSIC BOX) ---
+    // --- AUDIO FUNC ---
     function playNote(freq, time) {
         if (!isMusicPlaying) return;
         const osc = audioCtx.createOscillator();
@@ -425,7 +454,7 @@
         osc.type = 'sine'; 
         osc.frequency.value = freq;
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.1, time + 0.02); 
+        gain.gain.linearRampToValueAtTime(0.08, time + 0.05); 
         gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -435,11 +464,14 @@
 
     function scheduleMusic() {
         if (!isMusicPlaying) return;
+        const tempo = 0.4; 
         const currentTime = audioCtx.currentTime;
         while (nextNoteTime < currentTime + 0.1) {
-            const freq = melody[Math.floor(Math.random() * melody.length)];
+            const freq = melody[noteIndex];
             playNote(freq, nextNoteTime);
-            nextNoteTime += 0.4 + Math.random() * 0.4; 
+            if(Math.random() > 0.7) playNote(freq * 1.5, nextNoteTime); 
+            nextNoteTime += tempo;
+            noteIndex = (noteIndex + 1) % melody.length;
         }
         requestAnimationFrame(scheduleMusic);
     }
@@ -660,19 +692,6 @@
             const slot = new THREE.Mesh(slotGeo, slotMat);
             
             // --- FIX: ANIQLIK ---
-            // Slotning joylashuvi. Textura markazi bilan Plane markazi bir xil emas (yozuv pastda).
-            // createSlotTexture funksiyasida doira markazi 256, 256. Canvas 512, 600.
-            // Doira Canvas markazidan (256, 300) 44px tepada.
-            // 44px / 600px * 3.5 (balandlik) = 0.256
-            // Demak doira markazi Plane markazidan 0.256 yuqorida.
-            // Biz TargetPos ni Doira markaziga to'g'irlashimiz kerak.
-            // Agar slotni targetPos ga qo'ysak, doira markazi targetPos + 0.256 bo'ladi.
-            // Bizga doira markazi targetPos da bo'lishi kerak.
-            // Shuning uchun slotni 0.256 ga pastga suramiz.
-            // 0.35 oldingi taxminiy qiymat edi. 0.26 aniqroq.
-            
-            // Lekin biz oldingi safar y -= 0.6 qilgan edik va unga to'g'rilab y -= 0.35 offset bergandik.
-            // Keling, aniq hisoblangan offsetni ishlatamiz.
             // Slot position = targetPos - 0.26 (Y bo'yicha)
             slot.position.copy(targetPos);
             slot.position.y -= 0.26; 
@@ -757,30 +776,35 @@
         ui.score.innerText = "Ball: " + totalScore;
     }
 
-    // --- LEADERBOARD LOGIC ---
+    // --- LEADERBOARD LOGIC (LOCAL STORAGE) ---
+    function saveScore(name, score) {
+        let scores = JSON.parse(localStorage.getItem('kosmik_scores') || '[]');
+        scores.push({ name: name, score: score });
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5); // Faqat TOP 5
+        localStorage.setItem('kosmik_scores', JSON.stringify(scores));
+    }
+
     function showLeaderboard() {
-        const timeTaken = (Date.now() - startTime) / 1000; // Sekundlarda
-        // Ball hisoblash: Har bir to'g'ri topilgan shakl uchun 100 ball
-        // Vaqtdan yutuq: Har bir sekund uchun minus 1 ball (lekin minimal ball bor)
-        // Yoki oddiyroq: 5000 - vaqt * 10
-        const timePenalty = Math.floor(timeTaken * 2);
-        const finalScore = Math.max(0, totalScore + 1000 - timePenalty);
+        const timeTaken = (Date.now() - startTime) / 1000;
+        // Vaqtga qarab bonus ball (qancha tez bo'lsa shuncha ko'p, lekin 0 dan kam emas)
+        const timeBonus = Math.max(0, 500 - Math.floor(timeTaken * 2));
+        const finalScore = totalScore + timeBonus;
         
-        // Dummy Data (Fake Players)
-        const fakePlayers = [
-            { name: "Ali", score: 2500 },
-            { name: "Zarina", score: 2300 },
-            { name: "Bobur", score: 2100 }
-        ];
+        // Natijani saqlash
+        saveScore(playerName, finalScore);
         
-        // Bizning natijamiz
-        const playerResult = { name: "Siz", score: finalScore, isPlayer: true };
-        const allScores = [...fakePlayers, playerResult].sort((a, b) => b.score - a.score);
+        // O'qib olish va ko'rsatish
+        const scores = JSON.parse(localStorage.getItem('kosmik_scores') || '[]');
         
         let html = '';
-        allScores.forEach((p, i) => {
-            const cls = p.isPlayer ? 'lb-row lb-highlight' : 'lb-row';
+        scores.forEach((p, i) => {
+            // Agar bu hozirgi o'yinchi bo'lsa, ajratib ko'rsatamiz (ism va ball mos tushsa)
+            // Bu oddiy tekshiruv, mukammal emas lekin ishlaydi
+            const isCurrent = (p.name === playerName && p.score === finalScore);
+            const cls = isCurrent ? 'lb-row lb-highlight' : 'lb-row';
             const icon = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
+            
             html += `
                 <div class="${cls}">
                     <div class="lb-rank">${i+1} ${icon}</div>
@@ -911,7 +935,7 @@
                     createConfetti();
                     
                     state.lockedCount++;
-                    totalScore += 200; // Har bir to'g'ri javob uchun ball
+                    totalScore += 200; 
                     updateScore();
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     
@@ -922,8 +946,6 @@
                         if(state.levelIdx < LEVELS.length - 1) {
                              ui.winScreen.classList.remove('hidden');
                              ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
-                             // Jadvalni yashirish (faqat finalda ko'rsatish yoki har bosqichda)
-                             // Hozircha faqat finalda ko'rsatamiz
                              ui.winScreen.querySelector('#leaderboard').style.display = 'none';
                              ui.winScreen.querySelector('p').innerText = "Keyingi bosqichga tayyormisiz?";
                              setTimeout(() => {
@@ -931,10 +953,10 @@
                                 startCountdown();
                              }, 2000);
                         } else {
-                            // Final - Leaderboardni ko'rsatish
+                            // Final
                             showLeaderboard();
                             ui.winScreen.querySelector('#leaderboard').style.display = 'block';
-                            ui.winScreen.querySelector('p').style.display = 'none'; // P ni yashirish
+                            ui.winScreen.querySelector('p').style.display = 'none'; 
                         }
                     }
                 }
@@ -973,7 +995,6 @@
             state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
             state.grabbedObj.scale.setScalar(1.2); 
 
-            // Magnit effekti (Yaqinlashganda tortishish)
             const target = state.grabbedObj.userData.targetPos;
             const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
             if (dist2D < CONFIG.snapDistance) {
@@ -1043,6 +1064,7 @@
 
         ui.loading.style.display = 'none';
         ui.startBtn.classList.remove('hidden');
+        ui.nameInput.style.display = 'block'; // Inputni ko'rsatish
         
         initCursor();
         updateLayout(); 
@@ -1050,7 +1072,17 @@
     });
 
     ui.startBtn.addEventListener('click', async () => {
+        // Ismni tekshirish
+        const name = ui.nameInput.value.trim();
+        if (!name) {
+            ui.nameInput.style.borderColor = 'red';
+            ui.nameInput.placeholder = "Ism kiritish shart!";
+            return;
+        }
+        playerName = name;
+        ui.nameInput.style.display = 'none'; // Inputni yashirish
         ui.startBtn.innerText = "Yuklanmoqda...";
+
         try {
             startAmbientMusic();
             const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
@@ -1072,6 +1104,10 @@
     ui.restartBtn.addEventListener('click', () => {
         ui.winScreen.classList.add('hidden');
         state.levelIdx = 0;
+        // Scoreni reset qilish
+        totalScore = 0;
+        startTime = Date.now();
+        updateScore();
         initLevel(0);
     });
 
