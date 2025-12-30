@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Final</title>
+    <title>Kosmik Sayohat: Ertaknamo</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
             width: 100%; height: 100%; z-index: 2;
         }
 
-        /* Xabarlar */
+        /* Xabarlar - Kamera tepasida */
         #status-message {
             position: absolute; 
             bottom: 200px; 
@@ -275,11 +275,10 @@
     let hands; 
     let isHandProcessing = false; 
 
+    // Pentatonic scale (C Major Pentatonic) - Sehrli va yengil
+    // C5, D5, E5, G5, A5, C6
     const melody = [
-        523.25, 659.25, 783.99, 1046.50,
-        523.25, 587.33, 783.99, 880.00, 
-        392.00, 523.25, 659.25, 783.99,
-        1046.50, 783.99, 659.25, 523.25
+        523.25, 587.33, 659.25, 783.99, 880.00, 1046.50
     ];
 
     const CONFIG = {
@@ -373,16 +372,19 @@
         scene.add(cursorSprite);
     }
 
-    // --- AUDIO FUNC ---
+    // --- AUDIO FUNC (MUSIC BOX) ---
     function playNote(freq, time) {
         if (!isMusicPlaying) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine'; 
+        osc.type = 'sine'; // Music box uchun sine to'lqini eng yaxshisi
         osc.frequency.value = freq;
+        
+        // Music Box Envelop (Jaranglash)
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.08, time + 0.05); 
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); 
+        gain.gain.linearRampToValueAtTime(0.1, time + 0.02); // Tezkor attack
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); // Uzoq decay
+        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start(time);
@@ -391,14 +393,17 @@
 
     function scheduleMusic() {
         if (!isMusicPlaying) return;
-        const tempo = 0.4; 
         const currentTime = audioCtx.currentTime;
+        
+        // Nota oralig'i (ritm)
+        // Tasodifiy ritm bilan sehrli muhit yaratamiz
         while (nextNoteTime < currentTime + 0.1) {
-            const freq = melody[noteIndex];
+            // Tasodifiy nota tanlash
+            const freq = melody[Math.floor(Math.random() * melody.length)];
             playNote(freq, nextNoteTime);
-            if(Math.random() > 0.7) playNote(freq * 1.5, nextNoteTime); 
-            nextNoteTime += tempo;
-            noteIndex = (noteIndex + 1) % melody.length;
+            
+            // Keyingi notaning vaqti (tasodifiy)
+            nextNoteTime += 0.4 + Math.random() * 0.4; 
         }
         requestAnimationFrame(scheduleMusic);
     }
@@ -540,13 +545,19 @@
         const hex = '#' + new THREE.Color(colorHex).getHexString();
         const grad = ctx.createRadialGradient(centerX,centerY,10, centerX,centerY,radius);
         grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.3, hex); grad.addColorStop(1, '#000000');
-        ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
+        
+        ctx.beginPath(); 
+        ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
         ctx.fillStyle = grad; ctx.fill();
+        // --- FIX: Ramkani yo'qotish (faqat dumaloq) ---
+        // Strokeni olib tashladim yoki dumaloq qildim
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke();
+        
         ctx.font = 'bold 130px "Segoe UI Emoji", Arial';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#fff'; ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=10;
         ctx.fillText(text, centerX, centerY + 10);
+        
         const tex = new THREE.CanvasTexture(canvas);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
@@ -602,10 +613,11 @@
             const angle = i * angleStep - Math.PI/2;
             const targetPos = new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
 
-            // SLOT
+            // SLOT (Ramkasiz)
             const slotGeo = new THREE.PlaneGeometry(3.0, 3.5); 
             const slotTex = createSlotTexture(item.emoji, item.name, lvl.color);
-            const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 1.0 });
+            // AlphaTest: 0.1 - shaffof qismlarni kesib tashlash (to'rtburchak fonni yo'qotadi)
+            const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 1.0, alphaTest: 0.1 });
             const slot = new THREE.Mesh(slotGeo, slotMat);
             slot.position.copy(targetPos);
             slot.position.y -= 0.6; 
@@ -614,7 +626,7 @@
             slot.userData = { isSlot: true }; 
             slotsGroup.add(slot);
 
-            // PIECE
+            // PIECE (Ramkasiz)
             const pieceGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.2, 64);
             const pieceMatBody = new THREE.MeshStandardMaterial({ color: lvl.color, roughness: 0.2, metalness: 0.3 });
             const piece = new THREE.Mesh(pieceGeo, pieceMatBody);
@@ -622,9 +634,9 @@
             
             const faceGeo = new THREE.PlaneGeometry(2.0, 2.0);
             const faceTex = createPieceTexture(item.emoji, lvl.color);
-            const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, side: THREE.DoubleSide });
+            // AlphaTest: 0.1 - Dumaloqdan tashqarisini ko'rsatmaydi
+            const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, side: THREE.DoubleSide, alphaTest: 0.1 });
             
-            // --- FIX: Z-Fightingni oldini olish uchun masofani oshirish (0.11 -> 0.12) ---
             const frontFace = new THREE.Mesh(faceGeo, faceMat);
             frontFace.position.y = 0.12; frontFace.rotation.x = -Math.PI / 2; piece.add(frontFace);
             const backFace = new THREE.Mesh(faceGeo, faceMat);
@@ -717,7 +729,7 @@
             state.handVisible = false;
         }
         canvasCtx.restore();
-        isHandProcessing = false; // Keyingi freymga ruxsat
+        isHandProcessing = false; 
     }
 
     const raycaster = new THREE.Raycaster();
@@ -761,7 +773,6 @@
             return;
         }
 
-        // --- TUZATISH: Koordinatalarni chegaralash (Clamp) ---
         mouse.x = Math.max(-1, Math.min(1, state.handPos.x));
         mouse.y = Math.max(-1, Math.min(1, state.handPos.y));
         
@@ -836,7 +847,6 @@
             if (realObj && realObj.userData && !realObj.userData.isLocked) {
                 state.hoveredObj = realObj;
                 realObj.scale.setScalar(1.1);
-                // --- FIX: Nur taratish faqat 'material' bor bolalarga ---
                 realObj.children.forEach(c => { 
                     if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); 
                 });
@@ -907,7 +917,6 @@
 
     function animate() {
         requestAnimationFrame(animate);
-        // Throttle hand processing
         if(!ui.video.paused && !isHandProcessing) {
             isHandProcessing = true;
             hands.send({image: ui.video});
@@ -917,17 +926,14 @@
     }
 
     // --- MAIN INIT ---
-    // MediaPipe yuklanishini kutish va xatolikni tekshirish
     window.addEventListener('load', () => {
         if (typeof Hands === 'undefined') {
-            alert("Xatolik: MediaPipe kutubxonasi yuklanmadi. Iltimos, internetni tekshiring va sahifani yangilang.");
-            ui.loading.innerHTML = "Internet xatosi: MediaPipe yuklanmadi ❌";
+            alert("Xatolik: MediaPipe yuklanmadi.");
+            ui.loading.innerHTML = "Xatolik ❌";
             return;
         }
 
         hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        // Model complexity 1 = Accurate, 0 = Lite
-        // Confidence 0.5 = More sensitive
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         hands.onResults(onResults);
 
