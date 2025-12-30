@@ -329,7 +329,6 @@
     <div id="canvas-container"></div>
 
 <script>
-    // --- O'ZGARUVCHILAR ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMusicPlaying = false;
     let nextNoteTime = 0;
@@ -397,7 +396,6 @@
     
     const canvasCtx = ui.outCanvas.getContext('2d');
 
-    // --- THREE.JS INIT ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a0b2e);
     scene.fog = new THREE.FogExp2(0x1a0b2e, 0.025);
@@ -428,7 +426,6 @@
     scene.add(particlesGroup);
     scene.add(trailsGroup);
 
-    // Kursor
     let cursorSprite;
     let texHandOpen, texHandPinch;
 
@@ -442,7 +439,6 @@
         scene.add(cursorSprite);
     }
 
-    // --- TIMER SYSTEM ---
     function startTimer() {
         if (!isTimerRunning) {
             isTimerRunning = true;
@@ -471,7 +467,6 @@
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // --- AUDIO FUNC ---
     function playNote(freq, time) {
         if (!isMusicPlaying) return;
         const osc = audioCtx.createOscillator();
@@ -585,7 +580,6 @@
         }
     }
 
-    // --- TEXTURES ---
     function createCursorTexture(emoji) {
         const canvas = document.createElement('canvas');
         canvas.width = 128; canvas.height = 128;
@@ -657,7 +651,6 @@
         return tex;
     }
 
-    // --- RANDOM SHUFFLE ---
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -708,16 +701,37 @@
         scene.fog.color = targetColor;
 
         const isMobile = window.innerWidth < 600;
-        const radius = isMobile ? 2.2 : 3.5; 
-        const angleStep = (Math.PI*2)/lvl.items.length;
+        // Increased radius slightly for mobile based on new requirements for spacing
+        // Dynamic based on worldSize is even better
+        const minDim = Math.min(state.worldSize.width, state.worldSize.height);
+        // Using about 35-40% of min dimension as radius
+        let radius = minDim * 0.35; 
+        // Ensure some minimum spacing
+        if(radius < 2.5) radius = 2.5;
 
         // --- RANDOM JOYLASHUV (SLOTS) ---
+        // Instead of strict circle, add random jitter to angle or radius
+        // To ensure spacing, we can use sector-based jitter
+        const angleStep = (Math.PI * 2) / lvl.items.length;
+        
         let positions = [];
         for(let i=0; i<lvl.items.length; i++) {
-            const angle = i * angleStep - Math.PI/2;
-            positions.push(new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0));
+             // Base angle
+             let angle = i * angleStep;
+             // Add random jitter to angle (e.g. +/- 20% of the step)
+             // This keeps order but varies position
+             angle += (Math.random() - 0.5) * angleStep * 0.4;
+             
+             // Random radius variation
+             // e.g. radius between 90% and 110% of base radius
+             const r = radius + (Math.random() - 0.5) * 1.0;
+             
+             positions.push(new THREE.Vector3(Math.cos(angle)*r, Math.sin(angle)*r, 0));
         }
-        shuffleArray(positions); // Har doim har xil joyga tushishi uchun
+        shuffleArray(positions); 
+
+        // Scale down slots slightly on mobile to increase gap
+        const slotScale = isMobile ? 0.8 : 1.0;
 
         lvl.items.forEach((item, i) => {
             const targetPos = positions[i];
@@ -727,8 +741,10 @@
             const slotTex = createSlotTexture(item.emoji, item.name, lvl.color);
             const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 1.0, alphaTest: 0.1 });
             const slot = new THREE.Mesh(slotGeo, slotMat);
+            slot.scale.setScalar(slotScale);
             slot.position.copy(targetPos);
-            slot.position.y -= 0.26; 
+            // Adjusted Y offset for center alignment relative to visual center of slot texture
+            slot.position.y -= 0.26 * slotScale; 
             slot.position.z = -0.5; 
             slot.renderOrder = 1;
             slot.userData = { isSlot: true }; 
@@ -738,6 +754,7 @@
             const pieceGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.2, 64);
             const pieceMatBody = new THREE.MeshStandardMaterial({ color: lvl.color, roughness: 0.2, metalness: 0.3 });
             const piece = new THREE.Mesh(pieceGeo, pieceMatBody);
+            piece.scale.setScalar(slotScale);
             piece.rotation.x = Math.PI / 2;
             
             const faceGeo = new THREE.PlaneGeometry(2.0, 2.0);
@@ -753,7 +770,6 @@
             const spread = isMobile ? 1.5 : 3.0;
             const velocity = new THREE.Vector3((Math.random()-0.5)*0.03, (Math.random()-0.5)*0.03, 0);
 
-            // Piece joylashuvi (tasodifiy)
             piece.position.set((Math.random()-0.5)*spread*2, (Math.random()-0.5)*spread, uniqueZ);
             piece.renderOrder = 10 + i; 
 
@@ -810,7 +826,6 @@
     }
     function updateProgress(percent) { ui.progressFill.style.width = percent + '%'; }
 
-    // --- LEADERBOARD LOGIC (TIME ATTACK) ---
     function saveTime(name, timeMs) {
         let scores = JSON.parse(localStorage.getItem('kosmik_times') || '[]');
         const existingIndex = scores.findIndex(p => p.name === name);
@@ -967,6 +982,9 @@
                     const light = new THREE.PointLight(0xffff00, 1, 5);
                     obj.add(light);
                     
+                    playSound('pop');
+                    createConfetti();
+                    
                     state.lockedCount++;
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     
@@ -1018,7 +1036,7 @@
             
             if (realObj && realObj.userData && !realObj.userData.isLocked) {
                 state.hoveredObj = realObj;
-                realObj.scale.setScalar(1.1);
+                realObj.scale.setScalar(1.1 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); // Scale correction
                 realObj.children.forEach(c => { 
                     if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); 
                 });
@@ -1026,7 +1044,7 @@
             }
         } else {
             if (state.hoveredObj && state.hoveredObj !== state.grabbedObj) {
-                state.hoveredObj.scale.setScalar(1);
+                state.hoveredObj.scale.setScalar(1.0 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); // Reset scale
                 state.hoveredObj.children.forEach(c => { 
                     if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x000000); 
                 });
@@ -1040,7 +1058,8 @@
             state.grabbedObj.position.z = 2; 
             
             state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
-            state.grabbedObj.scale.setScalar(1.2); 
+            // Scale when grabbed
+            state.grabbedObj.scale.setScalar(1.2 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
 
             const target = state.grabbedObj.userData.targetPos;
             const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
@@ -1100,7 +1119,6 @@
         renderer.render(scene, camera);
     }
 
-    // --- MAIN INIT ---
     window.addEventListener('load', () => {
         if (typeof Hands === 'undefined') {
             alert("Xatolik: MediaPipe yuklanmadi.");
@@ -1140,8 +1158,8 @@
                 ui.startScreen.classList.add('fade-out');
                 setTimeout(() => {
                     ui.startScreen.classList.add('hidden');
-                    initLevel(0); // Dastlabki yuklash
-                    startCountdown(false); // Sanashni boshlash (level oshirmaydi)
+                    initLevel(0); 
+                    startCountdown(false); 
                 }, 500);
                 ui.uiLayer.classList.remove('hidden');
                 updateLayout();
