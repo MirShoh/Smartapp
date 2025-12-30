@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Smart Voice</title>
+    <title>Kosmik Sayohat: Aniq Joylashuv</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,7 @@
         }
 
         /* Interaktiv elementlar */
-        #music-icon, #speech-icon, .btn, #restart-btn {
+        #music-icon, .btn, #restart-btn {
             pointer-events: auto !important;
         }
 
@@ -147,23 +147,18 @@
             pointer-events: none; opacity: 0; transition: opacity 0.3s;
         }
 
-        /* Ikonkalar guruhi */
-        .controls-container {
+        /* Ovoz ikonkasi */
+        #music-icon {
             position: absolute; bottom: 20px; left: 20px;
-            display: flex; gap: 15px;
-            z-index: 150;
-        }
-
-        .control-icon {
-            font-size: 2rem; cursor: pointer; color: rgba(255,255,255,0.8);
-            transition: all 0.3s;
-            background: rgba(0,0,0,0.4); padding: 12px; border-radius: 50%;
-            width: 55px; height: 55px;
+            font-size: 2.5rem; cursor: pointer; color: rgba(255,255,255,0.8);
+            z-index: 150; transition: all 0.3s;
+            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 50%;
+            width: 50px; height: 50px;
             display: flex; align-items: center; justify-content: center;
             border: 2px solid rgba(255,255,255,0.2);
         }
-        .control-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
-        .control-icon:active { transform: scale(0.95); }
+        #music-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
+        #music-icon:active { transform: scale(0.95); }
 
         /* Screens */
         .overlay-screen {
@@ -203,8 +198,10 @@
             #title-container { top: 80px; }
             #countdown-overlay { font-size: 6rem !important; }
             .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
-            .controls-container { bottom: 10px; left: 10px; gap: 10px; }
-            .control-icon { width: 45px; height: 45px; font-size: 1.5rem; }
+            #music-icon { width: 40px; height: 40px; font-size: 1.8rem; bottom: 10px; left: 10px; }
+        }
+        @media (max-height: 500px) and (orientation: landscape) {
+            #title-container { top: 10px; } h1 { font-size: 1.2rem; } #left-panel { transform: scale(0.7); } #status-message { bottom: 110px; }
         }
     </style>
     
@@ -227,7 +224,7 @@
         </p>
         <div id="loading-container">
             <div class="loader"></div>
-            <div>AI Yuklanmoqda... (Smart)</div>
+            <div>AI Yuklanmoqda...</div>
         </div>
         <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
     </div>
@@ -251,11 +248,7 @@
             <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
         </div>
         
-        <!-- Boshqaruv tugmalari -->
-        <div class="controls-container">
-            <div id="music-icon" class="control-icon" title="Musiqa">🔊</div>
-            <div id="speech-icon" class="control-icon" title="Ovozli yordamchi">🗣️</div>
-        </div>
+        <div id="music-icon" title="Ovozni o'chirish/yoqish">🔊</div>
     </div>
     
     <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.8);">
@@ -276,14 +269,10 @@
     // --- O'ZGARUVCHILAR ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMusicPlaying = false;
-    let isSpeechEnabled = true;
     let nextNoteTime = 0;
     let noteIndex = 0;
     let hands; 
     let isHandProcessing = false; 
-    
-    // Muhim: Speech Garbage Collection uchun global o'zgaruvchi
-    let currentUtterance = null; 
 
     // Pentatonic scale
     const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
@@ -334,68 +323,9 @@
     
     const canvasCtx = ui.outCanvas.getContext('2d');
 
-    // --- TEXT TO SPEECH (TUZATILGAN) ---
-    function speak(text) {
-        if (!isSpeechEnabled || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel(); // Avvalgisini to'xtatish
-        
-        // Yangi utterance yaratish
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Ovoz tanlash (iloji bo'lsa)
-        const voices = window.speechSynthesis.getVoices();
-        // O'zbek tili yo'q bo'lsa, birinchi mavjud ovozni olamiz, lekin lang='uz-UZ' deb belgilaymiz
-        // Brauzer o'zi moslashga harakat qiladi
-        utterance.lang = 'uz-UZ'; 
-        utterance.rate = 0.9;
-        utterance.pitch = 1.1;
-        
-        // --- GARBAGE COLLECTION FIX ---
-        // O'zgaruvchini globalga saqlab qo'yamiz, aks holda Chrome uni gapirib bo'lmasdan o'chirib yuboradi
-        currentUtterance = utterance;
-        
-        utterance.onend = function() {
-            currentUtterance = null; // Tugagach bo'shatamiz
-        };
-        
-        utterance.onerror = function(e) {
-            console.error('Speech error:', e);
-            currentUtterance = null;
-        };
-
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // Ovozlar yuklanishini kutish (ba'zi brauzerlar uchun)
-    if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = () => {
-            window.speechSynthesis.getVoices();
-        };
-    }
-
-    function toggleSpeech() {
-        isSpeechEnabled = !isSpeechEnabled;
-        const icon = document.getElementById('speech-icon');
-        if (isSpeechEnabled) {
-            icon.innerText = '🗣️';
-            icon.style.opacity = '1';
-            icon.style.borderColor = '#00ffcc';
-            speak("Ovoz yoqildi");
-        } else {
-            icon.innerText = '🔇';
-            icon.style.opacity = '0.6';
-            icon.style.borderColor = 'rgba(255,255,255,0.2)';
-            window.speechSynthesis.cancel();
-        }
-    }
-    
-    document.getElementById('speech-icon').addEventListener('click', (e) => {
-        e.preventDefault(); e.stopPropagation(); toggleSpeech();
-    });
-
     // --- THREE.JS INIT ---
     const scene = new THREE.Scene();
-    // Boshlang'ich fon (Keyinroq Dynamic Theme bilan o'zgaradi)
+    // Boshlang'ich fon
     scene.background = new THREE.Color(0x1a0b2e);
     scene.fog = new THREE.FogExp2(0x1a0b2e, 0.025);
 
@@ -655,11 +585,7 @@
         ui.title.innerText = lvl.title;
         updateStepsUI();
         updateProgress(0); 
-        
-        // --- GAPIRISH (Boshlanishida) ---
-        // Foydalanuvchi interaksiyasidan keyin chaqirilishi shart (Click ichida)
-        
-        // --- MAVZULI MUHIT (Dynamic Theme) ---
+
         const targetColor = new THREE.Color(lvl.color).lerp(new THREE.Color(0x000000), 0.7);
         scene.background = targetColor;
         scene.fog.color = targetColor;
@@ -672,7 +598,7 @@
             const angle = i * angleStep - Math.PI/2;
             const targetPos = new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
 
-            // SLOT
+            // SLOT (Ramkasiz)
             const slotGeo = new THREE.PlaneGeometry(3.0, 3.5); 
             const slotTex = createSlotTexture(item.emoji, item.name, lvl.color);
             const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 1.0, alphaTest: 0.1 });
@@ -684,7 +610,7 @@
             slot.userData = { isSlot: true }; 
             slotsGroup.add(slot);
 
-            // PIECE
+            // PIECE (Ramkasiz)
             const pieceGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.2, 64);
             const pieceMatBody = new THREE.MeshStandardMaterial({ color: lvl.color, roughness: 0.2, metalness: 0.3 });
             const piece = new THREE.Mesh(pieceGeo, pieceMatBody);
@@ -862,15 +788,14 @@
 
                 if (dist2D < CONFIG.snapDistance) {
                     obj.position.copy(target);
-                    obj.position.z = 0; 
+                    // Z-Fighting fix: Shakl aniq ko'rinishi uchun uni ozgina ko'taramiz
+                    obj.position.z = 0.5; 
                     obj.userData.isLocked = true;
                     
                     const light = new THREE.PointLight(0xffff00, 1, 5);
                     obj.add(light);
                     
                     playSound('pop');
-                    // --- GAPIRISH (Muvaffaqiyat) ---
-                    speak("Ofarin! Bu " + obj.userData.name);
                     createConfetti();
                     
                     state.lockedCount++;
@@ -884,16 +809,14 @@
                              ui.winScreen.classList.remove('hidden');
                              ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
                              ui.winScreen.querySelector('p').innerText = "Keyingi bosqichga tayyormisiz?";
-                             speak("Barakalla! Barchasini topdingiz. Keyingi bosqichga o'tamiz.");
                              setTimeout(() => {
                                 ui.winScreen.classList.add('hidden');
                                 startCountdown();
-                             }, 3000);
+                             }, 2000);
                         } else {
                             ui.winScreen.classList.remove('hidden');
                             ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
                             ui.winScreen.querySelector('p').innerText = "Siz barcha bosqichlarni tugatdingiz!";
-                            speak("Tabriklayman! Siz barcha bosqichlarni muvaffaqiyatli tugatdingiz. Siz haqiqiy bilimdonsiz!");
                         }
                     }
                 }
@@ -958,18 +881,15 @@
         ui.countdown.style.opacity = 1;
         ui.countdown.innerText = count;
         playSound('count');
-        speak(count.toString());
 
         const interval = setInterval(() => {
             count--;
             if(count > 0) {
                 ui.countdown.innerText = count;
                 playSound('count');
-                speak(count.toString());
             } else {
                 clearInterval(interval);
                 ui.countdown.innerText = "KETDIK! 🚀";
-                speak("Ketdik!");
                 setTimeout(() => {
                     ui.countdown.classList.add('hidden');
                     state.levelIdx++;
@@ -1023,9 +943,6 @@
                 updateLayout();
                 initLevel(0);
                 animate();
-                
-                // --- Ovozli xabarni boshlash ---
-                speak(LEVELS[0].title + " bosqichi boshlandi. " + LEVELS[0].items[0].name + "ni toping!");
             };
         } catch(e) {
             alert("Kamera xatosi: " + e.message);
