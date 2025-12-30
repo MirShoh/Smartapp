@@ -224,7 +224,7 @@
         </p>
         <div id="loading-container">
             <div class="loader"></div>
-            <div>AI Yuklanmoqda... (Lite)</div>
+            <div>AI Yuklanmoqda...</div>
         </div>
         <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
     </div>
@@ -273,6 +273,7 @@
     let nextNoteTime = 0;
     let noteIndex = 0;
     let hands; 
+    let isHandProcessing = false; // Tiqilib qolishni oldini olish
 
     const melody = [
         523.25, 659.25, 783.99, 1046.50,
@@ -715,6 +716,7 @@
             state.handVisible = false;
         }
         canvasCtx.restore();
+        isHandProcessing = false; // Keyingi freymga ruxsat
     }
 
     const raycaster = new THREE.Raycaster();
@@ -759,7 +761,6 @@
         }
 
         // --- TUZATISH: Koordinatalarni chegaralash (Clamp) ---
-        // Bu obyektlarning ekran tashqarisiga chiqib ketishini oldini oladi
         mouse.x = Math.max(-1, Math.min(1, state.handPos.x));
         mouse.y = Math.max(-1, Math.min(1, state.handPos.y));
         
@@ -896,7 +897,11 @@
 
     function animate() {
         requestAnimationFrame(animate);
-        if(!ui.video.paused) hands.send({image: ui.video});
+        // Throttle hand processing
+        if(!ui.video.paused && !isHandProcessing) {
+            isHandProcessing = true;
+            hands.send({image: ui.video});
+        }
         updateGame();
         renderer.render(scene, camera);
     }
@@ -911,7 +916,9 @@
         }
 
         hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+        // Model complexity 1 = Accurate, 0 = Lite
+        // Confidence 0.5 = More sensitive
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         hands.onResults(onResults);
 
         ui.loading.style.display = 'none';
