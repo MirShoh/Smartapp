@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Chempionlar Ligasi</title>
+    <title>Kosmik Sayohat: Chempionlar</title>
     
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,7 +215,7 @@
             padding: 20px;
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 80%;
+            width: 90%;
             max-width: 500px;
             max-height: 300px;
             overflow-y: auto;
@@ -263,7 +263,7 @@
             #countdown-overlay { font-size: 6rem !important; }
             .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
             #music-icon { width: 40px; height: 40px; font-size: 1.8rem; bottom: 10px; left: 10px; }
-            #leaderboard { width: 90%; padding: 10px; }
+            #leaderboard { width: 95%; padding: 10px; }
             .lb-row { font-size: 1rem; }
             #player-name-input { font-size: 1.2rem; }
         }
@@ -321,14 +321,15 @@
     <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.95);">
         <h1 style="font-size: 3rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
         
-        <div id="leaderboard">
+        <!-- Faqat finalda ko'rinadi -->
+        <div id="leaderboard" style="display:none;">
             <h2>🏆 REYTING</h2>
-            <div id="lb-content">
-                <!-- JS orqali to'ldiriladi -->
-            </div>
+            <div id="lb-content"></div>
         </div>
 
-        <button id="restart-btn" class="btn">QAYTA O'YNASH 🔄</button>
+        <p id="next-level-msg" style="font-size: 1.5rem; margin-top: 20px; display: none;">Keyingi bosqichga tayyormisiz?</p>
+
+        <button id="restart-btn" class="btn" style="display:none;">QAYTA O'YNASH 🔄</button>
     </div>
 
     <div id="video-container">
@@ -348,7 +349,7 @@
     let isHandProcessing = false; 
     let startTime = 0;
     let totalScore = 0;
-    let playerName = "O'yinchi"; // Default ism
+    let playerName = "O'yinchi"; 
 
     const melody = [523.25, 659.25, 783.99, 1046.50, 523.25, 587.33, 783.99, 880.00];
 
@@ -396,7 +397,9 @@
         progressFill: document.getElementById('progress-fill'),
         restartBtn: document.getElementById('restart-btn'),
         score: document.getElementById('score-display'),
-        lbContent: document.getElementById('lb-content')
+        lbContent: document.getElementById('lb-content'),
+        leaderboard: document.getElementById('leaderboard'),
+        nextMsg: document.getElementById('next-level-msg')
     };
     
     const canvasCtx = ui.outCanvas.getContext('2d');
@@ -615,14 +618,11 @@
         ctx.beginPath(); 
         ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
         ctx.fillStyle = grad; ctx.fill();
-        // Ramka yo'q
-        // ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke();
-        
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke();
         ctx.font = 'bold 130px "Segoe UI Emoji", Arial';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#fff'; ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=10;
         ctx.fillText(text, centerX, centerY + 10);
-        
         const tex = new THREE.CanvasTexture(canvas);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
@@ -660,14 +660,6 @@
         state.levelIdx = idx;
         state.lockedCount = 0;
         const lvl = LEVELS[idx];
-        state.totalPieces = lvl.items.length;
-        
-        // Vaqtni yozib borish (Start)
-        if(idx === 0) {
-            startTime = Date.now();
-            totalScore = 0;
-            updateScore();
-        }
         
         ui.title.innerText = lvl.title;
         updateStepsUI();
@@ -685,14 +677,11 @@
             const angle = i * angleStep - Math.PI/2;
             const targetPos = new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
 
-            // SLOT (Ramkasiz)
+            // SLOT
             const slotGeo = new THREE.PlaneGeometry(3.0, 3.5); 
             const slotTex = createSlotTexture(item.emoji, item.name, lvl.color);
             const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 1.0, alphaTest: 0.1 });
             const slot = new THREE.Mesh(slotGeo, slotMat);
-            
-            // --- FIX: ANIQLIK ---
-            // Slot position = targetPos - 0.26 (Y bo'yicha)
             slot.position.copy(targetPos);
             slot.position.y -= 0.26; 
             slot.position.z = -0.5; 
@@ -700,7 +689,7 @@
             slot.userData = { isSlot: true }; 
             slotsGroup.add(slot);
 
-            // PIECE (Ramkasiz)
+            // PIECE
             const pieceGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.2, 64);
             const pieceMatBody = new THREE.MeshStandardMaterial({ color: lvl.color, roughness: 0.2, metalness: 0.3 });
             const piece = new THREE.Mesh(pieceGeo, pieceMatBody);
@@ -729,6 +718,9 @@
             };
             piecesGroup.add(piece);
         });
+        
+        // BUG FIX: Total pieces should be counted after actual creation
+        state.totalPieces = piecesGroup.children.length;
         state.isTransitioning = false;
     }
 
@@ -779,28 +771,23 @@
     // --- LEADERBOARD LOGIC (LOCAL STORAGE) ---
     function saveScore(name, score) {
         let scores = JSON.parse(localStorage.getItem('kosmik_scores') || '[]');
-        scores.push({ name: name, score: score });
+        scores.push({ name: name, score: score, date: new Date().toLocaleTimeString() });
         scores.sort((a, b) => b.score - a.score);
-        scores = scores.slice(0, 5); // Faqat TOP 5
+        scores = scores.slice(0, 10); // TOP 10
         localStorage.setItem('kosmik_scores', JSON.stringify(scores));
     }
 
     function showLeaderboard() {
         const timeTaken = (Date.now() - startTime) / 1000;
-        // Vaqtga qarab bonus ball (qancha tez bo'lsa shuncha ko'p, lekin 0 dan kam emas)
-        const timeBonus = Math.max(0, 500 - Math.floor(timeTaken * 2));
+        const timeBonus = Math.max(0, 1000 - Math.floor(timeTaken)); // Tezkorlik uchun bonus
         const finalScore = totalScore + timeBonus;
         
-        // Natijani saqlash
         saveScore(playerName, finalScore);
         
-        // O'qib olish va ko'rsatish
         const scores = JSON.parse(localStorage.getItem('kosmik_scores') || '[]');
         
         let html = '';
         scores.forEach((p, i) => {
-            // Agar bu hozirgi o'yinchi bo'lsa, ajratib ko'rsatamiz (ism va ball mos tushsa)
-            // Bu oddiy tekshiruv, mukammal emas lekin ishlaydi
             const isCurrent = (p.name === playerName && p.score === finalScore);
             const cls = isCurrent ? 'lb-row lb-highlight' : 'lb-row';
             const icon = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
@@ -808,15 +795,13 @@
             html += `
                 <div class="${cls}">
                     <div class="lb-rank">${i+1} ${icon}</div>
-                    <div class="lb-name">${p.name}</div>
+                    <div class="lb-name">${p.name} <small style="opacity:0.5">(${p.date || ''})</small></div>
                     <div class="lb-score">${p.score}</div>
                 </div>
             `;
         });
         
         ui.lbContent.innerHTML = html;
-        ui.winScreen.querySelector('h1').innerText = "NATIJALAR";
-        ui.winScreen.classList.remove('hidden');
     }
 
     function onResults(results) {
@@ -924,7 +909,6 @@
 
                 if (dist2D < CONFIG.snapDistance) {
                     obj.position.copy(target);
-                    // FIX: Z-fighting uchun joyiga qo'yganda ozgina ko'taramiz
                     obj.position.z = 0.5; 
                     obj.userData.isLocked = true;
                     
@@ -939,24 +923,29 @@
                     updateScore();
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     
-                    if(state.lockedCount === state.totalPieces) {
+                    if(state.lockedCount >= state.totalPieces) {
                         playSound('win');
                         state.isTransitioning = true;
                         
                         if(state.levelIdx < LEVELS.length - 1) {
                              ui.winScreen.classList.remove('hidden');
                              ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
-                             ui.winScreen.querySelector('#leaderboard').style.display = 'none';
-                             ui.winScreen.querySelector('p').innerText = "Keyingi bosqichga tayyormisiz?";
+                             ui.leaderboard.style.display = 'none';
+                             ui.nextMsg.style.display = 'block';
+                             ui.restartBtn.style.display = 'none';
+                             
                              setTimeout(() => {
                                 ui.winScreen.classList.add('hidden');
                                 startCountdown();
                              }, 2000);
                         } else {
-                            // Final
+                            // FINAL
                             showLeaderboard();
-                            ui.winScreen.querySelector('#leaderboard').style.display = 'block';
-                            ui.winScreen.querySelector('p').style.display = 'none'; 
+                            ui.winScreen.classList.remove('hidden');
+                            ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
+                            ui.leaderboard.style.display = 'block';
+                            ui.nextMsg.style.display = 'none';
+                            ui.restartBtn.style.display = 'block';
                         }
                     }
                 }
@@ -991,7 +980,6 @@
         if (state.grabbedObj) {
             state.grabbedObj.position.lerp(worldPos, 0.4);
             state.grabbedObj.position.z = 2; 
-            
             state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
             state.grabbedObj.scale.setScalar(1.2); 
 
@@ -1064,7 +1052,7 @@
 
         ui.loading.style.display = 'none';
         ui.startBtn.classList.remove('hidden');
-        ui.nameInput.style.display = 'block'; // Inputni ko'rsatish
+        ui.nameInput.style.display = 'block'; 
         
         initCursor();
         updateLayout(); 
@@ -1072,7 +1060,6 @@
     });
 
     ui.startBtn.addEventListener('click', async () => {
-        // Ismni tekshirish
         const name = ui.nameInput.value.trim();
         if (!name) {
             ui.nameInput.style.borderColor = 'red';
@@ -1080,7 +1067,7 @@
             return;
         }
         playerName = name;
-        ui.nameInput.style.display = 'none'; // Inputni yashirish
+        ui.nameInput.style.display = 'none'; 
         ui.startBtn.innerText = "Yuklanmoqda...";
 
         try {
@@ -1104,7 +1091,6 @@
     ui.restartBtn.addEventListener('click', () => {
         ui.winScreen.classList.add('hidden');
         state.levelIdx = 0;
-        // Scoreni reset qilish
         totalScore = 0;
         startTime = Date.now();
         updateScore();
