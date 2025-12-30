@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Professional</title>
+    <title>Kosmik Sayohat: Universal</title>
     
     <!-- Tezkor yuklanish uchun -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
     <!-- CSS ni ulash -->
-    <link rel="stylesheet" href="style5.css">
+    <link rel="stylesheet" href="style.css">
     
     <!-- Kerakli Kutubxonalar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -30,29 +30,33 @@
 
     <!-- 1. Permission Screen (Ruxsat so'rash) -->
     <div id="permission-screen" class="overlay-screen">
-        <h1 style="font-size: 2.5rem; margin-bottom: 20px;">KOSMIK SAYOHAT</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 30px;">O'yinni boshlash uchun kameraga ruxsat bering</p>
-        <button id="enable-cam-btn" class="btn">KAMERANI YOQISH 📷</button>
+        <h1 class="game-title">KOSMIK SAYOHAT</h1>
+        <p class="subtitle">O'yinni boshlash uchun kameraga ruxsat bering</p>
+        <button id="enable-cam-btn" class="btn interactive-ui">KAMERANI YOQISH 📷</button>
     </div>
 
     <!-- 2. Start / Name Entry Screen (Ism kiritish) -->
     <div id="start-screen" class="overlay-screen hidden">
-        <h1 style="font-size: 2.5rem; margin-top: 10px;">XUSH KELIBSIZ!</h1>
-        <p style="font-size: 1.1rem; color: #ddd;">Ismingizni kiriting:</p>
+        <h1 class="game-title">XUSH KELIBSIZ!</h1>
+        <p class="subtitle">Ismingizni tering yoki ayting:</p>
         
-        <!-- Ism kiritish (Klaviatura + Qo'l) -->
-        <input type="text" id="player-name-input" placeholder="Ism..." maxlength="12" autocomplete="off">
+        <!-- Ism kiritish guruhi -->
+        <div class="input-group">
+            <input type="text" id="player-name-input" class="interactive-ui" placeholder="ISM..." maxlength="10" autocomplete="off" readonly>
+            <div id="mic-input-btn" class="interactive-ui" title="Ismni aytib kiritish">🎤</div>
+        </div>
         
         <!-- Virtual Klaviatura -->
         <div id="keyboard-container"></div>
         
-        <div id="loading-text" class="hidden" style="margin-top:10px; color:#00ffcc">Tizim yuklanmoqda...</div>
+        <div id="loading-text" class="hidden">Tizim yuklanmoqda...</div>
         
-        <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
+        <button id="start-btn" class="btn interactive-ui hidden">BOSHLASH 🚀</button>
     </div>
 
-    <!-- O'yin UI Qatlami -->
+    <!-- 3. O'yin UI Qatlami -->
     <div id="ui-layer" class="hidden">
+        <!-- Chap Panel -->
         <div id="left-panel">
             <div id="steps-container"></div>
             <div id="progress-wrapper">
@@ -64,37 +68,45 @@
             <div id="timer-display">00:00</div>
         </div>
 
+        <!-- O'rta: Sarlavha -->
         <div id="title-container">
             <h1 id="task-title">SHAKLLAR</h1>
         </div>
 
+        <!-- Xabarlar -->
         <div id="status-message">
             <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
         </div>
         
-        <div id="music-icon" title="Ovozni o'chirish/yoqish">🔊</div>
+        <!-- Boshqaruv -->
+        <div class="controls-container">
+            <div id="music-icon" class="control-icon interactive-ui" title="Musiqa">🔊</div>
+            <div id="speech-icon" class="control-icon interactive-ui" title="Ovozli yordamchi">🗣️</div>
+        </div>
     </div>
     
-    <!-- G'alaba Ekrani -->
+    <!-- 4. G'alaba Ekrani -->
     <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.95);">
-        <h1 style="font-size: 3rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
+        <h1 style="font-size: 3rem; color: #FFD700;">G'ALABA! 🎉</h1>
+        
         <div id="leaderboard" style="display:none;">
-            <h2>🏆 TEZ KUNLAR REYTINGI</h2>
+            <h2>🏆 TOP REYTING</h2>
             <div id="lb-content"></div>
         </div>
-        <p id="next-level-msg" style="font-size: 1.5rem; margin-top: 20px; display: none;">Keyingi bosqichga tayyormisiz?</p>
-        <button id="restart-btn" class="btn" style="display:none;">QAYTA O'YNASH 🔄</button>
+
+        <p id="next-level-msg" style="font-size: 1.5rem; display: none;">Keyingi bosqich...</p>
+        <button id="restart-btn" class="btn interactive-ui" style="display:none;">QAYTA O'YNASH 🔄</button>
     </div>
 
-    <!-- Kamera va Canvas -->
+    <!-- Kamera va 3D Canvas -->
     <div id="video-container">
         <video id="input-video" playsinline webkit-playsinline muted autoplay></video>
-        <canvas id="output-canvas"></canvas>
+        <canvas id="output-canvas"></canvas> 
     </div>
     
     <div id="canvas-container"></div>
 
     <!-- JavaScript ni ulash -->
-    <script src="script5.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

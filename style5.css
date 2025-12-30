@@ -1,12 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
 
+/* --- ASOSIY --- */
 body { 
     margin: 0; 
     overflow: hidden; 
     background-color: #1a0b2e; 
     font-family: 'Nunito', sans-serif; 
     user-select: none; 
-    touch-action: none; 
+    touch-action: none; /* Mobil scrollni bloklash */
 }
 
 #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -16,308 +17,231 @@ body {
     z-index: 10; pointer-events: none; 
 }
 
-/* Interaktiv elementlar */
-#music-icon, #speech-icon, .btn, #restart-btn, #player-name-input, .key {
+/* Interaktiv elementlar (qo'l bilan bosiladigan) */
+.interactive-ui {
     pointer-events: auto !important;
+    transition: transform 0.1s, box-shadow 0.1s;
+    cursor: pointer;
+}
+.interactive-ui:hover, .interactive-ui.hovered {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px #00ffcc;
+    border-color: #00ffcc !important;
+}
+.interactive-ui:active, .interactive-ui.clicked {
+    transform: scale(0.95);
+    background-color: #fff !important;
+    color: #000 !important;
 }
 
-/* Kamera O'ng Pastda */
+/* Kamera Oynasi */
 #video-container {
     position: absolute; bottom: 20px; right: 20px; 
-    width: 220px; height: 165px;
-    border-radius: 20px; border: 4px solid #00ffcc; z-index: 100; 
+    width: 200px; height: 150px;
+    border-radius: 20px; border: 3px solid #00ffcc; z-index: 100; 
     background: #000; overflow: hidden;
-    box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
-    transform: scaleX(-1);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+    transform: scaleX(-1); /* Oyna effekti */
     transition: all 0.3s ease;
     pointer-events: none;
 }
 
-#input-video { 
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; object-fit: cover; 
-}
-#output-canvas {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; z-index: 2;
-}
+#input-video { width: 100%; height: 100%; object-fit: cover; }
+#output-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; opacity: 0.5; }
 
-/* HTML Qo'l Kursori (Start ekrani uchun) */
+/* Hand Cursor (Yashil Doira) */
 #hand-cursor {
     position: absolute;
     width: 30px; height: 30px;
-    background: rgba(0, 255, 204, 0.5);
-    border: 2px solid #00ffcc;
+    background: rgba(0, 255, 204, 0.4);
+    border: 3px solid #00ffcc;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 200;
     display: none;
-    box-shadow: 0 0 10px #00ffcc;
+    box-shadow: 0 0 15px #00ffcc;
+    transition: background 0.1s, width 0.1s, height 0.1s;
 }
 #hand-cursor.active {
     background: rgba(0, 255, 0, 0.8);
     border-color: #00ff00;
-    transform: translate(-50%, -50%) scale(0.8);
+    width: 20px; height: 20px;
 }
 
 /* Xabarlar */
 #status-message {
-    position: absolute; 
-    bottom: 200px; 
-    right: 20px; 
-    width: 220px;
-    text-align: center;
-    pointer-events: none;
+    position: absolute; bottom: 180px; right: 20px; width: 200px;
+    text-align: center; pointer-events: none;
     display: flex; flex-direction: column; align-items: center; gap: 10px;
-    transition: all 0.3s ease;
 }
-
 .message-bubble {
-    background: rgba(0, 0, 0, 0.8);
-    color: #00ffcc;
-    padding: 10px 20px;
-    border-radius: 15px;
-    border: 2px solid #00ffcc;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    white-space: nowrap; 
+    background: rgba(0, 0, 0, 0.8); color: #00ffcc;
+    padding: 8px 15px; border-radius: 12px; border: 2px solid #00ffcc;
+    font-weight: bold; font-size: 1rem; opacity: 0;
+    transform: translateY(10px); transition: all 0.3s;
 }
 .message-bubble.visible { opacity: 1; transform: translateY(0); }
 
-/* Sarlavha */
-#title-container {
-    position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-    text-align: center;
-    width: 100%;
-    pointer-events: none;
-}
-
-h1 { 
+/* Sarlavha va Fontlar */
+.game-title { 
     font-family: 'Fredoka One', cursive; font-size: 2.5rem; 
     color: #fff; text-shadow: 0 4px 0 #6a0dad; margin: 0;
-    background: rgba(0,0,0,0.4); padding: 8px 30px; border-radius: 30px;
-    backdrop-filter: blur(5px);
-    display: inline-block;
+}
+.subtitle { font-size: 1.1rem; color: #ddd; text-align: center; margin: 10px 0; }
+
+#title-container {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    text-align: center; width: 100%; pointer-events: none;
+}
+#task-title {
+    background: rgba(0,0,0,0.4); padding: 5px 25px; border-radius: 30px;
+    backdrop-filter: blur(5px); display: inline-block; font-size: 2rem;
+    color: #fff; font-family: 'Fredoka One', cursive;
 }
 
 /* Chap Panel */
 #left-panel {
-    position: absolute; top: 30px; left: 30px;
-    display: flex; flex-direction: column; gap: 20px;
+    position: absolute; top: 20px; left: 20px;
+    display: flex; flex-direction: column; gap: 15px;
     pointer-events: none;
-    transition: all 0.3s ease;
 }
-
 #timer-display {
-    font-family: 'Fredoka One', cursive;
-    color: #ffd700;
-    font-size: 2rem;
-    text-shadow: 2px 2px 0 #000;
-    background: rgba(0,0,0,0.5);
-    padding: 10px 20px;
-    border-radius: 15px;
-    border: 2px solid #ffd700;
-    min-width: 120px;
-    text-align: center;
+    font-family: 'Fredoka One', cursive; color: #ffd700; font-size: 1.8rem;
+    text-shadow: 2px 2px 0 #000; background: rgba(0,0,0,0.5);
+    padding: 5px 15px; border-radius: 15px; border: 2px solid #ffd700;
+    min-width: 100px; text-align: center;
 }
 
-#steps-container { display: flex; gap: 10px; }
-
+/* Progress va Steps */
+#steps-container { display: flex; gap: 8px; }
 .step-dot {
-    width: 35px; height: 35px;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid #fff;
-    border-radius: 50%;
+    width: 30px; height: 30px; background: rgba(255,255,255,0.1);
+    border: 2px solid #fff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Fredoka One', cursive;
-    color: #fff; font-size: 1rem;
-    transition: all 0.3s ease;
+    color: #fff; font-size: 0.9rem; font-weight: bold;
 }
-.step-dot.active { background: #00ffcc; color: #000; transform: scale(1.2); box-shadow: 0 0 15px #00ffcc; border-color: #00ffcc; }
+.step-dot.active { background: #00ffcc; color: #000; transform: scale(1.1); border-color: #00ffcc; }
 .step-dot.completed { background: #00ff00; border-color: #00ff00; color: #000; }
 
 #progress-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
-#progress-label { color: #fff; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9rem; }
-
+#progress-label { color: #fff; font-weight: bold; margin-bottom: 3px; font-size: 0.8rem; }
 #progress-container {
-    width: 200px; height: 15px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px; border: 2px solid #fff;
-    overflow: hidden;
+    width: 180px; height: 12px; background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px; border: 1px solid #fff; overflow: hidden;
 }
-#progress-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, #00ff00, #adff2f);
-    transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
-    box-shadow: 0 0 10px #00ff00;
+#progress-fill { height: 100%; width: 0%; background: #00ff00; transition: width 0.3s; }
+
+/* Overlay Screens */
+.overlay-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(20, 10, 40, 0.95); z-index: 50; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: white; text-align: center; transition: opacity 0.5s;
+    padding: 20px; box-sizing: border-box;
+    pointer-events: auto; /* Elementlar bosilishi uchun */
+}
+
+/* Buttons */
+.btn {
+    background: linear-gradient(45deg, #00ccff, #0066ff); border: none; padding: 15px 40px;
+    color: white; font-size: 1.4rem; border-radius: 50px; margin-top: 20px;
+    box-shadow: 0 6px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
+    font-family: 'Fredoka One', cursive; text-transform: uppercase;
+}
+.btn:active, .btn.clicked { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
+
+/* Input Group (Ism + Mikrofon) */
+.input-group {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 20px; width: 90%; max-width: 400px;
+}
+#player-name-input {
+    flex-grow: 1; padding: 10px 20px; font-size: 1.5rem; border-radius: 20px;
+    border: 3px solid #00ffcc; background: rgba(0,0,0,0.6); color: #fff;
+    text-align: center; outline: none; font-family: 'Nunito', sans-serif;
+}
+#mic-input-btn {
+    width: 50px; height: 50px; border-radius: 50%; background: #00ffcc;
+    color: #000; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+    border: 3px solid #fff; box-shadow: 0 0 15px #00ffcc;
+}
+#mic-input-btn.listening { background: #ff0055; box-shadow: 0 0 20px #ff0055; animation: pulse 1s infinite; }
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* Virtual Keyboard */
+#keyboard-container {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    margin: 15px auto; background: rgba(255,255,255,0.1); padding: 10px;
+    border-radius: 15px; width: 100%; max-width: 500px;
+}
+.key {
+    aspect-ratio: 1; background: rgba(0,0,0,0.5); border: 1px solid #00ffcc;
+    border-radius: 8px; color: #fff; font-size: 1.1rem;
+    font-family: 'Fredoka One', cursive; display: flex; align-items: center; justify-content: center;
+}
+.key.action-key { grid-column: span 2; aspect-ratio: auto; height: 45px; background: rgba(255, 0, 85, 0.5); border-color: #ff0055; }
+
+/* Controls */
+.controls-container {
+    position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 150;
+}
+.control-icon {
+    font-size: 1.5rem; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 50%;
+    width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8);
 }
 
 /* Countdown */
 #countdown-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); z-index: 60;
+    background: rgba(0,0,0,0.8); z-index: 60;
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-family: 'Fredoka One', cursive;
-    font-size: 12rem; text-shadow: 0 0 40px #00ffcc;
-    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+    font-size: 10rem; pointer-events: none; opacity: 0; transition: opacity 0.3s;
 }
 
-/* Boshqaruv tugmalari */
-.controls-container {
-    position: absolute; bottom: 20px; left: 20px;
-    display: flex; gap: 15px;
-    z-index: 150;
-}
-
-.control-icon {
-    font-size: 2rem; cursor: pointer; color: rgba(255,255,255,0.8);
-    transition: all 0.3s;
-    background: rgba(0,0,0,0.4); padding: 12px; border-radius: 50%;
-    width: 55px; height: 55px;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid rgba(255,255,255,0.2);
-}
-.control-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
-.control-icon:active { transform: scale(0.95); }
-
-/* Screens */
-.overlay-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 10, 40, 0.95); z-index: 50; 
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    color: white; text-align: center;
-    transition: opacity 0.5s;
-    pointer-events: auto;
-}
-
-.btn {
-    background: linear-gradient(45deg, #00ccff, #0066ff); border: none; padding: 18px 50px;
-    color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px;
-    box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
-    font-family: 'Fredoka One', cursive;
-}
-.btn:active, .btn.clicked { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
-
-/* Ism Kiritish Inputi */
-#player-name-input {
-    padding: 15px 25px;
-    font-size: 1.5rem;
-    border-radius: 30px;
-    border: 3px solid #00ffcc;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    text-align: center;
-    outline: none;
-    margin-bottom: 10px;
-    font-family: 'Nunito', sans-serif;
-    width: 80%;
-    max-width: 300px;
-    transition: all 0.3s;
-}
-#player-name-input:focus {
-    box-shadow: 0 0 20px #00ffcc;
-    transform: scale(1.05);
-}
-#player-name-input::placeholder { color: rgba(255,255,255,0.5); }
-
-/* Virtual Keyboard */
-#keyboard-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin: 20px auto;
-    background: rgba(255,255,255,0.1);
-    padding: 15px;
-    border-radius: 20px;
-    max-width: 600px;
-    width: 90%;
-}
-.key {
-    aspect-ratio: 1;
-    background: rgba(0,0,0,0.5);
-    border: 2px solid #00ffcc;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 1.2rem;
-    font-family: 'Fredoka One', cursive;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.1s;
-}
-.key:hover, .key.hovered { background: #00ffcc; color: #000; }
-.key:active, .key.clicked { transform: scale(0.9); background: #fff; }
-
-.key.action-key { grid-column: span 2; aspect-ratio: auto; height: 50px; background: rgba(255, 0, 85, 0.5); border-color: #ff0055; }
-
-/* Leaderboard Table */
-#leaderboard {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 90%;
-    max-width: 500px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-#leaderboard h2 {
-    margin: 0 0 15px 0;
-    color: #ffd700;
-    font-size: 2rem;
-    text-shadow: 2px 2px 0 #000;
-}
-
-.lb-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 1.2rem;
-    color: #fff;
-}
-.lb-row:last-child { border-bottom: none; }
-.lb-rank { font-weight: bold; color: #00ffcc; width: 40px; text-align: left; }
-.lb-name { flex-grow: 1; text-align: left; padding-left: 10px; }
-.lb-time { font-weight: bold; color: #ffd700; font-family: monospace; }
-.lb-highlight { background: rgba(0, 255, 204, 0.3); border-radius: 10px; border: 1px solid #00ffcc; }
-
+/* Loader */
 .loader {
-    border: 5px solid #f3f3f3; border-top: 5px solid #00ffcc;
-    border-radius: 50%; width: 50px; height: 50px;
-    animation: spin 1s linear infinite; margin-bottom: 20px;
+    border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #00ffcc;
+    border-radius: 50%; width: 40px; height: 40px;
+    animation: spin 1s linear infinite; margin-bottom: 10px;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.hidden { display: none !important; }
-.fade-out { opacity: 0; pointer-events: none; }
-
-/* Responsive */
-@media (max-width: 768px) {
-    #video-container { width: 120px; height: 90px; bottom: 10px; right: 10px; top: auto; border-width: 2px; }
-    #status-message { bottom: 110px; top: auto; right: 10px; width: 150px; }
-    .message-bubble { font-size: 0.8rem; padding: 5px 10px; }
-    #left-panel { top: 10px; left: 10px; gap: 10px; transform: scale(0.8); transform-origin: top left; }
-    h1 { font-size: 1.5rem; padding: 5px 20px; }
-    #title-container { top: 80px; }
-    #countdown-overlay { font-size: 6rem !important; }
-    .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
-    .controls-container { bottom: 10px; left: 10px; gap: 10px; }
-    .control-icon { width: 45px; height: 45px; font-size: 1.5rem; }
-    #leaderboard { width: 95%; padding: 10px; }
-    .lb-row { font-size: 1rem; }
-    #player-name-input { font-size: 1.2rem; }
-    #timer-display { font-size: 1.5rem; padding: 5px 15px; }
-    .key { font-size: 1rem; }
+/* Leaderboard */
+#leaderboard {
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+    border-radius: 15px; padding: 15px; width: 90%; max-width: 400px; max-height: 250px; overflow-y: auto;
 }
-@media (max-height: 500px) and (orientation: landscape) {
-    #title-container { top: 10px; } h1 { font-size: 1.2rem; } #left-panel { transform: scale(0.7); } #status-message { bottom: 110px; }
+#leaderboard h2 {
+    margin: 0 0 10px 0; color: #ffd700; font-size: 1.5rem; text-shadow: 2px 2px 0 #000;
+}
+.lb-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 1rem; }
+.lb-rank { font-weight: bold; color: #00ffcc; width: 30px; text-align: left; }
+.lb-name { flex-grow: 1; text-align: left; padding-left: 10px; }
+.lb-time { font-weight: bold; color: #ffd700; font-family: monospace; }
+.lb-highlight { background: rgba(0, 255, 204, 0.2); border-radius: 5px; }
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 600px) {
+    #video-container {
+        width: 100px; height: 75px; /* Kichikroq */
+        bottom: 10px; right: 10px;
+    }
+    #status-message { bottom: 90px; right: 10px; width: 140px; }
+    .message-bubble { font-size: 0.9rem; padding: 5px 10px; }
+    
+    #title-container { top: 60px; }
+    h1 { font-size: 1.8rem; }
+    #task-title { font-size: 1.5rem; padding: 5px 20px; }
+
+    #left-panel { top: 10px; left: 10px; transform: scale(0.85); transform-origin: top left; }
+    
+    .key { font-size: 1rem; }
+    #keyboard-container { gap: 4px; padding: 8px; }
+    
+    .btn { font-size: 1.1rem; padding: 12px 30px; }
+    .controls-container { bottom: 10px; left: 10px; }
 }
