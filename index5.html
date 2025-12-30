@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kosmik Sayohat: Professional</title>
+    
+    <!-- Tezkor yuklanish uchun -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- CSS ni ulash -->
+    <link rel="stylesheet" href="style5.css">
+    
+    <!-- Kerakli Kutubxonalar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- Countdown Overlay (3..2..1) -->
+    <div id="countdown-overlay" class="hidden">3</div>
+    
+    <!-- HTML Hand Cursor (UI interaksiyasi uchun) -->
+    <div id="hand-cursor"></div>
+
+    <!-- 1. Permission Screen (Ruxsat so'rash) -->
+    <div id="permission-screen" class="overlay-screen">
+        <h1 style="font-size: 2.5rem; margin-bottom: 20px;">KOSMIK SAYOHAT</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 30px;">O'yinni boshlash uchun kameraga ruxsat bering</p>
+        <button id="enable-cam-btn" class="btn">KAMERANI YOQISH 📷</button>
+    </div>
+
+    <!-- 2. Start / Name Entry Screen (Ism kiritish) -->
+    <div id="start-screen" class="overlay-screen hidden">
+        <h1 style="font-size: 2.5rem; margin-top: 10px;">XUSH KELIBSIZ!</h1>
+        <p style="font-size: 1.1rem; color: #ddd;">Ismingizni kiriting:</p>
+        
+        <!-- Ism kiritish (Klaviatura + Qo'l) -->
+        <input type="text" id="player-name-input" placeholder="Ism..." maxlength="12" autocomplete="off">
+        
+        <!-- Virtual Klaviatura -->
+        <div id="keyboard-container"></div>
+        
+        <div id="loading-text" class="hidden" style="margin-top:10px; color:#00ffcc">Tizim yuklanmoqda...</div>
+        
+        <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
+    </div>
+
+    <!-- O'yin UI Qatlami -->
+    <div id="ui-layer" class="hidden">
+        <div id="left-panel">
+            <div id="steps-container"></div>
+            <div id="progress-wrapper">
+                <div id="progress-label">BOSQICH PROGRESSI</div>
+                <div id="progress-container">
+                    <div id="progress-fill"></div>
+                </div>
+            </div>
+            <div id="timer-display">00:00</div>
+        </div>
+
+        <div id="title-container">
+            <h1 id="task-title">SHAKLLAR</h1>
+        </div>
+
+        <div id="status-message">
+            <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
+        </div>
+        
+        <div id="music-icon" title="Ovozni o'chirish/yoqish">🔊</div>
+    </div>
+    
+    <!-- G'alaba Ekrani -->
+    <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.95);">
+        <h1 style="font-size: 3rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
+        <div id="leaderboard" style="display:none;">
+            <h2>🏆 TEZ KUNLAR REYTINGI</h2>
+            <div id="lb-content"></div>
+        </div>
+        <p id="next-level-msg" style="font-size: 1.5rem; margin-top: 20px; display: none;">Keyingi bosqichga tayyormisiz?</p>
+        <button id="restart-btn" class="btn" style="display:none;">QAYTA O'YNASH 🔄</button>
+    </div>
+
+    <!-- Kamera va Canvas -->
+    <div id="video-container">
+        <video id="input-video" playsinline webkit-playsinline muted autoplay></video>
+        <canvas id="output-canvas"></canvas>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <!-- JavaScript ni ulash -->
+    <script src="script5.js"></script>
+</body>
+</html>
