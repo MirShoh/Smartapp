@@ -1,4 +1,5 @@
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// Global o'zgaruvchilar
+let audioCtx;
 let isMusicPlaying = false;
 let isSpeechEnabled = true;
 let nextNoteTime = 0;
@@ -6,22 +7,21 @@ let noteIndex = 0;
 let hands; 
 let isHandProcessing = false; 
 let playerName = ""; 
-
-// Game States
-let gameState = 'PERMISSION'; // PERMISSION, INTRO, PLAYING, GAMEOVER
+let gameState = 'PERMISSION'; 
 let isClickCooldown = false;
-
-// Time Control
 let totalPlayedTime = 0; 
 let lastFrameTime = 0;
 let isTimerRunning = false;
 let slowMoFactor = 1.0;
+let ui = {}; // UI elementlari keyinroq yuklanadi
+let cursorSprite;
+let canvasCtx;
 
 const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
 
 const CONFIG = {
-    sensitivityX: 2.5, // Mobil uchun biroz kamaytirildi
-    sensitivityY: 2.0,
+    sensitivityX: 3.0, 
+    sensitivityY: 2.2,
     snapDistance: 1.5,
 };
 
@@ -48,36 +48,204 @@ const state = {
     worldSize: { width: 10, height: 10 }
 };
 
-const ui = {
-    permScreen: document.getElementById('permission-screen'),
-    enableBtn: document.getElementById('enable-cam-btn'),
-    handCursor: document.getElementById('hand-cursor'),
-    hintBubble: document.getElementById('hint-bubble'),
-    startBtn: document.getElementById('start-btn'),
-    nameInput: document.getElementById('player-name-input'),
-    keyboard: document.getElementById('keyboard-container'),
-    startScreen: document.getElementById('start-screen'),
-    winScreen: document.getElementById('win-screen'),
-    uiLayer: document.getElementById('ui-layer'),
-    loadingText: document.getElementById('loading-text'),
-    video: document.getElementById('input-video'),
-    outCanvas: document.getElementById('output-canvas'),
-    title: document.getElementById('task-title'),
-    stepsContainer: document.getElementById('steps-container'),
-    countdown: document.getElementById('countdown-overlay'),
-    progressFill: document.getElementById('progress-fill'),
-    restartBtn: document.getElementById('restart-btn'),
-    timer: document.getElementById('timer-display'),
-    lbContent: document.getElementById('lb-content'),
-    leaderboard: document.getElementById('leaderboard'),
-    nextMsg: document.getElementById('next-level-msg'),
-    musicIcon: document.getElementById('music-icon'),
-    speechIcon: document.getElementById('speech-icon')
-};
+// THREE.JS INIT
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a0b2e);
+scene.fog = new THREE.FogExp2(0x1a0b2e, 0.025);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.sortObjects = true;
 
-const canvasCtx = ui.outCanvas.getContext('2d');
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(5, 10, 7);
+dirLight.castShadow = true;
+scene.add(dirLight);
 
-// --- KLAVIATURA ---
+const piecesGroup = new THREE.Group();
+const slotsGroup = new THREE.Group();
+const particlesGroup = new THREE.Group();
+const trailsGroup = new THREE.Group(); 
+scene.add(piecesGroup);
+scene.add(slotsGroup);
+scene.add(particlesGroup);
+scene.add(trailsGroup);
+
+// --- FUNKSIYALAR ---
+
+function initCursor() {
+    function createCursorTexture(emoji) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, 128, 128);
+        ctx.font = '100px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = "rgba(0,255,204,0.8)"; ctx.shadowBlur = 15;
+        ctx.fillText(emoji, 64, 70);
+        return new THREE.CanvasTexture(canvas);
+    }
+    const texHandOpen = createCursorTexture('✋');
+    const texHandPinch = createCursorTexture('👌');
+    const cursorMat = new THREE.SpriteMaterial({ map: texHandOpen, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false });
+    cursorSprite = new THREE.Sprite(cursorMat);
+    cursorSprite.scale.set(1.5, 1.5, 1);
+    cursorSprite.renderOrder = 999; 
+    scene.add(cursorSprite);
+    
+    // Global referencelar saqlash
+    cursorSprite.userData = { texOpen: texHandOpen, texPinch: texHandPinch };
+}
+
+function updateLayout() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const isMobile = window.innerWidth < 768;
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait) { camera.position.z = 18; } else { camera.position.z = isMobile ? 14 : 11; }
+    const vFOV = THREE.Math.degToRad(camera.fov);
+    const height = 2 * Math.tan(vFOV / 2) * camera.position.z;
+    const width = height * camera.aspect;
+    state.worldSize = { width, height };
+}
+
+// --- INITIALIZATION ---
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. UI elementlarini yuklash
+    ui = {
+        permScreen: document.getElementById('permission-screen'),
+        enableBtn: document.getElementById('enable-cam-btn'),
+        handCursor: document.getElementById('hand-cursor'),
+        hintBubble: document.getElementById('hint-bubble'),
+        startBtn: document.getElementById('start-btn'),
+        nameInput: document.getElementById('player-name-input'),
+        keyboard: document.getElementById('keyboard-container'),
+        startScreen: document.getElementById('start-screen'),
+        winScreen: document.getElementById('win-screen'),
+        uiLayer: document.getElementById('ui-layer'),
+        loading: document.getElementById('loading-container'),
+        video: document.getElementById('input-video'),
+        outCanvas: document.getElementById('output-canvas'),
+        title: document.getElementById('task-title'),
+        stepsContainer: document.getElementById('steps-container'),
+        countdown: document.getElementById('countdown-overlay'),
+        progressFill: document.getElementById('progress-fill'),
+        restartBtn: document.getElementById('restart-btn'),
+        timer: document.getElementById('timer-display'),
+        lbContent: document.getElementById('lb-content'),
+        leaderboard: document.getElementById('leaderboard'),
+        nextMsg: document.getElementById('next-level-msg'),
+        musicIcon: document.getElementById('music-icon'),
+        speechIcon: document.getElementById('speech-icon')
+    };
+
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    canvasCtx = ui.outCanvas.getContext('2d');
+    
+    // 2. Klaviatura yaratish
+    createKeyboard();
+    
+    // 3. 3D Cursor yaratish
+    initCursor();
+    updateLayout();
+
+    // 4. MediaPipe yuklash
+    if (typeof Hands === 'undefined') {
+        alert("Internet xatosi: MediaPipe kutubxonasi yuklanmadi. Sahifani yangilang.");
+        return;
+    }
+
+    hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+    hands.onResults(onResults);
+
+    // 5. EVENT LISTENERS
+    
+    // Kamerani yoqish tugmasi
+    if(ui.enableBtn) {
+        ui.enableBtn.addEventListener('click', async () => {
+            ui.enableBtn.innerText = "Yuklanmoqda...";
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // AudioContext ni clickda yaratish muhim
+            try {
+                startAmbientMusic();
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+                ui.video.srcObject = stream;
+                ui.video.onloadeddata = () => {
+                    ui.permScreen.classList.add('fade-out');
+                    setTimeout(() => {
+                        ui.permScreen.classList.add('hidden');
+                        ui.startScreen.classList.remove('hidden');
+                        gameState = 'INTRO';
+                        speak("Xush kelibsiz! Ismingizni kiriting.");
+                    }, 500);
+                    
+                    ui.uiLayer.classList.remove('hidden');
+                    updateLayout();
+                    animate();
+                };
+            } catch(e) {
+                alert("Kamera xatosi: " + e.message);
+                ui.enableBtn.innerText = "Qayta urinish";
+            }
+        });
+    }
+
+    // Boshlash tugmasi
+    if(ui.startBtn) {
+        ui.startBtn.addEventListener('click', () => {
+            const name = ui.nameInput.value.trim();
+            if (!name) {
+                ui.nameInput.style.borderColor = 'red';
+                setTimeout(() => ui.nameInput.style.borderColor = '#00ffcc', 500);
+                return;
+            }
+            playerName = name;
+            ui.startScreen.classList.add('fade-out');
+            setTimeout(() => {
+                ui.startScreen.classList.add('hidden');
+                initLevel(0); 
+                startCountdown(false); 
+            }, 500);
+        });
+    }
+
+    // Qayta o'ynash tugmasi
+    if(ui.restartBtn) {
+        ui.restartBtn.addEventListener('click', () => {
+            ui.winScreen.classList.add('hidden');
+            state.levelIdx = 0;
+            stopTimer();
+            totalPlayedTime = 0;
+            ui.timer.innerText = "00:00";
+            ui.leaderboard.style.display = 'none';
+            ui.restartBtn.style.display = 'none';
+            initLevel(0);
+            startCountdown(false); 
+        });
+    }
+
+    // Ism kiritish validatsiyasi
+    if(ui.nameInput) {
+        ui.nameInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+        });
+    }
+
+    // Musiqa va Ovoz ikonkalari
+    if(ui.musicIcon) ui.musicIcon.onclick = toggleMusic;
+    if(ui.speechIcon) ui.speechIcon.onclick = toggleSpeech;
+
+    window.addEventListener('resize', updateLayout);
+});
+
+
+// --- YORDAMCHI FUNKSIYALAR ---
+
 function createKeyboard() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
     ui.keyboard.innerHTML = '';
@@ -96,7 +264,6 @@ function createKeyboard() {
     back.onclick = () => handleKeyClick('BACK');
     ui.keyboard.appendChild(back);
 }
-createKeyboard();
 
 function handleKeyClick(val) {
     let current = ui.nameInput.value;
@@ -105,25 +272,15 @@ function handleKeyClick(val) {
     } else if (current.length < 10) {
         ui.nameInput.value = current + val;
     }
-    playerName = ui.nameInput.value;
     playSound('select');
 }
 
-ui.nameInput.addEventListener('input', (e) => {
-    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-    playerName = e.target.value;
-});
-
-// --- UI INTERACTION (HAND & TOUCH) ---
 function checkUiInteraction() {
     if (!state.handVisible) {
         ui.handCursor.style.display = 'none';
         return;
     }
     
-    // MediaPipe: x [0..1] chapdan o'ngga. Selfida x ko'zgu bo'ladi.
-    // CSSda oyna effekti (scaleX -1) bor.
-    // Ekranni koordinatalariga o'tkazish:
     const sx = (1 - state.screenHandPos.x) * window.innerWidth;
     const sy = state.screenHandPos.y * window.innerHeight;
     
@@ -134,21 +291,17 @@ function checkUiInteraction() {
     if (state.gesture === 'PINCH') {
         ui.handCursor.classList.add('active');
         if (!isClickCooldown) {
-            // Elementni topish
             const el = document.elementFromPoint(sx, sy);
             if (el) {
-                if (el.classList.contains('interactive-ui')) {
+                if (el.classList.contains('interactive-ui') || el.classList.contains('key')) {
                     el.classList.add('hovered');
-                    
-                    // Click trigger
-                    if (el.dataset.val) { // Klaviatura
+                    if (el.dataset.val) { 
                         handleKeyClick(el.dataset.val);
                         el.classList.add('clicked');
                         setTimeout(() => el.classList.remove('clicked'), 150);
-                    } else { // Buttonlar
+                    } else if (el.id === 'start-btn' || el.id === 'restart-btn' || el.id === 'enable-cam-btn' || el.id === 'music-icon' || el.id === 'speech-icon') {
                         el.click();
                     }
-                    
                     triggerCooldown();
                 }
             }
@@ -164,193 +317,24 @@ function triggerCooldown(ms = 400) {
     setTimeout(() => isClickCooldown = false, ms);
 }
 
-// --- TEXT TO SPEECH ---
-function speak(text) {
-    if (!isSpeechEnabled || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'uz-UZ'; 
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
-    window.speechSynthesis.speak(utterance);
-}
-
-// --- THREE.JS INIT ---
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a0b2e);
-scene.fog = new THREE.FogExp2(0x1a0b2e, 0.025);
-
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.sortObjects = true; 
-document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-scene.add(ambientLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(5, 10, 7);
-dirLight.castShadow = true;
-scene.add(dirLight);
-
-const piecesGroup = new THREE.Group();
-const slotsGroup = new THREE.Group();
-const particlesGroup = new THREE.Group();
-const trailsGroup = new THREE.Group(); 
-scene.add(piecesGroup);
-scene.add(slotsGroup);
-scene.add(particlesGroup);
-scene.add(trailsGroup);
-
-// Cursor
-let cursorSprite;
-let texHandOpen, texHandPinch;
-
-function initCursor() {
-    texHandOpen = createCursorTexture('✋');
-    texHandPinch = createCursorTexture('👌');
-    const cursorMat = new THREE.SpriteMaterial({ map: texHandOpen, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false });
-    cursorSprite = new THREE.Sprite(cursorMat);
-    cursorSprite.scale.set(1.5, 1.5, 1);
-    cursorSprite.renderOrder = 999; 
-    scene.add(cursorSprite);
-}
-
-// --- AUDIO (MUSIC BOX) ---
-function playNote(freq, time) {
-    if (!isMusicPlaying) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine'; 
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(0.1, time + 0.02); 
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); 
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(time);
-    osc.stop(time + 1.5);
-}
-
-function scheduleMusic() {
-    if (!isMusicPlaying) return;
-    const currentTime = audioCtx.currentTime;
-    while (nextNoteTime < currentTime + 0.1) {
-        const freq = melody[Math.floor(Math.random() * melody.length)];
-        playNote(freq, nextNoteTime);
-        nextNoteTime += 0.4 + Math.random() * 0.4; 
-    }
-    requestAnimationFrame(scheduleMusic);
-}
-
-function toggleMusic() {
-    isMusicPlaying = !isMusicPlaying;
-    if (isMusicPlaying) {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        nextNoteTime = audioCtx.currentTime + 0.1;
-        scheduleMusic();
-        ui.musicIcon.innerText = '🔊';
-        ui.musicIcon.style.opacity = '1';
-    } else {
-        ui.musicIcon.innerText = '🔇';
-        ui.musicIcon.style.opacity = '0.6';
-    }
-}
-ui.musicIcon.onclick = toggleMusic;
-
-function toggleSpeech() {
-    isSpeechEnabled = !isSpeechEnabled;
-    if(isSpeechEnabled) {
-        ui.speechIcon.innerText = '🗣️';
-        ui.speechIcon.style.opacity = '1';
-        speak("Ovoz yoqildi");
-    } else {
-        ui.speechIcon.innerText = '🔇';
-        ui.speechIcon.style.opacity = '0.6';
-        window.speechSynthesis.cancel();
-    }
-}
-ui.speechIcon.onclick = toggleSpeech;
-
-function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-
-    if (type === 'select') { 
-        osc.frequency.setValueAtTime(600, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
-    } else if (type === 'pop') { 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        osc.start(now); osc.stop(now + 0.5);
-    } else if (type === 'count') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(440, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
-    } else if (type === 'win') {
-        [440, 554, 659, 880].forEach((f, i) => {
-            const o = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            o.type = 'triangle';
-            o.connect(g); g.connect(audioCtx.destination);
-            o.frequency.value = f;
-            g.gain.setValueAtTime(0, now);
-            g.gain.linearRampToValueAtTime(0.1, now + 0.1 + i*0.1);
-            g.gain.exponentialRampToValueAtTime(0.001, now + 3);
-            o.start(now); o.stop(now + 3);
-        });
-    }
-}
-
-// --- TEXTURE HELPERS ---
-function createCursorTexture(emoji) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 128, 128);
-    ctx.font = '100px Arial';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.shadowColor = "rgba(0,255,204,0.8)"; ctx.shadowBlur = 15;
-    ctx.fillText(emoji, 64, 70);
-    return new THREE.CanvasTexture(canvas);
-}
-
+// --- TEXTURES ---
 function createSlotTexture(text, name, colorHex) {
     const canvas = document.createElement('canvas');
     canvas.width = 512; canvas.height = 600; 
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 512, 600);
     const centerX = 256; const centerY = 256; const radius = 200;
     const hex = '#' + new THREE.Color(colorHex).getHexString();
     
-    // Dumaloq
     ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
     ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
     ctx.strokeStyle = hex; ctx.lineWidth = 15;
     ctx.shadowColor = hex; ctx.shadowBlur = 30; 
     ctx.setLineDash([30, 20]); ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
 
-    // Emoji
     ctx.font = 'bold 200px "Segoe UI Emoji", Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.globalAlpha = 0.3; ctx.fillText(text, centerX, centerY + 20); ctx.globalAlpha = 1.0;
     
-    // Nomi
     let fontSize = 80; ctx.font = `bold ${fontSize}px "Fredoka One", sans-serif`;
     let textWidth = ctx.measureText(name).width; const maxWidth = 450;
     while (textWidth > maxWidth && fontSize > 20) {
@@ -358,7 +342,6 @@ function createSlotTexture(text, name, colorHex) {
     }
     ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 8;
     const textY = 560; ctx.strokeText(name, centerX, textY); ctx.fillText(name, centerX, textY);
-    
     const tex = new THREE.CanvasTexture(canvas);
     tex.encoding = THREE.sRGBEncoding;
     return tex;
@@ -368,7 +351,6 @@ function createPieceTexture(text, colorHex) {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 256, 256);
     const centerX = 128; const centerY = 128; const radius = 120;
     const hex = '#' + new THREE.Color(colorHex).getHexString();
     
@@ -388,31 +370,10 @@ function createPieceTexture(text, colorHex) {
     return tex;
 }
 
-function updateLayout() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const isMobile = window.innerWidth < 768;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    if (isPortrait) { camera.position.z = 18; } else { camera.position.z = isMobile ? 14 : 11; }
-    const vFOV = THREE.Math.degToRad(camera.fov);
-    const height = 2 * Math.tan(vFOV / 2) * camera.position.z;
-    const width = height * camera.aspect;
-    state.worldSize = { width, height };
-}
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
 function initLevel(idx) {
     state.isTransitioning = true;
     slowMoFactor = 1.0; 
     
-    // Tozalash
     while(piecesGroup.children.length) piecesGroup.remove(piecesGroup.children[0]);
     while(slotsGroup.children.length) slotsGroup.remove(slotsGroup.children[0]);
     
@@ -442,7 +403,12 @@ function initLevel(idx) {
             const r = radius + (Math.random() - 0.5) * 1.0;
             positions.push(new THREE.Vector3(Math.cos(angle)*r, Math.sin(angle)*r, 0));
     }
-    shuffleArray(positions); 
+    
+    // Shuffle
+    for (let i = positions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
 
     const slotScale = isMobile ? 0.8 : 1.0;
 
@@ -497,13 +463,49 @@ function initLevel(idx) {
     state.isTransitioning = false;
 }
 
-// ... (Particle va Trail funksiyalari o'zgarishsiz qoldi)
-function spawnTrail(pos) { if(Math.random()>0.3) return; const el=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.15),new THREE.MeshBasicMaterial({color:0xffff00,transparent:true})); el.position.copy(pos); el.position.z=2.5; el.userData={life:20}; trailsGroup.add(el); }
-function updateTrail() { for(let i=trailsGroup.children.length-1; i>=0; i--) { const t=trailsGroup.children[i]; t.userData.life--; t.material.opacity=t.userData.life/20; t.scale.setScalar(t.userData.life/20); if(t.userData.life<=0) trailsGroup.remove(t); } }
-function createConfetti() { const count=80; const geo=new THREE.BufferGeometry(); const posArr=new Float32Array(count*3); for(let i=0; i<count; i++) { posArr[i*3]=(Math.random()-0.5)*2; posArr[i*3+1]=(Math.random()-0.5)*2; posArr[i*3+2]=0; } geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3)); const mat=new THREE.PointsMaterial({color:0xffffff,size:0.3}); const sys=new THREE.Points(geo, mat); sys.userData={vels:[],life:100}; for(let i=0;i<count;i++) sys.userData.vels.push({x:(Math.random()-0.5)*0.5,y:(Math.random()-0.5)*0.5+0.2,z:(Math.random()-0.5)*0.5}); particlesGroup.add(sys); }
-function updateParticles() { for(let i=particlesGroup.children.length-1; i>=0; i--) { const p=particlesGroup.children[i]; p.userData.life--; const pos=p.geometry.attributes.position.array; for(let j=0; j<p.userData.vels.length; j++) { pos[j*3]+=p.userData.vels[j].x; pos[j*3+1]+=p.userData.vels[j].y; pos[j*3+2]+=p.userData.vels[j].z; p.userData.vels[j].y-=0.01; } p.geometry.attributes.position.needsUpdate=true; p.scale.setScalar(p.userData.life/100); if(p.userData.life<=0) particlesGroup.remove(p); } }
+// --- VISUAL EFFECTS ---
+function createConfetti() {
+    const count = 80; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(count*3); const velArr = [];
+    for(let i=0; i<count; i++) {
+        posArr[i*3] = (Math.random()-0.5)*2; posArr[i*3+1] = (Math.random()-0.5)*2; posArr[i*3+2] = 0;
+        velArr.push({x: (Math.random()-0.5)*0.5, y: (Math.random()-0.5)*0.5+0.2, z: (Math.random()-0.5)*0.5});
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3 });
+    const sys = new THREE.Points(geo, mat); sys.userData = { vels: velArr, life: 100 }; particlesGroup.add(sys);
+}
+function updateParticles() {
+    for(let i=particlesGroup.children.length-1; i>=0; i--) {
+        const p = particlesGroup.children[i]; p.userData.life--;
+        const pos = p.geometry.attributes.position.array;
+        for(let j=0; j<p.userData.vels.length; j++) {
+            pos[j*3] += p.userData.vels[j].x; pos[j*3+1] += p.userData.vels[j].y; pos[j*3+2] += p.userData.vels[j].z; p.userData.vels[j].y -= 0.01; 
+        }
+        p.geometry.attributes.position.needsUpdate = true; p.scale.setScalar(p.userData.life/100); if(p.userData.life<=0) particlesGroup.remove(p);
+    }
+}
+function spawnTrail(pos) {
+    if(Math.random() > 0.3) return;
+    const el = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true }));
+    el.position.copy(pos); el.position.z = 2.5; el.userData = { life: 20 }; trailsGroup.add(el);
+}
+function updateTrail() {
+    for(let i=trailsGroup.children.length-1; i>=0; i--) {
+        const t = trailsGroup.children[i]; t.userData.life--; t.material.opacity = t.userData.life/20; t.scale.setScalar(t.userData.life/20); if(t.userData.life<=0) trailsGroup.remove(t);
+    }
+}
+function updateStepsUI() {
+    ui.stepsContainer.innerHTML = '';
+    LEVELS.forEach((lvl, idx) => {
+        const dot = document.createElement('div'); dot.className = 'step-dot'; dot.innerText = idx + 1;
+        if (idx < state.levelIdx) { dot.classList.add('completed'); dot.innerText = '✓'; } 
+        else if (idx === state.levelIdx) { dot.classList.add('active'); }
+        ui.stepsContainer.appendChild(dot);
+    });
+}
+function updateProgress(percent) { ui.progressFill.style.width = percent + '%'; }
 
-// --- TIMER & LEADERBOARD ---
+// --- LOGIC ---
 function startTimer() { if (!isTimerRunning) { isTimerRunning = true; lastFrameTime = Date.now(); } }
 function stopTimer() { isTimerRunning = false; }
 function updateTimerDisplay() { 
@@ -517,6 +519,61 @@ function formatTime(ms) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function showMessage(text, color) { ui.hintBubble.innerText = text; ui.hintBubble.style.color = color; ui.hintBubble.style.borderColor = color; ui.hintBubble.classList.add('visible'); }
+function hideMessage() { ui.hintBubble.classList.remove('visible'); }
+
+function playNote(freq, time) {
+    if (!isMusicPlaying) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(0.1, time + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5); 
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(time); osc.stop(time + 1.5);
+}
+function scheduleMusic() {
+    if (!isMusicPlaying) return;
+    const currentTime = audioCtx.currentTime;
+    while (nextNoteTime < currentTime + 0.1) {
+        const freq = melody[Math.floor(Math.random() * melody.length)];
+        playNote(freq, nextNoteTime); nextNoteTime += 0.4 + Math.random() * 0.4; 
+    }
+    requestAnimationFrame(scheduleMusic);
+}
+function startAmbientMusic() { if (isMusicPlaying) return; isMusicPlaying = true; if(audioCtx.state === 'suspended') audioCtx.resume(); nextNoteTime = audioCtx.currentTime + 0.1; scheduleMusic(); updateMusicIcon(); }
+function toggleMusic() { 
+    isMusicPlaying = !isMusicPlaying; 
+    if (isMusicPlaying) { if(audioCtx.state === 'suspended') audioCtx.resume(); nextNoteTime = audioCtx.currentTime + 0.1; scheduleMusic(); } 
+    updateMusicIcon(); 
+}
+function updateMusicIcon() {
+    if (isMusicPlaying) { ui.musicIcon.innerText = '🔊'; ui.musicIcon.style.opacity = '1'; ui.musicIcon.style.borderColor = '#00ffcc'; }
+    else { ui.musicIcon.innerText = '🔇'; ui.musicIcon.style.opacity = '0.6'; ui.musicIcon.style.borderColor = 'rgba(255,255,255,0.2)'; }
+}
+
+function speak(text) {
+    if (!isSpeechEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'uz-UZ'; utterance.rate = 0.9; utterance.pitch = 1.1;
+    window.speechSynthesis.speak(utterance);
+}
+function toggleSpeech() {
+    isSpeechEnabled = !isSpeechEnabled;
+    if(isSpeechEnabled) { ui.speechIcon.innerText = '🗣️'; ui.speechIcon.style.opacity = '1'; speak("Ovoz yoqildi"); }
+    else { ui.speechIcon.innerText = '🔇'; ui.speechIcon.style.opacity = '0.6'; window.speechSynthesis.cancel(); }
+}
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (type === 'select') { osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+    else if (type === 'pop') { osc.type = 'triangle'; osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5); osc.start(now); osc.stop(now + 0.5); }
+    else if (type === 'count') { osc.type = 'square'; osc.frequency.setValueAtTime(440, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+    else if (type === 'win') { [440, 554, 659, 880].forEach((f, i) => { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = 'triangle'; o.connect(g); g.connect(audioCtx.destination); o.frequency.value = f; g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.1, now + 0.1 + i*0.1); g.gain.exponentialRampToValueAtTime(0.001, now + 3); o.start(now); o.stop(now + 3); }); }
 }
 
 function saveTime(name, timeMs) {
@@ -547,9 +604,38 @@ function showLeaderboard() {
         html += `<div class="${cls}"><div class="lb-rank">${i+1} ${icon}</div><div class="lb-name">${p.name}</div><div class="lb-time">${formatTime(p.time)}</div></div>`;
     });
     ui.lbContent.innerHTML = html;
+    ui.winScreen.classList.remove('hidden');
 }
 
-// --- MEDIAPIPE ---
+function startCountdown(isNextLevel = false) {
+    let count = 3;
+    ui.countdown.classList.remove('hidden');
+    ui.countdown.style.opacity = 1;
+    ui.countdown.innerText = count;
+    playSound('count'); speak(count.toString());
+
+    const interval = setInterval(() => {
+        count--;
+        if(count > 0) {
+            ui.countdown.innerText = count; playSound('count'); speak(count.toString());
+        } else {
+            clearInterval(interval);
+            ui.countdown.innerText = "KETDIK!";
+            speak("Ketdik!");
+            setTimeout(() => {
+                ui.countdown.classList.add('hidden');
+                if (isNextLevel) {
+                    state.levelIdx++;
+                    if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
+                    initLevel(state.levelIdx);
+                }
+                gameState = 'PLAYING';
+                startTimer(); 
+            }, 1000);
+        }
+    }, 1000);
+}
+
 function onResults(results) {
     ui.outCanvas.width = ui.video.videoWidth;
     ui.outCanvas.height = ui.video.videoHeight;
@@ -566,8 +652,7 @@ function onResults(results) {
         state.handVisible = true;
         const x = (1 - lm[9].x) * 2 - 1; 
         const y = (1 - lm[9].y) * 2 - 1;
-        state.screenHandPos.x = 1 - lm[9].x; 
-        state.screenHandPos.y = lm[9].y;
+        state.screenHandPos.x = 1 - lm[9].x; state.screenHandPos.y = lm[9].y;
 
         state.handPos.x += (x * CONFIG.sensitivityX - state.handPos.x) * 0.5;
         state.handPos.y += (y * CONFIG.sensitivityY - state.handPos.y) * 0.5;
@@ -584,21 +669,15 @@ function onResults(results) {
     isHandProcessing = false; 
 }
 
-// --- GAME LOOP ---
 function updateGame() {
     if(state.isTransitioning) return;
     updateParticles();
     updateTrail();
     updateTimerDisplay();
 
-    if (gameState === 'INTRO') {
-        checkUiInteraction(); // Bosh menyuda UI boshqaruvi
-        return; 
-    }
-
-    // Win screen restart interaction
-    if (!ui.winScreen.classList.contains('hidden')) {
+    if (gameState === 'INTRO' || !ui.winScreen.classList.contains('hidden')) {
         checkUiInteraction();
+        return; 
     }
 
     const timeDelta = 0.002 * slowMoFactor;
@@ -606,7 +685,7 @@ function updateGame() {
 
     piecesGroup.children.forEach(obj => {
         if(!obj.userData.isLocked && obj !== state.grabbedObj) {
-            if (state.levelIdx >= 2) { // 3-bosqichdan uchish
+            if (state.levelIdx >= 2) {
                 const vel = obj.userData.velocity;
                 obj.position.x += vel.x * slowMoFactor; obj.position.y += vel.y * slowMoFactor;
                 const limitX = (state.worldSize.width/2)-1; const limitY = (state.worldSize.height/2)-1;
@@ -639,7 +718,7 @@ function updateGame() {
     if(cursorSprite) {
         cursorSprite.position.copy(worldPos); cursorSprite.position.z = 3; cursorSprite.visible = true;
         if (state.handLabel === 'Left') cursorSprite.scale.x = 1.5; else cursorSprite.scale.x = -1.5; 
-        if (state.gesture === 'PINCH') cursorSprite.material.map = texHandPinch; else cursorSprite.material.map = texHandOpen;
+        if (state.gesture === 'PINCH') cursorSprite.material.map = cursorSprite.userData.texPinch; else cursorSprite.material.map = cursorSprite.userData.texOpen;
         spawnTrail(cursorSprite.position);
     }
 
@@ -670,12 +749,9 @@ function updateGame() {
                 updateProgress((state.lockedCount / state.totalPieces) * 100);
                 
                 if (state.lockedCount === state.totalPieces) {
-                    playSound('slowmo');
                     slowMoFactor = 0.2; 
                     setTimeout(() => {
                         slowMoFactor = 1.0;
-                        playSound('pop');
-                        createConfetti();
                         playSound('win');
                         state.isTransitioning = true;
                         stopTimer(); 
@@ -694,7 +770,6 @@ function updateGame() {
                              }, 3000);
                         } else {
                             showLeaderboard();
-                            ui.winScreen.classList.remove('hidden');
                             ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
                             ui.leaderboard.style.display = 'block';
                             ui.nextMsg.style.display = 'none';
@@ -702,9 +777,6 @@ function updateGame() {
                             speak("Tabriklayman! Siz g'olib bo'ldingiz!");
                         }
                     }, 800);
-                } else {
-                    playSound('pop');
-                    createConfetti();
                 }
             }
             state.grabbedObj = null;
@@ -718,13 +790,13 @@ function updateGame() {
         
         if (realObj && realObj.userData && !realObj.userData.isLocked) {
             state.hoveredObj = realObj;
-            realObj.scale.setScalar(1.1 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
+            realObj.scale.setScalar(1.1 * (window.innerWidth < 768 ? 0.8 : 1.0)); 
             realObj.children.forEach(c => { if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x333333); });
             if(state.gesture !== 'PINCH') { showMessage("CHIMCHILANG (👌)", "#ffff00"); }
         }
     } else {
         if (state.hoveredObj && state.hoveredObj !== state.grabbedObj) {
-            state.hoveredObj.scale.setScalar(1.0 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
+            state.hoveredObj.scale.setScalar(1.0 * (window.innerWidth < 768 ? 0.8 : 1.0)); 
             state.hoveredObj.children.forEach(c => { if(c.material && c.material.emissive) c.material.emissive = new THREE.Color(0x000000); });
         }
         state.hoveredObj = null;
@@ -735,7 +807,7 @@ function updateGame() {
         state.grabbedObj.position.lerp(worldPos, 0.4);
         state.grabbedObj.position.z = 2; 
         state.grabbedObj.rotation.set(Math.PI / 2, 0, 0); 
-        state.grabbedObj.scale.setScalar(1.2 * (ui.video.offsetWidth < 768 ? 0.8 : 1.0)); 
+        state.grabbedObj.scale.setScalar(1.2 * (window.innerWidth < 768 ? 0.8 : 1.0)); 
         const target = state.grabbedObj.userData.targetPos;
         const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
         if (dist2D < CONFIG.snapDistance) {
@@ -743,39 +815,6 @@ function updateGame() {
             state.grabbedObj.position.y += (target.y - state.grabbedObj.position.y) * 0.2;
         }
     }
-}
-
-function showMessage(text, color) { ui.hintBubble.innerText = text; ui.hintBubble.style.color = color; ui.hintBubble.style.borderColor = color; ui.hintBubble.classList.add('visible'); }
-function hideMessage() { ui.hintBubble.classList.remove('visible'); }
-
-function startCountdown(isNextLevel = false) {
-    let count = 3;
-    ui.countdown.classList.remove('hidden');
-    ui.countdown.style.opacity = 1;
-    ui.countdown.innerText = count;
-    playSound('count'); speak(count.toString());
-
-    const interval = setInterval(() => {
-        count--;
-        if(count > 0) {
-            ui.countdown.innerText = count;
-            playSound('count'); speak(count.toString());
-        } else {
-            clearInterval(interval);
-            ui.countdown.innerText = "KETDIK!";
-            speak("Ketdik!");
-            setTimeout(() => {
-                ui.countdown.classList.add('hidden');
-                if (isNextLevel) {
-                    state.levelIdx++;
-                    if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
-                    initLevel(state.levelIdx);
-                }
-                gameState = 'PLAYING';
-                startTimer(); 
-            }, 1000);
-        }
-    }, 1000);
 }
 
 function animate() {
@@ -787,65 +826,3 @@ function animate() {
     updateGame();
     renderer.render(scene, camera);
 }
-
-// --- INIT ---
-window.addEventListener('load', () => {
-    ui.loading.style.display = 'none';
-    hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-    hands.onResults(onResults);
-    
-    initCursor();
-    updateLayout(); 
-});
-
-ui.enableBtn.addEventListener('click', async () => {
-    ui.enableBtn.innerText = "Yuklanmoqda...";
-    try {
-        startAmbientMusic();
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
-        ui.video.srcObject = stream;
-        ui.video.onloadeddata = () => {
-            ui.permScreen.classList.add('fade-out');
-            setTimeout(() => {
-                ui.permScreen.classList.add('hidden');
-                ui.startScreen.classList.remove('hidden');
-                gameState = 'INTRO';
-                speak("Xush kelibsiz! Ismingizni kiriting.");
-            }, 500);
-            ui.uiLayer.classList.remove('hidden');
-            animate();
-        };
-    } catch(e) {
-        alert("Kamera xatosi: " + e.message);
-        ui.enableBtn.innerText = "Qayta urinish";
-    }
-});
-
-ui.startBtn.addEventListener('click', () => {
-    if (!playerName) {
-        ui.nameInput.style.borderColor = 'red';
-        setTimeout(() => ui.nameInput.style.borderColor = '#00ffcc', 500);
-        return;
-    }
-    ui.startScreen.classList.add('fade-out');
-    setTimeout(() => {
-        ui.startScreen.classList.add('hidden');
-        initLevel(0); 
-        startCountdown(false); 
-    }, 500);
-});
-
-ui.restartBtn.addEventListener('click', () => {
-    ui.winScreen.classList.add('hidden');
-    state.levelIdx = 0;
-    stopTimer();
-    totalPlayedTime = 0;
-    ui.timer.innerText = "00:00";
-    ui.leaderboard.style.display = 'none';
-    ui.restartBtn.style.display = 'none';
-    initLevel(0);
-    startCountdown(false); 
-});
-
-window.addEventListener('resize', () => { updateLayout(); });
