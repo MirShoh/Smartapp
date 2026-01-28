@@ -1,21 +1,23 @@
 /**
- * KOSMIK SAYOHAT - MVP
+ * KOSMIK SAYOHAT - MVP (Ultra Lite Versiya)
  * Muallif: [Sizning Ismingiz]
- * Versiya: 1.0.1 (Optimallashtirilgan)
+ * Versiya: 1.0.2 (Touch Fallback + Throttling)
  */
 
 // ==========================================
 // 1. SOZLAMALAR (CONFIG)
 // ==========================================
 const CONFIG = {
-    sensitivityX: 3.0,  // Qo'l harakati tezligi (Gorizontal)
-    sensitivityY: 2.2,  // Qo'l harakati tezligi (Vertikal)
-    snapDistance: 1.5,  // Yopishtirish masofasi
+    sensitivityX: 3.0,
+    sensitivityY: 2.2,
+    snapDistance: 1.5,
     colors: {
         bg: 0x1a0b2e,
         primary: 0x00ffcc,
         highlight: 0xffff00
-    }
+    },
+    aiUpdateInterval: 100, // AI har 100ms da ishlaydi (Telefonni qotirmaslik uchun)
+    loadingTimeout: 10000  // 10 soniya kutamiz, bo'lmasa Touch rejimiga o'tamiz
 };
 
 const LEVELS = [
@@ -32,12 +34,12 @@ const LEVELS = [
 const state = {
     levelIdx: 0,
     handPos: { x: 0, y: 0 },
-    gesture: 'IDLE',      // 'IDLE' yoki 'PINCH'
-    handVisible: false,
-    handLabel: 'Right',   // O'ng yoki Chap qo'l
+    gesture: 'IDLE',      
+    handVisible: false,   // Agar Touch rejim bo'lsa, bu doim true bo'ladi
+    inputType: 'CAMERA',  // 'CAMERA' yoki 'TOUCH'
     grabbedObj: null,
     hoveredObj: null,
-    lockedCount: 0,       // Joyiga qo'yilgan shakllar soni
+    lockedCount: 0,
     totalPieces: 0,
     isTransitioning: false,
     playerName: "O'yinchi",
@@ -45,14 +47,14 @@ const state = {
 };
 
 // Vaqtni boshqarish
-let timerInterval;
 let startTime;
 let totalTime = 0;
+let lastAIProcessTime = 0;
 
 // UI Elementlari
 const ui = {
     loading: document.getElementById('loading-overlay'),
-    loadingText: document.getElementById('loading-text'), // Loading matni uchun
+    loadingText: document.getElementById('loading-text'),
     startScreen: document.getElementById('start-screen'),
     winScreen: document.getElementById('win-screen'),
     uiLayer: document.getElementById('ui-layer'),
@@ -70,7 +72,6 @@ const ui = {
 // 3. OVOZ TIZIMI (AUDIO ENGINE)
 // ==========================================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let isMusicPlaying = false;
 
 function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -87,7 +88,6 @@ function playSound(type) {
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
         osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'win') {
-        // Oddiy g'alaba akkordi
         [440, 554, 659].forEach((f, i) => {
             const o = audioCtx.createOscillator();
             const g = audioCtx.createGain();
@@ -114,22 +114,22 @@ camera.position.z = 12;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+// Touch hodisalari uchun
+renderer.domElement.style.touchAction = 'none'; 
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// Yorug'lik
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
 dirLight.position.set(5, 10, 7);
 scene.add(dirLight);
 
-// Guruhlar
 const piecesGroup = new THREE.Group();
 const slotsGroup = new THREE.Group();
 scene.add(piecesGroup);
 scene.add(slotsGroup);
 
-// Kursor (Qo'l rasmi)
+// Kursor
 let cursorSprite;
 function initCursor() {
     const canvas = document.createElement('canvas');
@@ -138,7 +138,6 @@ function initCursor() {
     ctx.font = '100px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('✋', 64, 70);
-    
     const tex = new THREE.CanvasTexture(canvas);
     const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
     cursorSprite = new THREE.Sprite(mat);
@@ -148,32 +147,23 @@ function initCursor() {
 }
 initCursor();
 
-// Yordamchi funksiyalar: Tekstura yaratish
 function createTexture(emoji, text, color, isSlot = false) {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 300;
     const ctx = canvas.getContext('2d');
-    
-    // Fon
     const hex = '#' + new THREE.Color(color).getHexString();
     ctx.fillStyle = isSlot ? "rgba(255,255,255,0.1)" : hex;
     ctx.beginPath();
     ctx.arc(128, 128, 100, 0, Math.PI*2);
     ctx.fill();
-    
-    // Chegara
     ctx.strokeStyle = isSlot ? hex : "#ffffff";
     ctx.lineWidth = 10;
     if(isSlot) ctx.setLineDash([20, 10]);
     ctx.stroke();
-
-    // Emoji
     ctx.font = '100px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.globalAlpha = isSlot ? 0.4 : 1.0;
     ctx.fillText(emoji, 128, 135);
-    
-    // Matn
     ctx.globalAlpha = 1.0;
     ctx.font = 'bold 40px Arial';
     ctx.fillStyle = "#ffffff";
@@ -181,16 +171,13 @@ function createTexture(emoji, text, color, isSlot = false) {
     ctx.lineWidth = 4;
     ctx.strokeText(text, 128, 270);
     ctx.fillText(text, 128, 270);
-
-    const tex = new THREE.CanvasTexture(canvas);
-    return tex;
+    return new THREE.CanvasTexture(canvas);
 }
 
 // ==========================================
 // 5. O'YIN MANTIGI (GAME LOGIC)
 // ==========================================
 function initLevel(idx) {
-    // Tozalash
     while(piecesGroup.children.length > 0) piecesGroup.remove(piecesGroup.children[0]);
     while(slotsGroup.children.length > 0) slotsGroup.remove(slotsGroup.children[0]);
     
@@ -202,50 +189,34 @@ function initLevel(idx) {
     ui.taskTitle.innerText = lvl.title;
     ui.taskTitle.style.borderColor = '#' + new THREE.Color(lvl.color).getHexString();
     
-    // Fon rangini o'zgartirish
     const targetColor = new THREE.Color(lvl.color).lerp(new THREE.Color(0x000000), 0.7);
     scene.background = targetColor;
     scene.fog.color = targetColor;
 
-    // Shakllarni yaratish
     const items = [...lvl.items];
     const positions = [];
-    const radius = 3.5;
+    const radius = window.innerWidth < 600 ? 2.5 : 3.5;
     
-    // Doira shaklida slotlar
     for(let i=0; i<items.length; i++) {
         const angle = (i / items.length) * Math.PI * 2;
         positions.push(new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0));
     }
-    
-    // Aralashtirish
     positions.sort(() => Math.random() - 0.5);
 
     items.forEach((item, i) => {
         const targetPos = positions[i];
-
-        // 1. Slot (joy)
+        
         const slotTex = createTexture(item.emoji, item.name, lvl.color, true);
-        const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true });
-        const slot = new THREE.Mesh(new THREE.PlaneGeometry(3, 3.5), slotMat);
+        const slot = new THREE.Mesh(new THREE.PlaneGeometry(3, 3.5), new THREE.MeshBasicMaterial({ map: slotTex, transparent: true }));
         slot.position.copy(targetPos);
         slot.position.z = -0.5;
         slot.userData = { isSlot: true };
         slotsGroup.add(slot);
 
-        // 2. Shakl (Piece)
         const pieceTex = createTexture(item.emoji, item.name, lvl.color, false);
-        const pieceMat = new THREE.MeshBasicMaterial({ map: pieceTex, transparent: true });
-        const piece = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.9), pieceMat);
-        
-        // Tasodifiy joylashuv (Markazda tarqoq)
+        const piece = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.9), new THREE.MeshBasicMaterial({ map: pieceTex, transparent: true }));
         piece.position.set((Math.random()-0.5)*3, (Math.random()-0.5)*3, 0.5 + i*0.1);
-        piece.userData = { 
-            id: i, 
-            targetPos: targetPos, 
-            isLocked: false, 
-            name: item.name 
-        };
+        piece.userData = { id: i, targetPos: targetPos, isLocked: false, name: item.name };
         piecesGroup.add(piece);
     });
     
@@ -264,7 +235,6 @@ function checkWin() {
         
         setTimeout(() => {
             if (state.levelIdx < LEVELS.length - 1) {
-                // Keyingi level
                 ui.countdown.classList.remove('hidden');
                 ui.countdown.innerText = "BARAKALLA!";
                 setTimeout(() => {
@@ -272,7 +242,6 @@ function checkWin() {
                     ui.countdown.classList.add('hidden');
                 }, 2000);
             } else {
-                // O'yin tugadi
                 showWinScreen();
             }
         }, 1000);
@@ -282,17 +251,15 @@ function checkWin() {
 function showWinScreen() {
     ui.winScreen.classList.remove('hidden');
     document.getElementById('restart-btn').classList.remove('hidden');
-    // Natijani saqlash (LocalStorage)
     saveScore(state.playerName, totalTime);
 }
 
 function saveScore(name, time) {
     let scores = JSON.parse(localStorage.getItem('kosmik_scores') || '[]');
     scores.push({ name, time });
-    scores.sort((a,b) => a.time - b.time); // Eng kam vaqt birinchi
+    scores.sort((a,b) => a.time - b.time);
     localStorage.setItem('kosmik_scores', JSON.stringify(scores.slice(0, 5)));
     
-    // Jadvalni chizish
     const html = scores.map((s, i) => `
         <div class="lb-row ${s.name === name ? 'lb-highlight' : ''}">
             <span>${i+1}. ${s.name}</span>
@@ -303,41 +270,94 @@ function saveScore(name, time) {
 }
 
 // ==========================================
-// 6. O'YIN SIKLI (GAME LOOP)
+// 6. TOUCH / MOUSE NAZORATI (FALLBACK)
 // ==========================================
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+function handleInputMove(x, y) {
+    // Ekran koordinatalarini Normalizatsiya qilish (-1 dan +1 gacha)
+    mouse.x = (x / window.innerWidth) * 2 - 1;
+    mouse.y = -(y / window.innerHeight) * 2 + 1;
+    
+    state.handVisible = true;
+    // Touch rejimda Pinch avtomatik (bosilganda)
+    if(state.inputType === 'TOUCH') {
+        state.handPos.x = mouse.x;
+        state.handPos.y = mouse.y;
+    }
+}
+
+function handleInputStart() {
+    state.gesture = 'PINCH';
+}
+
+function handleInputEnd() {
+    state.gesture = 'IDLE';
+}
+
+// Touch Eventlar (Agar kamera ishlamasa)
+window.addEventListener('mousedown', (e) => {
+    if(state.inputType === 'TOUCH') { handleInputMove(e.clientX, e.clientY); handleInputStart(); }
+});
+window.addEventListener('mousemove', (e) => {
+    if(state.inputType === 'TOUCH') handleInputMove(e.clientX, e.clientY);
+});
+window.addEventListener('mouseup', () => {
+    if(state.inputType === 'TOUCH') handleInputEnd();
+});
+window.addEventListener('touchstart', (e) => {
+    if(state.inputType === 'TOUCH' && e.touches.length > 0) {
+        handleInputMove(e.touches[0].clientX, e.touches[0].clientY);
+        handleInputStart();
+    }
+}, {passive: false});
+window.addEventListener('touchmove', (e) => {
+    if(state.inputType === 'TOUCH' && e.touches.length > 0) {
+        e.preventDefault(); // Ekranni qimirlatmaslik uchun
+        handleInputMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, {passive: false});
+window.addEventListener('touchend', () => {
+    if(state.inputType === 'TOUCH') handleInputEnd();
+});
+
+
+// ==========================================
+// 7. ASOSIY ANIMATSIYA
+// ==========================================
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Three.js render
     renderer.render(scene, camera);
 
     if (state.isTransitioning || !state.isPlaying) return;
 
-    // Vaqtni yangilash
     if (startTime) {
         totalTime = (Date.now() - startTime) / 1000;
         ui.timer.innerText = Math.floor(totalTime / 60).toString().padStart(2,'0') + ':' + (Math.floor(totalTime) % 60).toString().padStart(2,'0');
     }
 
-    // Hand Tracking Logikasi
-    if (state.handVisible) {
-        // Kursor joylashuvi
+    // Agar CAMERA rejimi bo'lsa, kursor handPos ga ergashadi
+    if (state.inputType === 'CAMERA') {
         mouse.x = Math.max(-1, Math.min(1, state.handPos.x));
         mouse.y = Math.max(-1, Math.min(1, state.handPos.y));
-        
-        // Raycaster (Kursor nima ustida turibdi?)
-        raycaster.setFromCamera(mouse, camera);
-        const worldPos = new THREE.Vector3(mouse.x * 15, mouse.y * 10, 0); // Taxminiy proyeksiyalash
-        
-        cursorSprite.position.x = worldPos.x;
-        cursorSprite.position.y = worldPos.y;
-        cursorSprite.visible = true;
-        cursorSprite.material.opacity = state.gesture === 'PINCH' ? 1.0 : 0.6;
+    }
 
-        // Obyektni ushlash
+    // Raycaster mantig'i (Umumiy)
+    if (state.handVisible) {
+        raycaster.setFromCamera(mouse, camera);
+        
+        // Z=0 tekisligidagi nuqtani topish
+        const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        const worldPos = new THREE.Vector3();
+        raycaster.ray.intersectPlane(planeZ, worldPos);
+        
+        // Kursor
+        cursorSprite.position.copy(worldPos);
+        cursorSprite.position.z = 2;
+        cursorSprite.visible = true;
+        cursorSprite.scale.setScalar(state.gesture === 'PINCH' ? 1.5 : 2.0);
+
         if (state.gesture === 'PINCH') {
             if (!state.grabbedObj && state.hoveredObj) {
                 state.grabbedObj = state.hoveredObj;
@@ -345,15 +365,12 @@ function animate() {
                 ui.hintBubble.style.color = "#00ff00";
             }
         } else {
-            // Qo'yib yuborish
             if (state.grabbedObj) {
-                // Joyiga tushdimi?
                 const obj = state.grabbedObj;
                 const target = obj.userData.targetPos;
                 const dist = obj.position.distanceTo(target);
                 
                 if (dist < CONFIG.snapDistance) {
-                    // Muvaffaqiyat!
                     obj.position.copy(target);
                     obj.position.z = 0.5;
                     obj.userData.isLocked = true;
@@ -362,17 +379,14 @@ function animate() {
                     updateProgress((state.lockedCount / state.totalPieces) * 100);
                     checkWin();
                 }
-                
                 state.grabbedObj = null;
                 ui.hintBubble.innerText = "BO'SH";
             }
         }
 
-        // Dragging (Sudrash)
         if (state.grabbedObj) {
-            state.grabbedObj.position.lerp(new THREE.Vector3(worldPos.x, worldPos.y, 2), 0.2);
+            state.grabbedObj.position.lerp(new THREE.Vector3(worldPos.x, worldPos.y, 2), 0.3);
         } else {
-            // Hover (Ustiga olib borish) tekshiruvi
             const intersects = raycaster.intersectObjects(piecesGroup.children);
             if (intersects.length > 0) {
                 const obj = intersects[0].object;
@@ -380,7 +394,7 @@ function animate() {
                     state.hoveredObj = obj;
                     obj.scale.setScalar(1.2);
                     ui.hintBubble.classList.add('visible');
-                    ui.hintBubble.innerText = "USHLA (👌)";
+                    ui.hintBubble.innerText = "USHLA";
                 }
             } else {
                 if(state.hoveredObj) state.hoveredObj.scale.setScalar(1.0);
@@ -388,15 +402,18 @@ function animate() {
                 ui.hintBubble.classList.remove('visible');
             }
         }
-    } else {
-        cursorSprite.visible = false;
     }
 }
 
 // ==========================================
-// 7. KAMERA VA MEDIAPIPE
+// 8. O'YINNI BOSHLASH
 // ==========================================
+let hands; 
+
 function onHandsResults(results) {
+    // Faqat kamera rejimida chizamiz
+    if(state.inputType !== 'CAMERA') return;
+
     ui.canvasCtx.save();
     ui.canvasCtx.clearRect(0, 0, ui.outCanvas.width, ui.outCanvas.height);
     ui.canvasCtx.drawImage(results.image, 0, 0, ui.outCanvas.width, ui.outCanvas.height);
@@ -405,62 +422,91 @@ function onHandsResults(results) {
         state.handVisible = true;
         const lm = results.multiHandLandmarks[0];
         
-        // Chizish
         drawConnectors(ui.canvasCtx, lm, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
         drawLandmarks(ui.canvasCtx, lm, {color: '#FF0000', lineWidth: 1});
 
-        // Koordinatalar (Oyna effekti uchun X ni teskari qilamiz)
         const x = (1 - lm[9].x) * 2 - 1;
-        const y = (1 - lm[9].y) * 2 - 1; // Y yuqoriga -1, pastga 1
+        const y = (1 - lm[9].y) * 2 - 1;
         
-        // Silliqlash (Smoothing)
         state.handPos.x += (x * CONFIG.sensitivityX - state.handPos.x) * 0.5;
         state.handPos.y += (-y * CONFIG.sensitivityY - state.handPos.y) * 0.5;
 
-        // Pinch aniqlash (Bosh va ko'rsatkich barmoq orasi)
         const dist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
         state.gesture = dist < 0.05 ? 'PINCH' : 'IDLE';
     } else {
+        // Agar qo'l ko'rinmasa, kursor yo'qoladi
         state.handVisible = false;
     }
     ui.canvasCtx.restore();
 }
 
+// AI sikli (Throttled)
+async function aiLoop() {
+    if(state.inputType === 'CAMERA' && state.isPlaying && !ui.video.paused) {
+        const now = Date.now();
+        // 100ms kuting (10 FPS)
+        if(now - lastAIProcessTime > CONFIG.aiUpdateInterval) {
+            await hands.send({image: ui.video});
+            lastAIProcessTime = now;
+        }
+    }
+    requestAnimationFrame(aiLoop);
+}
+
+function switchToTouchMode() {
+    console.log("Touch rejimiga o'tilmoqda...");
+    state.inputType = 'TOUCH';
+    ui.loading.style.display = 'none';
+    ui.uiLayer.classList.remove('hidden');
+    // Kamerani o'chirish
+    if(ui.video.srcObject) {
+        ui.video.srcObject.getTracks().forEach(track => track.stop());
+    }
+    ui.video.style.display = 'none';
+    ui.outCanvas.style.display = 'none';
+    
+    alert("Kamera ishlamadi yoki internet sekin.\nSensor (barmoq) rejimiga o'tildi!");
+    
+    ui.outCanvas.width = window.innerWidth;
+    ui.outCanvas.height = window.innerHeight;
+    
+    initLevel(0);
+    state.isPlaying = true;
+    startTime = Date.now();
+    animate();
+}
+
 async function startGame() {
     const name = document.getElementById('player-name-input').value;
-    if(!name) { alert("Iltimos, ismingizni kiriting!"); return; }
-    
+    if(!name) { alert("Ismingizni kiriting!"); return; }
     state.playerName = name;
     ui.startScreen.classList.add('hidden');
-    
-    // Statusni yangilash
     ui.loading.style.display = 'flex'; 
-    if(ui.loadingText) ui.loadingText.innerText = "AI Modeli yuklanmoqda...";
+
+    // Timeout (10 soniyada yuklanmasa, Touch ga o'tish)
+    const loadTimer = setTimeout(() => {
+        if(!state.isPlaying) switchToTouchMode();
+    }, CONFIG.loadingTimeout);
 
     try {
-        // Hands obyektini sozlash
-        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        if(ui.loadingText) ui.loadingText.innerText = "AI Modeli yuklanmoqda...";
         
-        // 0 = Lite (Juda tez), 1 = Full (O'rtacha)
-        hands.setOptions({ 
-            maxNumHands: 1, 
-            modelComplexity: 0, 
-            minDetectionConfidence: 0.5, 
-            minTrackingConfidence: 0.5 
-        });
-        
+        hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         hands.onResults(onHandsResults);
 
-        if(ui.loadingText) ui.loadingText.innerText = "Kameraga ulanmoqda...";
-
+        if(ui.loadingText) ui.loadingText.innerText = "Kamera ulanmoqda...";
+        
         const cameraObj = new Camera(ui.video, {
-            onFrame: async () => { await hands.send({image: ui.video}); },
+            onFrame: async () => { /* Bu yerni bo'sh qoldiramiz, aiLoop boshqaradi */ },
             width: 640, height: 480
         });
-        
         await cameraObj.start();
         
-        // O'yinni boshlash
+        // Agar shu yergacha xatosiz kelsa, demak kamera ishladi
+        clearTimeout(loadTimer);
+        state.inputType = 'CAMERA';
+        
         ui.loading.style.display = 'none';
         ui.uiLayer.classList.remove('hidden');
         ui.outCanvas.width = 640; ui.outCanvas.height = 480;
@@ -468,21 +514,19 @@ async function startGame() {
         initLevel(0);
         state.isPlaying = true;
         startTime = Date.now();
-        animate();
         
+        animate(); // Grafika
+        aiLoop();  // AI (Alohida siklda)
+
     } catch (e) {
-        console.error(e);
-        alert("Xatolik yuz berdi: " + e.message + "\nInternetni tekshiring!");
-        ui.loading.style.display = 'none';
-        ui.startScreen.classList.remove('hidden');
+        clearTimeout(loadTimer);
+        switchToTouchMode(); // Xato bo'lsa darrov Touch ga o'tish
     }
 }
 
-// Hodisalar
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 
-// Ekran o'zgarganda
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
