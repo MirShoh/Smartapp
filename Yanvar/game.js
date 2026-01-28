@@ -1,7 +1,7 @@
 /**
  * KOSMIK SAYOHAT - MVP
  * Muallif: [Sizning Ismingiz]
- * Versiya: 1.0.0
+ * Versiya: 1.0.1 (Optimallashtirilgan)
  */
 
 // ==========================================
@@ -52,6 +52,7 @@ let totalTime = 0;
 // UI Elementlari
 const ui = {
     loading: document.getElementById('loading-overlay'),
+    loadingText: document.getElementById('loading-text'), // Loading matni uchun
     startScreen: document.getElementById('start-screen'),
     winScreen: document.getElementById('win-screen'),
     uiLayer: document.getElementById('ui-layer'),
@@ -431,18 +432,32 @@ async function startGame() {
     
     state.playerName = name;
     ui.startScreen.classList.add('hidden');
-    ui.loading.style.display = 'flex'; // Loadingni ko'rsatish
-
-    // Kamerani yoqish
-    const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-    hands.onResults(onHandsResults);
+    
+    // Statusni yangilash
+    ui.loading.style.display = 'flex'; 
+    if(ui.loadingText) ui.loadingText.innerText = "AI Modeli yuklanmoqda...";
 
     try {
+        // Hands obyektini sozlash
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        
+        // 0 = Lite (Juda tez), 1 = Full (O'rtacha)
+        hands.setOptions({ 
+            maxNumHands: 1, 
+            modelComplexity: 0, 
+            minDetectionConfidence: 0.5, 
+            minTrackingConfidence: 0.5 
+        });
+        
+        hands.onResults(onHandsResults);
+
+        if(ui.loadingText) ui.loadingText.innerText = "Kameraga ulanmoqda...";
+
         const cameraObj = new Camera(ui.video, {
             onFrame: async () => { await hands.send({image: ui.video}); },
             width: 640, height: 480
         });
+        
         await cameraObj.start();
         
         // O'yinni boshlash
@@ -456,8 +471,10 @@ async function startGame() {
         animate();
         
     } catch (e) {
-        alert("Kamerada xatolik: " + e.message);
-        ui.loading.innerHTML = "Xatolik yuz berdi :(";
+        console.error(e);
+        alert("Xatolik yuz berdi: " + e.message + "\nInternetni tekshiring!");
+        ui.loading.style.display = 'none';
+        ui.startScreen.classList.remove('hidden');
     }
 }
 
