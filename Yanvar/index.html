@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Neon AR Shooter</title>
     <style>
         body {
@@ -11,6 +11,7 @@
             overflow: hidden;
             background-color: #050505;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; /* Mobil brauzerda skrollni o'chirish */
         }
         #container {
             position: relative;
@@ -25,7 +26,7 @@
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1);
-            filter: brightness(0.7) contrast(1.2); /* Videoni biroz qoraytiramiz, neon effektlar yaxshi ko'rinishi uchun */
+            filter: brightness(0.7) contrast(1.2); 
             z-index: 0;
         }
         canvas {
@@ -56,7 +57,8 @@
             border-radius: 4px;
             box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
             color: #fff;
-            transform: skewX(-10deg); /* Futuristik qiyshiq shakl */
+            transform: skewX(-10deg); 
+            transition: all 0.3s ease;
         }
         
         .hud-title {
@@ -92,6 +94,31 @@
             pointer-events: none;
             box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
             transition: all 0.3s;
+            white-space: nowrap;
+            width: max-content;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Mobil uchun CSS (Media Queries) */
+        @media (max-width: 768px) {
+            .hud-panel {
+                padding: 8px 15px;
+                transform: skewX(0deg); /* Mobilda to'g'ri tursin */
+            }
+            .hud-title {
+                font-size: 10px;
+                letter-spacing: 1px;
+            }
+            .score-value {
+                font-size: 28px;
+            }
+            #instruction {
+                bottom: 80px; /* Qo'l pastda turganda yopilib qolmasligi uchun */
+                font-size: 14px;
+                padding: 8px 20px;
+            }
         }
 
         /* Yuklash ekrani */
@@ -106,6 +133,7 @@
             font-size: 24px;
             z-index: 10;
             flex-direction: column;
+            text-align: center;
         }
         .loader {
             width: 50px; height: 50px;
@@ -118,8 +146,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
     
-    <!-- CameraUtils shart emas, chunki qo'lda yozamiz -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     
@@ -135,11 +161,11 @@
 
     <div id="loading">
         <div class="loader"></div>
-        <div id="loading-text">Tizim ishga tushmoqda...</div>
+        <div id="loading-text">Tizim ishga tushmoqda...<br><span style="font-size: 14px; opacity: 0.7">Iltimos, kamera ruxsatini bering</span></div>
     </div>
 
     <div id="container">
-        <video id="input_video" playsinline></video>
+        <video id="input_video" playsinline webkit-playsinline></video>
         
         <div id="ui-layer">
             <div class="hud-panel">
@@ -161,7 +187,7 @@
         // --- KONFIGURATSIYA ---
         const BALL_RADIUS = 0.28;
         const GRID_ROWS = 4;
-        const GRID_COLS = 7;
+        const GRID_COLS = 6; // Mobilda sig'ishi uchun kamaytirdik (7 -> 6)
         const COLORS = [0xff0055, 0x00ffcc, 0xbd00ff, 0xffcc00]; 
         const ANCHOR_POINT = new THREE.Vector3(0, -2.5, 0);
 
@@ -187,15 +213,15 @@
         scene.add(rimLight);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0, 6);
+        // Kamera pozitsiyasi endi adjustLayout() funksiyasida belgilanadi
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Mobil optimizatsiya (maks 2x)
         document.getElementById('container').appendChild(renderer.domElement);
 
         // --- 2. MATERIALLAR VA OBYEKTLAR ---
-        const baseGeometry = new THREE.SphereGeometry(BALL_RADIUS, 32, 32);
+        const baseGeometry = new THREE.SphereGeometry(BALL_RADIUS, 24, 24); // Polygon kamaytirildi (optim)
         
         function createBall(color, x, y, z = 0) {
             const material = new THREE.MeshPhysicalMaterial({
@@ -231,10 +257,10 @@
         class Explosion {
             constructor(position, color) {
                 this.particles = [];
-                const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+                const geometry = new THREE.SphereGeometry(0.05, 6, 6); // Optim
                 const material = new THREE.MeshBasicMaterial({ color: color });
                 
-                for(let i=0; i<15; i++) {
+                for(let i=0; i<12; i++) { // Kamroq zarrachalar
                     const mesh = new THREE.Mesh(geometry, material);
                     mesh.position.copy(position);
                     mesh.userData.velocity = new THREE.Vector3(
@@ -321,7 +347,39 @@
         cursorGroup.add(ring2);
         scene.add(cursorGroup);
 
-        // --- 3. MEDIAPIPE & LOGIC ---
+        // --- 3. RESPONSIVE HANDLER (Layout moslash) ---
+        function adjustLayout() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const aspect = width / height;
+
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+
+            // MOBIL MOSLASHUV
+            if (aspect < 1.0) { 
+                // Portret rejimi (Telefon vertikal)
+                // Kamerani orqaroqqa suramiz, shunda grid to'liq ko'rinadi
+                camera.position.set(0, 1, 10); 
+                ANCHOR_POINT.set(0, -3.5, 0); // Rogatkani pastroqqa tushiramiz
+            } else {
+                // Landshaft rejimi (Desktop/Telefon yonbosh)
+                camera.position.set(0, 0, 6);
+                ANCHOR_POINT.set(0, -2.5, 0);
+            }
+            
+            // O'yinchi shari joylashuvini yangilash
+            if(gameState === 'IDLE' && currentBall) {
+                currentBall.position.copy(ANCHOR_POINT);
+            }
+        }
+        // Sahna yuklanganda va o'zgarganda chaqiriladi
+        adjustLayout();
+        window.addEventListener('resize', adjustLayout);
+
+
+        // --- 4. MEDIAPIPE & LOGIC ---
         const videoElement = document.getElementById('input_video');
         const instructionEl = document.getElementById('instruction');
         const scoreEl = document.getElementById('score');
@@ -343,18 +401,29 @@
                 const indexTip = landmarks[8];
                 const thumbTip = landmarks[4];
 
-                const ndcX = (0.5 - indexTip.x) * 2;
-                const ndcY = (0.5 - indexTip.y) * 2;
+                const ndcX = (0.5 - indexTip.x) * 2; // -1 to 1
+                const ndcY = (0.5 - indexTip.y) * 2; // -1 to 1
                 
-                const targetX = ndcX * 7;
-                const targetY = ndcY * 5;
-                handPos.lerp(new THREE.Vector3(targetX, targetY, 0), 0.2); 
+                // DINAMIK MAPPING (Moslashuvchan koordinatalar)
+                // Ekranda ko'rinadigan 3D maydon o'lchamini hisoblaymiz (Z=0 da)
+                const dist = camera.position.z; // Z=0 ga nisbatan masofa
+                const vFOV = THREE.MathUtils.degToRad(camera.fov);
+                const visibleHeight = 2 * Math.tan(vFOV / 2) * dist;
+                const visibleWidth = visibleHeight * camera.aspect;
+
+                // Qo'l harakatini shu maydonga moslaymiz
+                // Y o'qini biroz ko'taramiz (+visibleHeight * 0.1) shunda qo'l o'rtaroqda bo'ladi
+                const targetX = ndcX * (visibleWidth / 2);
+                const targetY = ndcY * (visibleHeight / 2) + (camera.position.y); // Kamera balandligini hisobga olamiz
+
+                handPos.lerp(new THREE.Vector3(targetX, targetY, 0), 0.3); // Tezroq reaksiya (0.2 -> 0.3)
                 
                 cursorGroup.position.copy(handPos);
                 cursorGroup.rotation.z += 0.05;
 
                 const dx = indexTip.x - thumbTip.x;
                 const dy = indexTip.y - thumbTip.y;
+                // Masofani aspect ratio ga qarab sezgirligini o'zgartirish shart emas, chunki bu normalizatsiya qilingan
                 const distance = Math.sqrt(dx*dx + dy*dy);
 
                 isPinching = distance < 0.06;
@@ -372,25 +441,28 @@
         }
 
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.setOptions({ 
+            maxNumHands: 1, 
+            modelComplexity: 0, // Lite model (Mobil uchun tezroq)
+            minDetectionConfidence: 0.5, 
+            minTrackingConfidence: 0.5 
+        });
         hands.onResults(onResults);
 
-        // --- YANGI KAMERA FUNKSIYASI (Xatolikni tuzatish uchun) ---
         async function startCamera() {
             try {
-                // Oddiyroq constraints (ideal width/height), majburiy emas
+                // Mobil uchun aniqroq sozlamalar
                 const constraints = {
                     video: {
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: "user"
+                        facingMode: "user", // Old kamera
+                        width: { ideal: 640 }, // Kichikroq ruxsat (tezlik uchun)
+                        height: { ideal: 480 }
                     }
                 };
 
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = stream;
                 
-                // Video tayyor bo'lishini kutish
                 await new Promise((resolve) => {
                     videoElement.onloadedmetadata = () => {
                         videoElement.play();
@@ -398,7 +470,6 @@
                     };
                 });
 
-                // Frame loop: Qo'llarni aniqlash uchun videoni yuborib turamiz
                 async function processVideo() {
                     if (videoElement.paused || videoElement.ended) return;
                     await hands.send({image: videoElement});
@@ -412,8 +483,7 @@
                     <div style="color: #ff0055; text-align: center; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;">
                         <div style="font-size: 50px;">📷❌</div>
                         <h2 style="margin: 10px 0;">Kamera topilmadi</h2>
-                        <p style="font-size: 16px; opacity: 0.8;">Iltimos, kamera ulanganini tekshiring<br>yoki ruxsat berilganligiga ishonch hosil qiling.</p>
-                        <p style="font-size: 12px; color: #888;">Xatolik kodi: ${error.name}</p>
+                        <p style="font-size: 16px; opacity: 0.8;">Mobil qurilmada brauzer ruxsatlarini tekshiring.</p>
                     </div>
                 `;
             }
@@ -432,7 +502,8 @@
                 trajectoryLine.visible = false;
 
                 const distToBall = handPos.distanceTo(currentBall.position);
-                if (isPinching && distToBall < 1.0) {
+                // Mobilda barmoq aniqligi pastroq bo'lishi mumkin, radiusni oshiramiz (1.0 -> 1.5)
+                if (isPinching && distToBall < 1.5) {
                     gameState = 'DRAGGING';
                 }
             }
@@ -463,9 +534,11 @@
             else if (gameState === 'SHOT') {
                 currentBall.position.add(shootingVelocity);
 
-                if (currentBall.position.x > 7 || currentBall.position.x < -7) shootingVelocity.x *= -1;
+                // Devor chegaralari (Dinamik bo'lishi kerak, lekin hozircha oddiy)
+                const wallX = (camera.position.z > 8) ? 9 : 7; // Agar kamera uzoq bo'lsa, devor kengroq
+                if (currentBall.position.x > wallX || currentBall.position.x < -wallX) shootingVelocity.x *= -1;
                 
-                if (currentBall.position.y > 5.0) {
+                if (currentBall.position.y > 6.0) {
                      freezeBall();
                 }
 
@@ -547,12 +620,6 @@
             renderer.render(scene, camera);
         }
         
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
         animate();
     </script>
 </body>
