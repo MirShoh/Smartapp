@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kosmik Sayohat: Bolalar Uchun</title>
     
-    <!-- Tashqi resurslar (Shriftlar) -->
+    <!-- Google Fonts (Shriftlar) -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Bizning dizayn faylimiz -->
+    <!-- Dizayn faylini ulash -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Kutubxonalar (Three.js va MediaPipe) -->
-    <!-- Three.js -->
+    <!-- Kerakli kutubxonalar (Internet kerak) -->
+    <!-- Three.js (3D grafika uchun) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- MediaPipe Hands -->
+    <!-- MediaPipe (Qo'lni aniqlash uchun) -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -25,23 +25,32 @@
 </head>
 <body>
 
-    <!-- 1. Yuklanish ekrani -->
+    <!-- 1. Yuklanish ekrani (Loading) -->
+    <!-- Dastur ochilganda shu ekran turadi va game.js yuklangach yo'qoladi -->
     <div id="loading-overlay" class="overlay-screen">
         <div class="loader"></div>
         <div id="loading-text">Tizim yuklanmoqda...</div>
     </div>
 
-    <!-- 2. Kirish ekrani (Start Screen) -->
+    <!-- 2. Bosh sahifa (Start Screen) -->
     <div id="start-screen" class="overlay-screen hidden">
         <h1 class="game-title">KOSMIK SARGUZASHT 🚀</h1>
         <p class="subtitle">Qo'llaringiz bilan mo'jiza yarating!</p>
         
+        <!-- Ism kiritish joyi -->
         <input type="text" id="player-name-input" placeholder="Ismingizni yozing..." maxlength="12" autocomplete="off">
-        <button id="start-btn" class="btn">BOSHLASH</button>
-        <p class="instruction">Kameraga ruxsat berishni unutmang!</p>
+        
+        <!-- ASOSIY TUGMA: KAMERA BILAN -->
+        <button id="start-btn" class="btn">KAMERA ORQALI O'YNASH 📸</button>
+        
+        <!-- YANGI TUGMA: KAMERASIZ (Sensor bilan) -->
+        <!-- Internet sekin bo'lsa, shu tugma orqali o'ynash mumkin -->
+        <button id="touch-btn" class="btn" style="background: linear-gradient(45deg, #ffaa00, #ff5500); margin-top: 15px; font-size: 1.2rem;">KAMERASIZ O'YNASH 👆</button>
+        
+        <p class="instruction" style="margin-top: 20px; color: #aaa; font-size: 0.9rem;">Kameraga ruxsat so'ralsa, "Ruxsat berish"ni bosing</p>
     </div>
 
-    <!-- 3. O'yin interfeysi (UI Layer) -->
+    <!-- 3. O'yin jarayoni interfeysi (UI) -->
     <div id="ui-layer" class="hidden">
         <!-- Chap panel: Vaqt va Progress -->
         <div id="left-panel">
@@ -59,7 +68,7 @@
             <h1 id="task-title">SHAKLLAR</h1>
         </div>
 
-        <!-- O'ng: Maslahatlar -->
+        <!-- O'ng: Maslahat pufakchasi -->
         <div id="status-message">
             <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
         </div>
@@ -68,13 +77,15 @@
         <div id="music-icon" title="Ovoz">🔊</div>
     </div>
 
-    <!-- 4. G'oliblik ekrani -->
+    <!-- 4. G'oliblik ekrani (Win Screen) -->
     <div id="win-screen" class="overlay-screen hidden">
         <h1 class="win-title">G'ALABA! 🎉</h1>
+        
         <div id="leaderboard">
             <h2>🏆 CHEMPIONLAR</h2>
             <div id="lb-content"></div>
         </div>
+        
         <p id="next-level-msg" class="hidden">Keyingi bosqichga tayyormisiz?</p>
         <button id="restart-btn" class="btn hidden">QAYTA O'YNASH 🔄</button>
     </div>
@@ -82,18 +93,18 @@
     <!-- 5. Ortga sanoq (3-2-1) -->
     <div id="countdown-overlay" class="hidden">3</div>
 
-    <!-- 6. Kamera va Canvas konteyneri -->
+    <!-- Kamera va Canvas konteyneri -->
     <div id="video-container">
-        <!-- Kamera aslida ko'rinmaydi, biz uning rasmini canvasga chizamiz -->
+        <!-- Kamera videosi (Yashirin bo'lishi mumkin) -->
         <video id="input-video" playsinline webkit-playsinline muted autoplay></video>
-        <!-- Qo'l chiziqlarini chizish uchun -->
+        <!-- Qo'l chiziqlari uchun canvas -->
         <canvas id="output-canvas"></canvas>
     </div>
     
     <!-- Asosiy 3D O'yin oynasi -->
     <div id="canvas-container"></div>
 
-    <!-- O'yin mantig'i -->
+    <!-- O'yin mantig'i fayli -->
     <script src="game.js"></script>
 </body>
 </html>

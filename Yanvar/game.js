@@ -1,7 +1,7 @@
 /**
- * KOSMIK SAYOHAT - MVP (Ultra Lite Versiya)
+ * KOSMIK SAYOHAT - MVP (Fix Version 1.0.3)
  * Muallif: [Sizning Ismingiz]
- * Versiya: 1.0.2 (Touch Fallback + Throttling)
+ * Versiya: 1.0.3 (Loading Screen Fix + Manual Touch Mode)
  */
 
 // ==========================================
@@ -16,8 +16,8 @@ const CONFIG = {
         primary: 0x00ffcc,
         highlight: 0xffff00
     },
-    aiUpdateInterval: 100, // AI har 100ms da ishlaydi (Telefonni qotirmaslik uchun)
-    loadingTimeout: 10000  // 10 soniya kutamiz, bo'lmasa Touch rejimiga o'tamiz
+    aiUpdateInterval: 100, // AI har 100ms da ishlaydi
+    loadingTimeout: 10000  // 10 soniya kutish
 };
 
 const LEVELS = [
@@ -35,7 +35,7 @@ const state = {
     levelIdx: 0,
     handPos: { x: 0, y: 0 },
     gesture: 'IDLE',      
-    handVisible: false,   // Agar Touch rejim bo'lsa, bu doim true bo'ladi
+    handVisible: false,
     inputType: 'CAMERA',  // 'CAMERA' yoki 'TOUCH'
     grabbedObj: null,
     hoveredObj: null,
@@ -69,7 +69,7 @@ const ui = {
 };
 
 // ==========================================
-// 3. OVOZ TIZIMI (AUDIO ENGINE)
+// 3. OVOZ TIZIMI
 // ==========================================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -103,7 +103,7 @@ function playSound(type) {
 }
 
 // ==========================================
-// 4. GRAFIKA (THREE.JS ENGINE)
+// 4. GRAFIKA (THREE.JS)
 // ==========================================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.colors.bg);
@@ -114,7 +114,6 @@ camera.position.z = 12;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-// Touch hodisalari uchun
 renderer.domElement.style.touchAction = 'none'; 
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
@@ -175,7 +174,7 @@ function createTexture(emoji, text, color, isSlot = false) {
 }
 
 // ==========================================
-// 5. O'YIN MANTIGI (GAME LOGIC)
+// 5. O'YIN MANTIGI
 // ==========================================
 function initLevel(idx) {
     while(piecesGroup.children.length > 0) piecesGroup.remove(piecesGroup.children[0]);
@@ -270,42 +269,32 @@ function saveScore(name, time) {
 }
 
 // ==========================================
-// 6. TOUCH / MOUSE NAZORATI (FALLBACK)
+// 6. TOUCH / MOUSE NAZORATI
 // ==========================================
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 function handleInputMove(x, y) {
-    // Ekran koordinatalarini Normalizatsiya qilish (-1 dan +1 gacha)
     mouse.x = (x / window.innerWidth) * 2 - 1;
     mouse.y = -(y / window.innerHeight) * 2 + 1;
     
     state.handVisible = true;
-    // Touch rejimda Pinch avtomatik (bosilganda)
     if(state.inputType === 'TOUCH') {
         state.handPos.x = mouse.x;
         state.handPos.y = mouse.y;
     }
 }
 
-function handleInputStart() {
-    state.gesture = 'PINCH';
-}
+function handleInputStart() { state.gesture = 'PINCH'; }
+function handleInputEnd() { state.gesture = 'IDLE'; }
 
-function handleInputEnd() {
-    state.gesture = 'IDLE';
-}
-
-// Touch Eventlar (Agar kamera ishlamasa)
 window.addEventListener('mousedown', (e) => {
     if(state.inputType === 'TOUCH') { handleInputMove(e.clientX, e.clientY); handleInputStart(); }
 });
 window.addEventListener('mousemove', (e) => {
     if(state.inputType === 'TOUCH') handleInputMove(e.clientX, e.clientY);
 });
-window.addEventListener('mouseup', () => {
-    if(state.inputType === 'TOUCH') handleInputEnd();
-});
+window.addEventListener('mouseup', () => { if(state.inputType === 'TOUCH') handleInputEnd(); });
 window.addEventListener('touchstart', (e) => {
     if(state.inputType === 'TOUCH' && e.touches.length > 0) {
         handleInputMove(e.touches[0].clientX, e.touches[0].clientY);
@@ -314,17 +303,15 @@ window.addEventListener('touchstart', (e) => {
 }, {passive: false});
 window.addEventListener('touchmove', (e) => {
     if(state.inputType === 'TOUCH' && e.touches.length > 0) {
-        e.preventDefault(); // Ekranni qimirlatmaslik uchun
+        e.preventDefault();
         handleInputMove(e.touches[0].clientX, e.touches[0].clientY);
     }
 }, {passive: false});
-window.addEventListener('touchend', () => {
-    if(state.inputType === 'TOUCH') handleInputEnd();
-});
+window.addEventListener('touchend', () => { if(state.inputType === 'TOUCH') handleInputEnd(); });
 
 
 // ==========================================
-// 7. ASOSIY ANIMATSIYA
+// 7. ANIMATSIYA
 // ==========================================
 function animate() {
     requestAnimationFrame(animate);
@@ -337,22 +324,18 @@ function animate() {
         ui.timer.innerText = Math.floor(totalTime / 60).toString().padStart(2,'0') + ':' + (Math.floor(totalTime) % 60).toString().padStart(2,'0');
     }
 
-    // Agar CAMERA rejimi bo'lsa, kursor handPos ga ergashadi
     if (state.inputType === 'CAMERA') {
         mouse.x = Math.max(-1, Math.min(1, state.handPos.x));
         mouse.y = Math.max(-1, Math.min(1, state.handPos.y));
     }
 
-    // Raycaster mantig'i (Umumiy)
     if (state.handVisible) {
         raycaster.setFromCamera(mouse, camera);
         
-        // Z=0 tekisligidagi nuqtani topish
         const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
         const worldPos = new THREE.Vector3();
         raycaster.ray.intersectPlane(planeZ, worldPos);
         
-        // Kursor
         cursorSprite.position.copy(worldPos);
         cursorSprite.position.z = 2;
         cursorSprite.visible = true;
@@ -406,14 +389,12 @@ function animate() {
 }
 
 // ==========================================
-// 8. O'YINNI BOSHLASH
+// 8. O'YINNI BOSHLASH & INIT
 // ==========================================
 let hands; 
 
 function onHandsResults(results) {
-    // Faqat kamera rejimida chizamiz
     if(state.inputType !== 'CAMERA') return;
-
     ui.canvasCtx.save();
     ui.canvasCtx.clearRect(0, 0, ui.outCanvas.width, ui.outCanvas.height);
     ui.canvasCtx.drawImage(results.image, 0, 0, ui.outCanvas.width, ui.outCanvas.height);
@@ -427,24 +408,19 @@ function onHandsResults(results) {
 
         const x = (1 - lm[9].x) * 2 - 1;
         const y = (1 - lm[9].y) * 2 - 1;
-        
         state.handPos.x += (x * CONFIG.sensitivityX - state.handPos.x) * 0.5;
         state.handPos.y += (-y * CONFIG.sensitivityY - state.handPos.y) * 0.5;
-
         const dist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
         state.gesture = dist < 0.05 ? 'PINCH' : 'IDLE';
     } else {
-        // Agar qo'l ko'rinmasa, kursor yo'qoladi
         state.handVisible = false;
     }
     ui.canvasCtx.restore();
 }
 
-// AI sikli (Throttled)
 async function aiLoop() {
     if(state.inputType === 'CAMERA' && state.isPlaying && !ui.video.paused) {
         const now = Date.now();
-        // 100ms kuting (10 FPS)
         if(now - lastAIProcessTime > CONFIG.aiUpdateInterval) {
             await hands.send({image: ui.video});
             lastAIProcessTime = now;
@@ -457,15 +433,14 @@ function switchToTouchMode() {
     console.log("Touch rejimiga o'tilmoqda...");
     state.inputType = 'TOUCH';
     ui.loading.style.display = 'none';
+    ui.startScreen.classList.add('hidden');
     ui.uiLayer.classList.remove('hidden');
-    // Kamerani o'chirish
+    
     if(ui.video.srcObject) {
         ui.video.srcObject.getTracks().forEach(track => track.stop());
     }
     ui.video.style.display = 'none';
     ui.outCanvas.style.display = 'none';
-    
-    alert("Kamera ishlamadi yoki internet sekin.\nSensor (barmoq) rejimiga o'tildi!");
     
     ui.outCanvas.width = window.innerWidth;
     ui.outCanvas.height = window.innerHeight;
@@ -483,12 +458,16 @@ async function startGame() {
     ui.startScreen.classList.add('hidden');
     ui.loading.style.display = 'flex'; 
 
-    // Timeout (10 soniyada yuklanmasa, Touch ga o'tish)
     const loadTimer = setTimeout(() => {
-        if(!state.isPlaying) switchToTouchMode();
+        if(!state.isPlaying) {
+            alert("Kamera yuklanmadi. Sensorli rejimga o'tilmoqda!");
+            switchToTouchMode();
+        }
     }, CONFIG.loadingTimeout);
 
     try {
+        if(typeof Hands === 'undefined') { throw new Error("MediaPipe yuklanmagan"); }
+
         if(ui.loadingText) ui.loadingText.innerText = "AI Modeli yuklanmoqda...";
         
         hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
@@ -498,12 +477,11 @@ async function startGame() {
         if(ui.loadingText) ui.loadingText.innerText = "Kamera ulanmoqda...";
         
         const cameraObj = new Camera(ui.video, {
-            onFrame: async () => { /* Bu yerni bo'sh qoldiramiz, aiLoop boshqaradi */ },
+            onFrame: async () => { },
             width: 640, height: 480
         });
         await cameraObj.start();
         
-        // Agar shu yergacha xatosiz kelsa, demak kamera ishladi
         clearTimeout(loadTimer);
         state.inputType = 'CAMERA';
         
@@ -515,20 +493,40 @@ async function startGame() {
         state.isPlaying = true;
         startTime = Date.now();
         
-        animate(); // Grafika
-        aiLoop();  // AI (Alohida siklda)
+        animate(); 
+        aiLoop();
 
     } catch (e) {
         clearTimeout(loadTimer);
-        switchToTouchMode(); // Xato bo'lsa darrov Touch ga o'tish
+        console.error(e);
+        alert("Xatolik: " + e.message + "\nKamerasiz rejimga o'tilmoqda.");
+        switchToTouchMode();
     }
 }
 
+// HODISALAR
 document.getElementById('start-btn').addEventListener('click', startGame);
+
+// Kamerasiz o'ynash tugmasi
+document.getElementById('touch-btn').addEventListener('click', () => {
+    const name = document.getElementById('player-name-input').value || "O'yinchi";
+    state.playerName = name;
+    switchToTouchMode();
+});
+
 document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// BUG FIX: SAHIFA YUKLANGANDA LOADINGNI O'CHIRISH
+window.addEventListener('DOMContentLoaded', () => {
+    // 1 soniyadan keyin menyuni ochish
+    setTimeout(() => {
+        if(ui.loading) ui.loading.style.display = 'none';
+        if(ui.startScreen) ui.startScreen.classList.remove('hidden');
+    }, 1000);
 });
