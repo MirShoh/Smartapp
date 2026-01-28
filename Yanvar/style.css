@@ -1,0 +1,204 @@
+/* --- ASOSIY SOZLAMALAR --- */
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #1a0b2e; /* To'q binafsha kosmik fon */
+    font-family: 'Nunito', sans-serif; 
+    user-select: none; 
+    touch-action: none; 
+}
+
+/* --- KONTEYNERLAR --- */
+#canvas-container { 
+    width: 100vw; height: 100vh; 
+    position: absolute; top: 0; left: 0; 
+    z-index: 1; 
+}
+
+#ui-layer {
+    position: absolute; top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    z-index: 10; pointer-events: none; 
+}
+
+/* Interaktiv elementlar uchun (bosish mumkin) */
+#music-icon, .btn, #restart-btn, #player-name-input {
+    pointer-events: auto !important;
+}
+
+/* --- KAMERA OYNASI (Kichkina oyna) --- */
+#video-container {
+    position: absolute; bottom: 20px; right: 20px; 
+    width: 220px; height: 165px;
+    border-radius: 20px; 
+    border: 4px solid #00ffcc; 
+    z-index: 100; 
+    background: #000; overflow: hidden;
+    box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
+    transform: scaleX(-1); /* Oynadek aks ettirish */
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+#input-video { 
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; object-fit: cover; 
+}
+#output-canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 2;
+}
+
+/* --- EKRANLAR (Overlay) --- */
+.overlay-screen {
+    position: absolute; top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(26, 11, 46, 0.95); /* Fon rangi */
+    z-index: 50; 
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; 
+    color: white; text-align: center;
+    transition: opacity 0.5s;
+    pointer-events: auto;
+}
+
+.hidden { display: none !important; }
+.fade-out { opacity: 0; pointer-events: none; }
+
+/* --- MATNLAR VA TUGMALAR --- */
+.game-title {
+    font-family: 'Fredoka One', cursive; 
+    font-size: 3.5rem; color: #fff; 
+    text-shadow: 0 5px 0 #6a0dad, 0 0 20px #00ffcc;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.3rem; color: #ddd; margin-bottom: 30px;
+}
+
+.btn {
+    background: linear-gradient(45deg, #00ccff, #0066ff); 
+    border: none; padding: 15px 50px;
+    color: white; font-size: 1.5rem; 
+    border-radius: 50px; cursor: pointer; margin-top: 20px;
+    box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
+    font-family: 'Fredoka One', cursive;
+    transition: transform 0.1s;
+}
+.btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
+
+#player-name-input {
+    padding: 15px 25px;
+    font-size: 1.5rem;
+    border-radius: 30px;
+    border: 3px solid #00ffcc;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-align: center;
+    outline: none;
+    width: 80%; max-width: 300px;
+}
+#player-name-input:focus { box-shadow: 0 0 20px #00ffcc; transform: scale(1.05); }
+
+/* --- O'YIN ELEMENTLARI --- */
+#title-container {
+    position: absolute; top: 30px; left: 50%; 
+    transform: translateX(-50%);
+    text-align: center; width: 100%;
+    pointer-events: none;
+}
+
+#task-title { 
+    font-family: 'Fredoka One', cursive; font-size: 2.5rem; 
+    color: #fff; text-shadow: 0 4px 0 #6a0dad; margin: 0;
+    background: rgba(0,0,0,0.4); padding: 8px 30px; border-radius: 30px;
+    backdrop-filter: blur(5px); display: inline-block;
+}
+
+/* Chap panel */
+#left-panel {
+    position: absolute; top: 30px; left: 30px;
+    display: flex; flex-direction: column; gap: 15px;
+    pointer-events: none;
+}
+
+#timer-display {
+    font-family: 'Fredoka One', cursive;
+    color: #ffd700; font-size: 2rem;
+    text-shadow: 2px 2px 0 #000;
+    background: rgba(0,0,0,0.5); padding: 10px;
+    border-radius: 15px; border: 2px solid #ffd700;
+    text-align: center;
+}
+
+/* Progress bar */
+#progress-container {
+    width: 180px; height: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px; border: 2px solid #fff;
+    overflow: hidden;
+}
+#progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #00ff00, #adff2f);
+    transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 0 10px #00ff00;
+}
+
+/* Status Bubble */
+#status-message {
+    position: absolute; bottom: 200px; right: 20px; 
+    width: 220px; text-align: center; pointer-events: none;
+}
+.message-bubble {
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ffcc; padding: 10px 20px;
+    border-radius: 15px; border: 2px solid #00ffcc;
+    font-weight: bold; font-size: 1.1rem;
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+}
+.message-bubble.visible { opacity: 1; transform: translateY(0); }
+
+/* --- REYTING JADVALI --- */
+#leaderboard {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px; padding: 20px;
+    margin-bottom: 20px; width: 90%; max-width: 400px;
+}
+.lb-row {
+    display: flex; justify-content: space-between;
+    padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 1.1rem;
+}
+.lb-highlight { background: rgba(0, 255, 204, 0.3); border-radius: 10px; }
+
+/* --- YUKLANISH (Loader) --- */
+.loader {
+    border: 5px solid #f3f3f3; border-top: 5px solid #00ffcc;
+    border-radius: 50%; width: 50px; height: 50px;
+    animation: spin 1s linear infinite; margin-bottom: 20px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* --- ORTGA SANOQ --- */
+#countdown-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-family: 'Fredoka One', cursive;
+    font-size: 10rem; text-shadow: 0 0 40px #00ffcc;
+    pointer-events: none;
+}
+
+/* --- MOBIL UCHUN MOSLASHUV --- */
+@media (max-width: 768px) {
+    #video-container { width: 100px; height: 75px; bottom: 10px; right: 10px; }
+    #status-message { bottom: 100px; right: 10px; width: 120px; }
+    .game-title { font-size: 2rem; }
+    #left-panel { transform: scale(0.8); transform-origin: top left; top: 10px; left: 10px; }
+    #title-container { top: 70px; }
+    #task-title { font-size: 1.5rem; }
+}

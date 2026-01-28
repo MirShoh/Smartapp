@@ -2,625 +2,98 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Neon AR Shooter</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #050505;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none; /* Mobil brauzerda skrollni o'chirish */
-        }
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        #input_video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-            filter: brightness(0.7) contrast(1.2); 
-            z-index: 0;
-        }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        
-        /* HUD (Head-Up Display) Uslubi */
-        #ui-layer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 2;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .hud-panel {
-            background: rgba(0, 20, 40, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-left: 4px solid #00ffcc;
-            padding: 15px 25px;
-            border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
-            color: #fff;
-            transform: skewX(-10deg); 
-            transition: all 0.3s ease;
-        }
-        
-        .hud-title {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #00ffcc;
-            margin-bottom: 5px;
-        }
-        
-        .score-value {
-            font-size: 42px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            font-family: 'Courier New', monospace;
-        }
-
-        #instruction {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #ff0055;
-            color: #fff;
-            padding: 10px 30px;
-            font-size: 18px;
-            border-radius: 30px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            z-index: 2;
-            pointer-events: none;
-            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
-            transition: all 0.3s;
-            white-space: nowrap;
-            width: max-content;
-            max-width: 90%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Mobil uchun CSS (Media Queries) */
-        @media (max-width: 768px) {
-            .hud-panel {
-                padding: 8px 15px;
-                transform: skewX(0deg); /* Mobilda to'g'ri tursin */
-            }
-            .hud-title {
-                font-size: 10px;
-                letter-spacing: 1px;
-            }
-            .score-value {
-                font-size: 28px;
-            }
-            #instruction {
-                bottom: 80px; /* Qo'l pastda turganda yopilib qolmasligi uchun */
-                font-size: 14px;
-                padding: 8px 20px;
-            }
-        }
-
-        /* Yuklash ekrani */
-        #loading {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            color: #00ffcc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            z-index: 10;
-            flex-direction: column;
-            text-align: center;
-        }
-        .loader {
-            width: 50px; height: 50px;
-            border: 5px solid #333;
-            border-top: 5px solid #00ffcc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kosmik Sayohat: Bolalar Uchun</title>
     
+    <!-- Tashqi resurslar (Shriftlar) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Bizning dizayn faylimiz -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Kutubxonalar (Three.js va MediaPipe) -->
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
-            }
-        }
-    </script>
 </head>
 <body>
 
-    <div id="loading">
+    <!-- 1. Yuklanish ekrani -->
+    <div id="loading-overlay" class="overlay-screen">
         <div class="loader"></div>
-        <div id="loading-text">Tizim ishga tushmoqda...<br><span style="font-size: 14px; opacity: 0.7">Iltimos, kamera ruxsatini bering</span></div>
+        <div id="loading-text">Tizim yuklanmoqda...</div>
     </div>
 
-    <div id="container">
-        <video id="input_video" playsinline webkit-playsinline></video>
+    <!-- 2. Kirish ekrani (Start Screen) -->
+    <div id="start-screen" class="overlay-screen hidden">
+        <h1 class="game-title">KOSMIK SARGUZASHT 🚀</h1>
+        <p class="subtitle">Qo'llaringiz bilan mo'jiza yarating!</p>
         
-        <div id="ui-layer">
-            <div class="hud-panel">
-                <div class="hud-title">SCORE</div>
-                <div id="score" class="score-value">0000</div>
+        <input type="text" id="player-name-input" placeholder="Ismingizni yozing..." maxlength="12" autocomplete="off">
+        <button id="start-btn" class="btn">BOSHLASH</button>
+        <p class="instruction">Kameraga ruxsat berishni unutmang!</p>
+    </div>
+
+    <!-- 3. O'yin interfeysi (UI Layer) -->
+    <div id="ui-layer" class="hidden">
+        <!-- Chap panel: Vaqt va Progress -->
+        <div id="left-panel">
+            <div id="timer-display">00:00</div>
+            <div id="progress-wrapper">
+                <div id="progress-container">
+                    <div id="progress-fill"></div>
+                </div>
             </div>
-            <div class="hud-panel" style="border-left-color: #ff0055;">
-                <div class="hud-title">COMBO</div>
-                <div id="combo" class="score-value" style="font-size: 24px; color: #ff0055;">x1</div>
-            </div>
+            <div id="steps-container"></div>
         </div>
 
-        <div id="instruction">Kameraga ruxsat bering</div>
+        <!-- O'rta: Vazifa nomi -->
+        <div id="title-container">
+            <h1 id="task-title">SHAKLLAR</h1>
+        </div>
+
+        <!-- O'ng: Maslahatlar -->
+        <div id="status-message">
+            <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
+        </div>
+        
+        <!-- Ovoz tugmasi -->
+        <div id="music-icon" title="Ovoz">🔊</div>
     </div>
 
-    <script type="module">
-        import * as THREE from 'three';
+    <!-- 4. G'oliblik ekrani -->
+    <div id="win-screen" class="overlay-screen hidden">
+        <h1 class="win-title">G'ALABA! 🎉</h1>
+        <div id="leaderboard">
+            <h2>🏆 CHEMPIONLAR</h2>
+            <div id="lb-content"></div>
+        </div>
+        <p id="next-level-msg" class="hidden">Keyingi bosqichga tayyormisiz?</p>
+        <button id="restart-btn" class="btn hidden">QAYTA O'YNASH 🔄</button>
+    </div>
 
-        // --- KONFIGURATSIYA ---
-        const BALL_RADIUS = 0.28;
-        const GRID_ROWS = 4;
-        const GRID_COLS = 6; // Mobilda sig'ishi uchun kamaytirdik (7 -> 6)
-        const COLORS = [0xff0055, 0x00ffcc, 0xbd00ff, 0xffcc00]; 
-        const ANCHOR_POINT = new THREE.Vector3(0, -2.5, 0);
+    <!-- 5. Ortga sanoq (3-2-1) -->
+    <div id="countdown-overlay" class="hidden">3</div>
 
-        let score = 0;
-        let combo = 1;
-        let gameState = 'IDLE'; 
-        let currentBall = null;
-        let balls = []; 
-        let particles = [];
-        let shootingVelocity = new THREE.Vector3();
-        
-        // --- 1. SETUP ---
-        const scene = new THREE.Scene();
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-        scene.add(ambientLight);
-        
-        const mainLight = new THREE.PointLight(0xffffff, 1, 100);
-        mainLight.position.set(5, 5, 5);
-        scene.add(mainLight);
-        
-        const rimLight = new THREE.PointLight(0x00ccff, 0.8, 50);
-        rimLight.position.set(-5, 5, -5);
-        scene.add(rimLight);
+    <!-- 6. Kamera va Canvas konteyneri -->
+    <div id="video-container">
+        <!-- Kamera aslida ko'rinmaydi, biz uning rasmini canvasga chizamiz -->
+        <video id="input-video" playsinline webkit-playsinline muted autoplay></video>
+        <!-- Qo'l chiziqlarini chizish uchun -->
+        <canvas id="output-canvas"></canvas>
+    </div>
+    
+    <!-- Asosiy 3D O'yin oynasi -->
+    <div id="canvas-container"></div>
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        // Kamera pozitsiyasi endi adjustLayout() funksiyasida belgilanadi
-
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Mobil optimizatsiya (maks 2x)
-        document.getElementById('container').appendChild(renderer.domElement);
-
-        // --- 2. MATERIALLAR VA OBYEKTLAR ---
-        const baseGeometry = new THREE.SphereGeometry(BALL_RADIUS, 24, 24); // Polygon kamaytirildi (optim)
-        
-        function createBall(color, x, y, z = 0) {
-            const material = new THREE.MeshPhysicalMaterial({
-                color: color,
-                metalness: 0.1,
-                roughness: 0.1,
-                transmission: 0.6,
-                thickness: 1.0,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.1,
-            });
-
-            const mesh = new THREE.Mesh(baseGeometry, material);
-            mesh.position.set(x, y, z);
-            
-            const coreGeo = new THREE.SphereGeometry(BALL_RADIUS * 0.6, 16, 16);
-            const coreMat = new THREE.MeshBasicMaterial({ color: color });
-            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-            mesh.add(coreMesh);
-
-            mesh.userData = { 
-                radius: BALL_RADIUS, 
-                color: color, 
-                active: true,
-                velocity: new THREE.Vector3(0,0,0)
-            };
-            scene.add(mesh);
-            return mesh;
-        }
-
-        const particleGeo = new THREE.BufferGeometry();
-        
-        class Explosion {
-            constructor(position, color) {
-                this.particles = [];
-                const geometry = new THREE.SphereGeometry(0.05, 6, 6); // Optim
-                const material = new THREE.MeshBasicMaterial({ color: color });
-                
-                for(let i=0; i<12; i++) { // Kamroq zarrachalar
-                    const mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.copy(position);
-                    mesh.userData.velocity = new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.3,
-                        (Math.random() - 0.5) * 0.3,
-                        (Math.random() - 0.5) * 0.3
-                    );
-                    mesh.userData.life = 1.0;
-                    scene.add(mesh);
-                    this.particles.push(mesh);
-                }
-            }
-            
-            update() {
-                for (let i = this.particles.length - 1; i >= 0; i--) {
-                    const p = this.particles[i];
-                    p.position.add(p.userData.velocity);
-                    p.userData.life -= 0.05;
-                    p.scale.setScalar(p.userData.life);
-                    
-                    if (p.userData.life <= 0) {
-                        scene.remove(p);
-                        this.particles.splice(i, 1);
-                    }
-                }
-                return this.particles.length > 0;
-            }
-        }
-        let explosions = [];
-
-        function initGrid() {
-            balls.forEach(b => scene.remove(b));
-            balls = [];
-
-            const startX = -((GRID_COLS - 1) * BALL_RADIUS * 2) / 2;
-            const startY = 3.5;
-            
-            for (let r = 0; r < GRID_ROWS; r++) {
-                for (let c = 0; c < GRID_COLS; c++) {
-                    const offsetX = (r % 2) * BALL_RADIUS;
-                    const x = startX + c * BALL_RADIUS * 2 + offsetX;
-                    const y = startY - r * BALL_RADIUS * 1.8;
-                    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                    balls.push(createBall(color, x, y));
-                }
-            }
-        }
-        initGrid();
-
-        function spawnPlayerBall() {
-            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-            currentBall = createBall(color, ANCHOR_POINT.x, ANCHOR_POINT.y, 2); 
-            
-            const targetZ = 0;
-            const animateEntry = () => {
-                if(currentBall && currentBall.position.z > targetZ) {
-                    currentBall.position.z -= 0.2;
-                    requestAnimationFrame(animateEntry);
-                } else if(currentBall) {
-                    currentBall.position.z = 0;
-                }
-            };
-            animateEntry();
-            
-            gameState = 'IDLE';
-        }
-        spawnPlayerBall();
-
-        const laserMat = new THREE.LineDashedMaterial({ 
-            color: 0x00ffcc, 
-            dashSize: 0.2, 
-            gapSize: 0.1, 
-            linewidth: 2 
-        });
-        const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
-        const trajectoryLine = new THREE.Line(laserGeo, laserMat);
-        trajectoryLine.computeLineDistances();
-        scene.add(trajectoryLine);
-
-        const cursorGroup = new THREE.Group();
-        const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.15, 32), new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 }));
-        const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.05, 0.07, 32), new THREE.MeshBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.8 }));
-        cursorGroup.add(ring1);
-        cursorGroup.add(ring2);
-        scene.add(cursorGroup);
-
-        // --- 3. RESPONSIVE HANDLER (Layout moslash) ---
-        function adjustLayout() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const aspect = width / height;
-
-            camera.aspect = aspect;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
-
-            // MOBIL MOSLASHUV
-            if (aspect < 1.0) { 
-                // Portret rejimi (Telefon vertikal)
-                // Kamerani orqaroqqa suramiz, shunda grid to'liq ko'rinadi
-                camera.position.set(0, 1, 10); 
-                ANCHOR_POINT.set(0, -3.5, 0); // Rogatkani pastroqqa tushiramiz
-            } else {
-                // Landshaft rejimi (Desktop/Telefon yonbosh)
-                camera.position.set(0, 0, 6);
-                ANCHOR_POINT.set(0, -2.5, 0);
-            }
-            
-            // O'yinchi shari joylashuvini yangilash
-            if(gameState === 'IDLE' && currentBall) {
-                currentBall.position.copy(ANCHOR_POINT);
-            }
-        }
-        // Sahna yuklanganda va o'zgarganda chaqiriladi
-        adjustLayout();
-        window.addEventListener('resize', adjustLayout);
-
-
-        // --- 4. MEDIAPIPE & LOGIC ---
-        const videoElement = document.getElementById('input_video');
-        const instructionEl = document.getElementById('instruction');
-        const scoreEl = document.getElementById('score');
-        const comboEl = document.getElementById('combo');
-        const loadingEl = document.getElementById('loading');
-
-        let handPos = new THREE.Vector3(0, -10, 0);
-        let isPinching = false;
-        let isCameraRunning = false;
-
-        function onResults(results) {
-            if (!isCameraRunning) {
-                loadingEl.style.display = 'none';
-                isCameraRunning = true;
-            }
-
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                const indexTip = landmarks[8];
-                const thumbTip = landmarks[4];
-
-                const ndcX = (0.5 - indexTip.x) * 2; // -1 to 1
-                const ndcY = (0.5 - indexTip.y) * 2; // -1 to 1
-                
-                // DINAMIK MAPPING (Moslashuvchan koordinatalar)
-                // Ekranda ko'rinadigan 3D maydon o'lchamini hisoblaymiz (Z=0 da)
-                const dist = camera.position.z; // Z=0 ga nisbatan masofa
-                const vFOV = THREE.MathUtils.degToRad(camera.fov);
-                const visibleHeight = 2 * Math.tan(vFOV / 2) * dist;
-                const visibleWidth = visibleHeight * camera.aspect;
-
-                // Qo'l harakatini shu maydonga moslaymiz
-                // Y o'qini biroz ko'taramiz (+visibleHeight * 0.1) shunda qo'l o'rtaroqda bo'ladi
-                const targetX = ndcX * (visibleWidth / 2);
-                const targetY = ndcY * (visibleHeight / 2) + (camera.position.y); // Kamera balandligini hisobga olamiz
-
-                handPos.lerp(new THREE.Vector3(targetX, targetY, 0), 0.3); // Tezroq reaksiya (0.2 -> 0.3)
-                
-                cursorGroup.position.copy(handPos);
-                cursorGroup.rotation.z += 0.05;
-
-                const dx = indexTip.x - thumbTip.x;
-                const dy = indexTip.y - thumbTip.y;
-                // Masofani aspect ratio ga qarab sezgirligini o'zgartirish shart emas, chunki bu normalizatsiya qilingan
-                const distance = Math.sqrt(dx*dx + dy*dy);
-
-                isPinching = distance < 0.06;
-                
-                if (isPinching) {
-                    ring1.material.color.setHex(0xff0055);
-                    cursorGroup.scale.setScalar(0.8);
-                } else {
-                    ring1.material.color.setHex(0x00ffcc);
-                    cursorGroup.scale.setScalar(1.0);
-                }
-            } else {
-                isPinching = false;
-            }
-        }
-
-        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        hands.setOptions({ 
-            maxNumHands: 1, 
-            modelComplexity: 0, // Lite model (Mobil uchun tezroq)
-            minDetectionConfidence: 0.5, 
-            minTrackingConfidence: 0.5 
-        });
-        hands.onResults(onResults);
-
-        async function startCamera() {
-            try {
-                // Mobil uchun aniqroq sozlamalar
-                const constraints = {
-                    video: {
-                        facingMode: "user", // Old kamera
-                        width: { ideal: 640 }, // Kichikroq ruxsat (tezlik uchun)
-                        height: { ideal: 480 }
-                    }
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = stream;
-                
-                await new Promise((resolve) => {
-                    videoElement.onloadedmetadata = () => {
-                        videoElement.play();
-                        resolve();
-                    };
-                });
-
-                async function processVideo() {
-                    if (videoElement.paused || videoElement.ended) return;
-                    await hands.send({image: videoElement});
-                    requestAnimationFrame(processVideo);
-                }
-                processVideo();
-
-            } catch (error) {
-                console.error("Kamera xatosi:", error);
-                loadingEl.innerHTML = `
-                    <div style="color: #ff0055; text-align: center; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;">
-                        <div style="font-size: 50px;">📷❌</div>
-                        <h2 style="margin: 10px 0;">Kamera topilmadi</h2>
-                        <p style="font-size: 16px; opacity: 0.8;">Mobil qurilmada brauzer ruxsatlarini tekshiring.</p>
-                    </div>
-                `;
-            }
-        }
-
-        startCamera();
-
-        function updateGame() {
-            explosions = explosions.filter(exp => exp.update());
-
-            if (!currentBall) return;
-
-            if (gameState === 'IDLE') {
-                instructionEl.innerText = "Sharni chimchilab ushlang";
-                instructionEl.style.borderColor = "#00ffcc";
-                trajectoryLine.visible = false;
-
-                const distToBall = handPos.distanceTo(currentBall.position);
-                // Mobilda barmoq aniqligi pastroq bo'lishi mumkin, radiusni oshiramiz (1.0 -> 1.5)
-                if (isPinching && distToBall < 1.5) {
-                    gameState = 'DRAGGING';
-                }
-            }
-            else if (gameState === 'DRAGGING') {
-                instructionEl.innerText = "Nishonga oling va qo'yib yuboring!";
-                instructionEl.style.borderColor = "#ff0055";
-
-                const pullVector = new THREE.Vector3().subVectors(handPos, ANCHOR_POINT);
-                const maxPull = 3.0;
-                if (pullVector.length() > maxPull) pullVector.setLength(maxPull);
-                
-                currentBall.position.copy(ANCHOR_POINT).add(pullVector);
-
-                trajectoryLine.visible = true;
-                const shootDir = new THREE.Vector3().subVectors(ANCHOR_POINT, currentBall.position).normalize();
-                const endPoint = new THREE.Vector3().copy(currentBall.position).add(shootDir.multiplyScalar(10)); 
-                
-                const points = [currentBall.position, endPoint];
-                trajectoryLine.geometry.setFromPoints(points);
-                trajectoryLine.computeLineDistances();
-
-                if (!isPinching) {
-                    gameState = 'SHOT';
-                    trajectoryLine.visible = false;
-                    shootingVelocity.subVectors(ANCHOR_POINT, currentBall.position).multiplyScalar(0.35); 
-                }
-            }
-            else if (gameState === 'SHOT') {
-                currentBall.position.add(shootingVelocity);
-
-                // Devor chegaralari (Dinamik bo'lishi kerak, lekin hozircha oddiy)
-                const wallX = (camera.position.z > 8) ? 9 : 7; // Agar kamera uzoq bo'lsa, devor kengroq
-                if (currentBall.position.x > wallX || currentBall.position.x < -wallX) shootingVelocity.x *= -1;
-                
-                if (currentBall.position.y > 6.0) {
-                     freezeBall();
-                }
-
-                for (let i = 0; i < balls.length; i++) {
-                    const target = balls[i];
-                    if (!target.userData.active) continue;
-
-                    const dist = currentBall.position.distanceTo(target.position);
-                    if (dist < BALL_RADIUS * 1.8) { 
-                        handleCollision(target);
-                        break;
-                    }
-                }
-            }
-        }
-
-        function freezeBall() {
-             gameState = 'FROZEN';
-             balls.push(currentBall);
-             combo = 1;
-             updateUI();
-             setTimeout(() => { if(gameState==='FROZEN') spawnPlayerBall(); }, 300);
-        }
-
-        function handleCollision(targetBall) {
-            gameState = 'FROZEN';
-            
-            if (targetBall.userData.color === currentBall.userData.color) {
-                explosions.push(new Explosion(targetBall.position, targetBall.userData.color));
-                explosions.push(new Explosion(currentBall.position, currentBall.userData.color));
-
-                score += 10 * combo;
-                combo++;
-                updateUI();
-
-                scene.remove(targetBall);
-                scene.remove(currentBall);
-                
-                const index = balls.indexOf(targetBall);
-                if (index > -1) balls.splice(index, 1);
-
-                instructionEl.innerText = `POP! +${10 * (combo-1)}`;
-                instructionEl.style.color = "#ffff00";
-            } else {
-                balls.push(currentBall);
-                combo = 1;
-                instructionEl.innerText = "Yomon emas...";
-                instructionEl.style.color = "#fff";
-                updateUI();
-            }
-
-            if (balls.length === 0) {
-                initGrid();
-                score += 1000;
-                instructionEl.innerText = "LEVEL CLEARED!";
-            }
-
-            setTimeout(() => {
-                 spawnPlayerBall();
-            }, 600);
-        }
-
-        function updateUI() {
-            scoreEl.innerText = score.toString().padStart(4, '0');
-            comboEl.innerText = "x" + combo;
-            
-            if(combo > 1) {
-                comboEl.style.color = "#ffff00";
-                comboEl.style.transform = "scale(1.5)";
-                setTimeout(() => comboEl.style.transform = "scale(1)", 200);
-            } else {
-                comboEl.style.color = "#ff0055";
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            updateGame();
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-    </script>
+    <!-- O'yin mantig'i -->
+    <script src="game.js"></script>
 </body>
 </html>
