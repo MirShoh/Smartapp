@@ -150,19 +150,14 @@
         let gameState = 'menu';
         let score = 0;
         let currentLevel = 0;
-        let blocks = []; // pufaklar o'rniga bloklar
+        let bubbles = [];
         let animationId;
         let lastTime = 0;
         let cameraStream = null;
         
         let handsAI = null;
         let detectedHands = [];
-        
-        // Drag and drop (ushlash va tashlash) o'zgaruvchilari
-        let pointer = { x: null, y: null, isPinching: false };
-        let fakeFinger = { x: null, y: null, isDown: false };
-        let draggedBlock = null;
-        const targetZone = { x: 0, y: 0, w: 250, h: 120 };
+        let fakeFinger = null; // Sichqoncha fallback
 
         // --- DOM Elementlar ---
         const screens = {
@@ -179,52 +174,55 @@
         const feedbackMessageEl = document.getElementById('feedbackMessage');
         const feedbackBoxEl = document.getElementById('feedbackBox');
 
-        // --- Draggable Block klassi (Ushlanadigan qutichalar) ---
-        class DraggableBlock {
-            constructor(text, isCorrect, x, y, w, h) {
+        // --- Pufaklar klassi ---
+        class Bubble {
+            constructor(text, isCorrect, canvasWidth, canvasHeight) {
+                this.r = Math.min(canvasWidth, canvasHeight) * 0.12;
+                this.x = this.r + Math.random() * (canvasWidth - 2 * this.r);
+                this.y = this.r + Math.random() * (canvasHeight - 2 * this.r);
                 this.text = text;
                 this.isCorrect = isCorrect;
-                this.w = w;
-                this.h = h;
-                this.originalX = x;
-                this.originalY = y;
-                this.x = x;
-                this.y = y;
-                this.isDragging = false;
-                this.color = '#3b82f6'; // Ko'k
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.popped = false;
+                this.hoverTime = 0;
+            }
+
+            update(width, height) {
+                if (this.popped) return;
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < this.r || this.x > width - this.r) this.vx *= -1;
+                if (this.y < this.r || this.y > height - this.r) this.vy *= -1;
             }
 
             draw(ctx) {
-                // Soya effekti
-                ctx.shadowBlur = this.isDragging ? 20 : 10;
-                ctx.shadowColor = 'rgba(0,0,0,0.3)';
-                ctx.shadowOffsetY = this.isDragging ? 10 : 5;
-                
-                // Asosiy fon
-                ctx.fillStyle = this.isDragging ? '#60a5fa' : this.color;
+                if (this.popped) return;
                 ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.w, this.h, 15);
-                ctx.fill();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
                 
-                // Chegara
-                ctx.lineWidth = 3;
+                if (this.hoverTime > 0) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = 'white';
+                    ctx.lineWidth = 6 + (this.hoverTime / 10);
+                } else {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.lineWidth = 4;
+                }
+                
+                ctx.fill();
                 ctx.strokeStyle = '#ffffff';
                 ctx.stroke();
-                
                 ctx.shadowBlur = 0;
-                ctx.shadowOffsetY = 0;
 
-                // Matn
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 28px sans-serif';
+                ctx.font = 'bold 24px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(this.text, this.x + this.w / 2, this.y + this.h / 2);
-            }
-
-            isInside(px, py) {
-                return px >= this.x && px <= this.x + this.w &&
-                       py >= this.y && py <= this.y + this.h;
+                ctx.fillText(this.text, this.x, this.y);
             }
         }
 
@@ -317,50 +315,24 @@
             const levelData = GAME_LEVELS[levelIndex];
             targetWordEl.innerText = levelData.uz;
             
-            // Drop zone (tashlash hududi) joylashuvi
-            targetZone.w = 340;
-            targetZone.h = 100;
-            targetZone.x = canvasEl.width / 2 - targetZone.w / 2;
-            targetZone.y = 80; // Ekranning yuqori qismida
-            
             const shuffledOptions = [...levelData.options].sort(() => Math.random() - 0.5);
-            blocks = shuffledOptions.map((opt, i) => {
-                const w = 200;
-                const h = 80;
-                const spacing = (canvasEl.width - (3 * w)) / 4;
-                const x = spacing + i * (w + spacing);
-                const y = canvasEl.height - 150; // Ekranning pastki qismida
-                return new DraggableBlock(opt, opt === levelData.en, x, y, w, h);
-            });
-            draggedBlock = null;
+            bubbles = shuffledOptions.map(opt => 
+                new Bubble(opt, opt === levelData.en, canvasEl.width, canvasEl.height)
+            );
         }
 
-        // --- Sichqoncha hodisalari (Kamera yo'q bo'lsa drag and drop qilish uchun) ---
-        canvasEl.addEventListener('mousedown', (e) => {
-            if (gameState !== 'playing') return;
-            fakeFinger.isDown = true;
-            updateFakeFinger(e);
-        });
+        // --- Sichqoncha hodisalari (Kamera yo'q bo'lsa) ---
         canvasEl.addEventListener('mousemove', (e) => {
             if (gameState !== 'playing') return;
-            updateFakeFinger(e);
-        });
-        canvasEl.addEventListener('mouseup', () => {
-            fakeFinger.isDown = false;
-        });
-        canvasEl.addEventListener('mouseleave', () => {
-            fakeFinger.isDown = false;
-            fakeFinger.x = null;
-            fakeFinger.y = null;
-        });
-
-        function updateFakeFinger(e) {
             const rect = canvasEl.getBoundingClientRect();
             const scaleX = canvasEl.width / rect.width;
             const scaleY = canvasEl.height / rect.height;
-            fakeFinger.x = (e.clientX - rect.left) * scaleX;
-            fakeFinger.y = (e.clientY - rect.top) * scaleY;
-        }
+            fakeFinger = {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        });
+        canvasEl.addEventListener('mouseleave', () => fakeFinger = null);
 
         // --- Asosiy O'yin Tsikli ---
         let frameCounter = 0;
@@ -378,6 +350,7 @@
             ctx.translate(-canvasEl.width, 0);
             if (videoEl.readyState >= 2) {
                 ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+                // AI ga videoni yuborish (ish yukini kamaytirish uchun har 2 kadrda 1 marta)
                 frameCounter++;
                 if (handsAI && frameCounter % 2 === 0) {
                     await handsAI.send({ image: videoEl });
@@ -385,110 +358,48 @@
             }
             ctx.restore();
 
-            // 2. Barmoq bilan ushlash (pinch) koordinatasini aniqlash
-            pointer.x = null;
-            pointer.y = null;
-            pointer.isPinching = false;
+            // 2. Barmoq koordinatasini aniqlash
+            let pointerX = null;
+            let pointerY = null;
 
             if (detectedHands.length > 0) {
-                const thumb = detectedHands[0][4]; // Bosh barmoq uchi
-                const index = detectedHands[0][8]; // Ko'rsatkich barmoq uchi
-                
-                const pxThumb = (1 - thumb.x) * canvasEl.width; // Ko'zgu effekti uchun X ni teskari qilish
-                const pyThumb = thumb.y * canvasEl.height;
-                const pxIndex = (1 - index.x) * canvasEl.width;
-                const pyIndex = index.y * canvasEl.height;
-                
-                // Ikki barmoq orasidagi masofani hisoblash (ushlaganini bilish uchun)
-                const dist = Math.hypot(pxThumb - pxIndex, pyThumb - pyIndex);
-                pointer.isPinching = dist < 50; // Agar masofa 50px dan kam bo'lsa "ushladi" deymiz
-                
-                // Pointer markazi (ikki barmoq o'rtasi)
-                pointer.x = (pxThumb + pxIndex) / 2; 
-                pointer.y = (pyThumb + pyIndex) / 2;
-                
-                drawHandSkeleton(ctx, detectedHands[0], pointer.isPinching);
-            } else if (fakeFinger.x !== null) {
-                pointer.x = fakeFinger.x;
-                pointer.y = fakeFinger.y;
-                pointer.isPinching = fakeFinger.isDown;
-                
+                const indexFinger = detectedHands[0][8]; // Ko'rsatkich barmoq uchi
+                pointerX = (1 - indexFinger.x) * canvasEl.width; // Ko'zgu effekti uchun X ni teskari qilish
+                pointerY = indexFinger.y * canvasEl.height;
+                drawHandSkeleton(ctx, detectedHands[0]);
+            } else if (fakeFinger) {
+                pointerX = fakeFinger.x;
+                pointerY = fakeFinger.y;
                 ctx.beginPath();
-                ctx.arc(pointer.x, pointer.y, pointer.isPinching ? 10 : 15, 0, Math.PI * 2);
-                ctx.fillStyle = pointer.isPinching ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 255, 255, 0.8)'; // Ushlasa qizil
+                ctx.arc(pointerX, pointerY, 15, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
                 ctx.fill();
             }
 
-            // 3. Drag and Drop logikasi
-            
-            // Target zonani (Bo'sh qutini) chizish
-            ctx.setLineDash([10, 10]);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#94a3b8'; // Kulrang uzuq chiziqlar
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Shaffof oq fon
-            ctx.beginPath();
-            ctx.roundRect(targetZone.x, targetZone.y, targetZone.w, targetZone.h, 15);
-            ctx.fill();
-            ctx.stroke();
-            ctx.setLineDash([]); // Chiziqni asliga qaytarish
-            
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = '22px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText("So'zni ushlab bu yerga tashlang", targetZone.x + targetZone.w/2, targetZone.y + targetZone.h/2);
+            // 3. Sharlarni chizish va to'qnashuvni tekshirish
+            bubbles.forEach(bubble => {
+                bubble.update(canvasEl.width, canvasEl.height);
+                bubble.draw(ctx);
 
-            // Ushlash va qo'yib yuborish holatlarini tekshirish
-            if (pointer.isPinching && pointer.x !== null) {
-                // Agar hech qanday blok ushlanmagan bo'lsa, ushlashga harakat qilamiz
-                if (!draggedBlock) {
-                    for (let block of blocks) {
-                        if (block.isInside(pointer.x, pointer.y)) {
-                            draggedBlock = block;
-                            draggedBlock.isDragging = true;
-                            break;
+                if (pointerX !== null && pointerY !== null && !bubble.popped) {
+                    const dist = Math.hypot(pointerX - bubble.x, pointerY - bubble.y);
+                    if (dist < bubble.r) {
+                        bubble.hoverTime += deltaTime;
+                        if (bubble.hoverTime > 500) { // 0.5 soniya
+                            bubble.popped = true;
+                            handleBubblePop(bubble);
                         }
-                    }
-                }
-            } else {
-                // Qo'yib yuborilganda
-                if (draggedBlock) {
-                    draggedBlock.isDragging = false;
-                    
-                    // Drop zonaga tushdimi tekshiramiz (Blok markazi orqali)
-                    const blockCenterX = draggedBlock.x + draggedBlock.w / 2;
-                    const blockCenterY = draggedBlock.y + draggedBlock.h / 2;
-                    
-                    const isInsideZone = blockCenterX > targetZone.x && 
-                                         blockCenterX < targetZone.x + targetZone.w &&
-                                         blockCenterY > targetZone.y && 
-                                         blockCenterY < targetZone.y + targetZone.h;
-                    
-                    if (isInsideZone) {
-                        handleDrop(draggedBlock);
                     } else {
-                        // Noto'g'ri joyga tashlasa o'z joyiga qaytarish
-                        draggedBlock.x = draggedBlock.originalX;
-                        draggedBlock.y = draggedBlock.originalY;
+                        bubble.hoverTime = 0;
                     }
-                    draggedBlock = null;
                 }
-            }
-
-            // Ushlangan blokka kursorni (barmoqni) ergashtirish
-            if (draggedBlock && pointer.x !== null) {
-                draggedBlock.x = pointer.x - draggedBlock.w / 2;
-                draggedBlock.y = pointer.y - draggedBlock.h / 2;
-            }
-
-            // Bloklarni ekranga chizish
-            blocks.forEach(block => block.draw(ctx));
+            });
 
             animationId = requestAnimationFrame(gameLoop);
         }
 
-        function handleDrop(block) {
-            if (block.isCorrect) {
+        function handleBubblePop(bubble) {
+            if (bubble.isCorrect) {
                 showFeedback('Barakalla! To\'g\'ri topdingiz!', true);
                 updateScore(10);
                 setTimeout(() => {
@@ -498,13 +409,11 @@
             } else {
                 showFeedback('Xato, qayta urinib ko\'ring!', false);
                 updateScore(-5);
-                block.x = block.originalX;
-                block.y = block.originalY; // Xato bo'lsa ham joyiga qaytadi
             }
         }
 
         // --- Qo'l skeletini chizish ---
-        function drawHandSkeleton(ctx, landmarks, isPinching) {
+        function drawHandSkeleton(ctx, landmarks) {
             const connections = [
                 [0,1], [1,2], [2,3], [3,4],
                 [0,5], [5,6], [6,7], [7,8],
@@ -514,8 +423,7 @@
                 [0,17]
             ];
             
-            // Ushlanganda qizil, bo'sh turganda yashil rangli skelet
-            ctx.strokeStyle = isPinching ? '#ef4444' : '#34d399'; 
+            ctx.strokeStyle = '#34d399'; // Yashil chiziqlar
             ctx.lineWidth = 3;
             for(let [i, j] of connections) {
                 const p1 = landmarks[i];
@@ -526,15 +434,13 @@
                 ctx.stroke();
             }
 
-            ctx.fillStyle = isPinching ? '#fca5a5' : '#f87171';
+            ctx.fillStyle = '#f87171'; // Qizil nuqtalar
             for(let i=0; i<landmarks.length; i++) {
                 const p = landmarks[i];
                 ctx.beginPath();
-                // Bosh barmoq va ko'rsatkich barmoq uchlarini kattaroq qilib ko'rsatish
-                const isPinchFinger = (i === 4 || i === 8);
-                ctx.arc((1 - p.x) * canvasEl.width, p.y * canvasEl.height, isPinchFinger ? 10 : 5, 0, Math.PI * 2);
+                ctx.arc((1 - p.x) * canvasEl.width, p.y * canvasEl.height, i === 8 ? 10 : 5, 0, Math.PI * 2);
                 ctx.fill();
-                if(isPinchFinger) {
+                if(i === 8) {
                     ctx.strokeStyle = 'white';
                     ctx.stroke();
                 }
@@ -542,4 +448,4 @@
         }
     </script>
 </body>
-</html>   
+</html> 
