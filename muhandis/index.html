@@ -170,6 +170,82 @@
         let isTouching = false;
         let detectedAIThrust = 0;
 
+        // ==========================================
+        // WEB AUDIO API (OVOZ EFFEKTLARI SINTEZATORI)
+        // ==========================================
+        let audioCtx;
+        let engineNode, engineGain, engineFilter;
+
+        function initAudio() {
+            if (audioCtx) return; // Faqat bir marta ishga tushadi
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 1. Dvigatel shovqini (Oq shovqin asosida)
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1; // Shovqin generatori
+            }
+            
+            engineNode = audioCtx.createBufferSource();
+            engineNode.buffer = buffer;
+            engineNode.loop = true;
+            
+            engineFilter = audioCtx.createBiquadFilter();
+            engineFilter.type = 'lowpass';
+            engineFilter.frequency.value = 100; // Boshlang'ich past chastota
+            
+            engineGain = audioCtx.createGain();
+            engineGain.gain.value = 0; // Boshida ovoz o'chirilgan
+            
+            engineNode.connect(engineFilter);
+            engineFilter.connect(engineGain);
+            engineGain.connect(audioCtx.destination);
+            engineNode.start();
+        }
+
+        // Qisqa "Tiyq" etuvchi signal (Sanoq uchun)
+        function playBeep(freq, type = 'sine', duration = 0.1) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // Portlash ovozi (Halokat)
+        function playExplosionSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1);
+            gain.gain.setValueAtTime(1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        // Muvaffaqiyat ovozi (Yutuq)
+        function playWinSound() {
+            if (!audioCtx) return;
+            // Ketma-ket 3 ta nota (Arpedjio)
+            setTimeout(() => playBeep(440, 'triangle', 0.3), 0);
+            setTimeout(() => playBeep(554, 'triangle', 0.3), 150);
+            setTimeout(() => playBeep(659, 'triangle', 0.5), 300);
+            setTimeout(() => playBeep(880, 'triangle', 0.8), 450);
+        }
+
         // Raketa obyekti (o'lchamlari ekran kengligiga moslanadi)
         const rocket = {
             x: width / 2,
@@ -185,7 +261,8 @@
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
             size: Math.random() * 2,
-            alpha: Math.random()
+            alpha: Math.random(),
+            speed: Math.random() * 0.5 // Yulduzlar harakati uchun (3D effekt)
         }));
 
         let particles = [];
@@ -206,11 +283,14 @@
         window.addEventListener('touchstart', handlePointerDown, {passive: true});
         window.addEventListener('touchend', handlePointerUp, {passive: true});
 
-
         // ==========================================
         // TUTORIAL VA O'YIN BOSHLANISHI
         // ==========================================
         function startTutorialSequence() {
+            // Ovoz tizimini foydalanuvchi bosgan zahoti uyg'otish
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
             uiStart.classList.add('hidden');
             uiResult.classList.add('hidden');
             uiTutorial.classList.remove('hidden');
@@ -231,8 +311,10 @@
                 count--;
                 if(count > 0) {
                     countdownText.textContent = count;
+                    playBeep(440); // Sanoq ovozi
                 } else if(count === 0) {
                     countdownText.textContent = "🚀";
+                    playBeep(880, 'square', 0.3); // "Start" balandroq ovoz
                 } else {
                     clearInterval(countInterval);
                     uiTutorial.classList.add('hidden');
@@ -292,12 +374,17 @@
         });
 
         // ==========================================
-        // O'YIN FIZIKASI VA GRAFIKA
+        // O'YIN FIZIKASI VA GRAFIKA (3D Realistik Uslub)
         // ==========================================
         function drawBackground() {
-            ctx.fillStyle = '#0f172a';
+            // Koinot foni (Gradient)
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            bgGrad.addColorStop(0, '#020617'); // Juda to'q ko'k
+            bgGrad.addColorStop(1, '#0f172a'); 
+            ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, width, height);
 
+            // Yulduzlar (Parallax 3D effekt)
             ctx.fillStyle = '#ffffff';
             stars.forEach(star => {
                 ctx.globalAlpha = star.alpha;
@@ -305,17 +392,57 @@
                 star.alpha += (Math.random() - 0.5) * 0.05;
                 if(star.alpha < 0.1) star.alpha = 0.1;
                 if(star.alpha > 1) star.alpha = 1;
+                
+                // Sekin pastga harakat (Kema tushayotganini bildirish uchun)
+                if(gameState === 'PLAYING') {
+                    star.y -= (rocket.vy * star.speed);
+                    if(star.y < 0) star.y = height;
+                    if(star.y > height) star.y = 0;
+                }
             });
             ctx.globalAlpha = 1.0;
 
             const groundY = height - 100;
-            ctx.fillStyle = '#475569';
-            ctx.fillRect(0, groundY, width, 100);
             
-            // Maydoncha kengligi ekran o'lchamiga qarab
+            // Oy sirti (3D sferik gradient gorizonti)
+            let moonGrad = ctx.createLinearGradient(0, groundY - 20, 0, height);
+            moonGrad.addColorStop(0, '#64748b'); // Yorug'lik tushgan qismi
+            moonGrad.addColorStop(1, '#1e293b'); // Qorong'u qismi
+            
+            ctx.fillStyle = moonGrad;
+            ctx.beginPath();
+            // Oyni biroz doirasimon sayyora shaklida qilish
+            ctx.ellipse(width/2, height + 20, width * 0.8, 150, 0, Math.PI, 0);
+            ctx.fill();
+            
+            // Kraterlar (3D chuqurlik va soya effekti bilan)
+            ctx.fillStyle = '#334155'; // Krater tagi
+            ctx.beginPath(); ctx.ellipse(width*0.2, groundY+30, 40, 15, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#1e293b'; // Krater soyasi
+            ctx.beginPath(); ctx.ellipse(width*0.2 - 3, groundY+28, 30, 10, 0, 0, Math.PI*2); ctx.fill();
+
+            ctx.fillStyle = '#334155';
+            ctx.beginPath(); ctx.ellipse(width*0.8, groundY+50, 60, 20, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#1e293b'; 
+            ctx.beginPath(); ctx.ellipse(width*0.8 - 5, groundY+47, 45, 14, 0, 0, Math.PI*2); ctx.fill();
+
+            // 3D Qo'nish maydonchasi
             const padWidth = Math.min(150, width * 0.4); 
+            
+            // Maydoncha asosi (Zamin)
+            ctx.fillStyle = '#065f46'; 
+            ctx.beginPath();
+            ctx.ellipse(width/2, groundY, padWidth/2, 12, 0, 0, Math.PI*2);
+            ctx.fill();
+            
+            // Maydoncha yuzasi (Neon nuratish effekti)
             ctx.fillStyle = '#10b981'; 
-            ctx.fillRect(width/2 - padWidth/2, groundY, padWidth, 6);
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#34d399';
+            ctx.beginPath();
+            ctx.ellipse(width/2, groundY - 3, padWidth/2.2, 8, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // Soyani o'chirish
         }
 
         function drawRocket() {
@@ -327,50 +454,127 @@
             ctx.save();
             ctx.translate(rx, ry);
 
+            // Dvigatel olovi (Realistik nur sochuvchi plazma effekti)
             if (rocket.thrustLevel > 0.1 && !rocket.isLanded) {
-                const flameLength = rocket.thrustLevel * (rh) + Math.random() * 10;
-                ctx.fillStyle = '#f97316'; 
-                ctx.beginPath(); ctx.moveTo(-rw/3, rh/2); ctx.lineTo(0, rh/2 + flameLength); ctx.lineTo(rw/3, rh/2); ctx.fill();
+                const flameLength = rocket.thrustLevel * (rh * 1.5) + Math.random() * 10;
                 
+                ctx.globalCompositeOperation = "lighter"; // Olovni fonga nisbatan yorqinroq qilish
+                
+                // Tashqi qizil issiqlik aurası
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.4)'; 
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ef4444';
+                ctx.beginPath(); 
+                ctx.moveTo(-rw/2.5, rh/2); 
+                ctx.quadraticCurveTo(0, rh/2 + flameLength*1.2, rw/2.5, rh/2); 
+                ctx.fill();
+                
+                // O'rta sariq-apelsin olov
+                ctx.fillStyle = 'rgba(249, 115, 22, 0.7)'; 
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#f97316';
+                ctx.beginPath(); 
+                ctx.moveTo(-rw/3, rh/2); 
+                ctx.quadraticCurveTo(0, rh/2 + flameLength, rw/3, rh/2); 
+                ctx.fill();
+                
+                // Ichki oq-sariq qaynoq olov (Core)
                 ctx.fillStyle = '#fef08a'; 
-                ctx.beginPath(); ctx.moveTo(-rw/6, rh/2); ctx.lineTo(0, rh/2 + flameLength * 0.6); ctx.lineTo(rw/6, rh/2); ctx.fill();
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#ffffff';
+                ctx.beginPath(); 
+                ctx.moveTo(-rw/6, rh/2); 
+                ctx.lineTo(0, rh/2 + flameLength * 0.6); 
+                ctx.lineTo(rw/6, rh/2); 
+                ctx.fill();
+                
+                ctx.globalCompositeOperation = "source-over"; // Chizish rejimini normaga qaytarish
+                ctx.shadowBlur = 0;
 
+                // Uchqunlar (Zarrachalar)
                 particles.push({
-                    x: rx + (Math.random() - 0.5) * (rw/2),
+                    x: rx + (Math.random() - 0.5) * (rw/1.5),
                     y: ry + rh/2,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: Math.random() * 3 + 2,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: Math.random() * 4 + 3,
                     life: 1.0,
-                    color: Math.random() > 0.5 ? '#f97316' : '#ef4444'
+                    color: Math.random() > 0.5 ? '#f97316' : '#fcd34d'
                 });
             }
 
-            // Raketa tanasi
-            ctx.fillStyle = '#e2e8f0'; 
+            // 3D Raketa tanasi (Silindr shaklidagi metallik effekt)
+            const bodyGrad = ctx.createLinearGradient(-rw/2, 0, rw/2, 0);
+            bodyGrad.addColorStop(0, '#475569');   // Chap qorong'u soya
+            bodyGrad.addColorStop(0.2, '#94a3b8'); // Yarim soya
+            bodyGrad.addColorStop(0.5, '#ffffff'); // Asosiy yorug'lik tushishi
+            bodyGrad.addColorStop(0.8, '#cbd5e1'); // Yarim soya
+            bodyGrad.addColorStop(1, '#334155');   // O'ng qorong'u soya
+
+            ctx.fillStyle = bodyGrad; 
             ctx.beginPath();
-            ctx.moveTo(-rw/2, rh/2); ctx.lineTo(-rw/2, -rh/4); ctx.lineTo(0, -rh/2);
-            ctx.lineTo(rw/2, -rh/4); ctx.lineTo(rw/2, rh/2); ctx.closePath(); ctx.fill();
+            ctx.moveTo(-rw/2, rh/2); // Chap past
+            ctx.lineTo(-rw/2, -rh/4); // Chap tepa qismi
+            ctx.quadraticCurveTo(0, -rh, rw/2, -rh/4); // 3D Burun
+            ctx.lineTo(rw/2, rh/2); // O'ng past
+            ctx.quadraticCurveTo(0, rh/2 + rh/8, -rw/2, rh/2); // 3D Silindr asosi (dumaloq tag)
+            ctx.fill();
+            
+            // Qizil qism (Dizayn bezagi)
+            const redGrad = ctx.createLinearGradient(-rw/2, 0, rw/2, 0);
+            redGrad.addColorStop(0, '#991b1b');
+            redGrad.addColorStop(0.5, '#ef4444');
+            redGrad.addColorStop(1, '#7f1d1d');
+            ctx.fillStyle = redGrad;
+            ctx.beginPath();
+            ctx.rect(-rw/2, -rh/6, rw, rh/12);
+            ctx.fill();
 
-            // Oyna
-            ctx.fillStyle = '#38bdf8';
+            // 3D Oyna (Shisha qaytarish effekti)
+            const winGrad = ctx.createRadialGradient(-rw/10, -rh/8 - rw/10, 0, 0, -rh/8, rw/4);
+            winGrad.addColorStop(0, '#e0f2fe'); // Oyna markazidagi porlash
+            winGrad.addColorStop(0.4, '#38bdf8');
+            winGrad.addColorStop(1, '#0284c7'); // Shisha chetidagi soya
+            
+            ctx.fillStyle = winGrad;
             ctx.beginPath(); ctx.arc(0, -rh/8, rw/4, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.stroke();
+            
+            // Oyna ramkasi (Metal)
+            ctx.strokeStyle = '#475569'; ctx.lineWidth = rw/10; ctx.stroke();
+            
+            // Shisha nuri (Reflection highlight)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath(); ctx.ellipse(-rw/12, -rh/8 - rw/12, rw/12, rw/20, Math.PI/4, 0, Math.PI*2); ctx.fill();
 
-            // Oyoqlari
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = rw/10;
-            ctx.beginPath(); ctx.moveTo(-rw/2, rh/4); ctx.lineTo(-rw, rh/2 + rh/6); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(rw/2, rh/4); ctx.lineTo(rw, rh/2 + rh/6); ctx.stroke();
+            // 3D Oyoqlari (Qalinlik va tayanch nuqtalari bilan)
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = rw/8;
+            ctx.lineCap = "round";
+            // Chap oyoq
+            ctx.beginPath(); ctx.moveTo(-rw/2.2, rh/4); ctx.lineTo(-rw, rh/2 + rh/5); ctx.stroke();
+            // Chap oyoq tayanchi
+            ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(-rw, rh/2 + rh/5, rw/4, rw/10, 0, 0, Math.PI*2); ctx.fill();
+            
+            // O'ng oyoq
+            ctx.beginPath(); ctx.moveTo(rw/2.2, rh/4); ctx.lineTo(rw, rh/2 + rh/5); ctx.stroke();
+            // O'ng oyoq tayanchi
+            ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(rw, rh/2 + rh/5, rw/4, rw/10, 0, 0, Math.PI*2); ctx.fill();
 
             ctx.restore();
 
+            // Zarrachalar (Olov uchqunlari)
+            ctx.globalCompositeOperation = "lighter";
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                p.x += p.vx; p.y += p.vy; p.life -= 0.04; // Sekin o'chish
                 if (p.life <= 0) { particles.splice(i, 1); continue; }
-                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, (rw/10) * p.life, 0, Math.PI*2); ctx.fill();
+                
+                ctx.globalAlpha = p.life; 
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); 
+                ctx.arc(p.x, p.y, (rw/8) * p.life, 0, Math.PI*2); 
+                ctx.fill();
             }
             ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = "source-over"; // Normaga qaytarish
         }
 
         function updatePhysics() {
@@ -379,8 +583,15 @@
             // Boshqaruv mantig'i: Agar ekranga bosilgan bo'lsa (touch), u kameradan ustun keladi
             let targetThrust = isTouching ? 1.0 : detectedAIThrust;
             
-            // Thrustni silliq o'zgartirish
-            rocket.thrustLevel += (targetThrust - rocket.thrustLevel) * 0.2;
+            // Thrustni silliq o'zgartirish (Tezlashib ketmasligi uchun o'tish kuchi 0.2 dan 0.04 ga tushirildi)
+            rocket.thrustLevel += (targetThrust - rocket.thrustLevel) * 0.04;
+
+            // Dvigatel ovozini Thrust darajasiga qarab sinxron o'zgartirish
+            if (engineGain && engineFilter) {
+                // Kuch qancha ko'p bo'lsa ovoz shuncha baland va chastota yuqori bo'ladi
+                engineGain.gain.setValueAtTime(rocket.thrustLevel * 0.5, audioCtx.currentTime);
+                engineFilter.frequency.setValueAtTime(100 + rocket.thrustLevel * 1000, audioCtx.currentTime);
+            }
 
             // Fizika
             const actualThrust = rocket.thrustLevel * MAX_THRUST;
@@ -412,10 +623,14 @@
                 
                 if (currentSpeed <= SAFE_LANDING_SPEED * 10) {
                     gameState = 'WIN';
+                    if(engineGain) engineGain.gain.value = 0; // Dvigatelni o'chirish
+                    playWinSound(); // Yutuq ovozi
                     showResult("🎉 Qoyilmaqom!", "Raketa muvaffaqiyatli qo'ndi. Siz ajoyib muhandissiz!", "text-emerald-400", "🏆");
                 } else {
                     gameState = 'LOSE';
+                    if(engineGain) engineGain.gain.value = 0; // Dvigatelni o'chirish
                     createExplosion(rocket.x, rocket.y);
+                    playExplosionSound(); // Portlash ovozi
                     showResult("💥 Halokat!", "Tezlik juda yuqori edi. Dvigatelni vaqtida yoqishni unutmang.", "text-red-500", "🔥");
                 }
                 rocket.vy = 0;
