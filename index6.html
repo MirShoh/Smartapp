@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMotion Edu - Interaktiv Ingliz Tili</title>
+    
+    <!-- Tailwind CSS (Dizayn uchun) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MediaPipe Hands (Sun'iy idrok uchun) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        .hidden-screen { display: none !important; }
+        #gameCanvas { cursor: crosshair; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white p-4 shadow-md flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+            <span class="text-2xl font-bold tracking-wider">SmartMotion Edu</span>
+        </div>
+        <div class="space-x-4 hidden md:block">
+            <span class="hover:text-indigo-200 cursor-pointer">Bosh sahifa</span>
+            <span class="hover:text-indigo-200 cursor-pointer font-semibold border-b-2 border-white">O'yinlar</span>
+            <span class="hover:text-indigo-200 cursor-pointer">Biz haqimizda</span>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl flex-grow">
+        
+        <!-- Yuqori ma'lumot qismi -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-slate-800 mb-4">Ingliz tilini tana harakatlari orqali o'rganamiz!</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                Sun'iy idrok (AI) kamerangiz orqali harakatlaringizni kuzatadi. Bolangiz ekranga tegmasdan, ingliz tili so'zlarini ushlab olib til o'rganadi. Qiziqarli va foydali!
+            </p>
+        </div>
+
+        <!-- O'yin Konteyneri -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 relative min-h-[480px]">
+            
+            <!-- 1. Menyus Ekrani -->
+            <div id="menuScreen" class="p-12 text-center flex flex-col items-center justify-center min-h-[480px] bg-gradient-to-br from-indigo-50 to-purple-100">
+                <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                    <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-indigo-900 mb-2">Boshlashga tayyormisiz?</h2>
+                <p class="text-slate-600 mb-8 max-w-md">Kamerangizni yoqing, qo'lingizni ekranga qarating va to'g'ri inglizcha tarjimani barmoq bilan ishora qilib ushlang.</p>
+                <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 text-xl">
+                    O'yinni Boshlash
+                </button>
+            </div>
+
+            <!-- 2. Yuklanish Ekrani -->
+            <div id="loadingScreen" class="hidden-screen p-12 text-center flex flex-col items-center justify-center min-h-[480px]">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+                <h2 class="text-2xl font-semibold text-slate-700">AI modellar va kamera yuklanmoqda...</h2>
+                <p class="text-slate-500 mt-2">Iltimos, brauzer so'rasa kameraga ruxsat bering.</p>
+            </div>
+
+            <!-- 3. O'yin Tugashi Ekrani -->
+            <div id="gameoverScreen" class="hidden-screen p-12 text-center flex flex-col items-center justify-center min-h-[480px] bg-green-50">
+                <span class="text-6xl mb-4">🏆</span>
+                <h2 class="text-4xl font-bold text-green-700 mb-2">Ajoyib natija!</h2>
+                <p class="text-2xl text-slate-700 mb-8">Sizning balingiz: <span id="finalScore" class="font-bold text-indigo-600">0</span></p>
+                <button onclick="startGame()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                    Yana O'ynash
+                </button>
+            </div>
+
+            <!-- 4. O'yin Ekrani -->
+            <div id="playingScreen" class="hidden-screen relative bg-slate-900 flex justify-center w-full min-h-[480px]">
+                
+                <!-- Top bar -->
+                <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 pointer-events-none">
+                    <div class="bg-white/90 backdrop-blur rounded-xl px-6 py-3 shadow-lg">
+                        <p class="text-sm text-slate-500 font-bold uppercase tracking-wide">Tarjimasini toping:</p>
+                        <p id="targetWord" class="text-3xl font-extrabold text-indigo-700">So'z</p>
+                    </div>
+                    
+                    <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                        <div class="bg-white/90 backdrop-blur rounded-xl px-4 py-2 shadow-lg">
+                            <p class="text-lg font-bold text-slate-800">Ball: <span id="currentScore" class="text-green-600">0</span></p>
+                        </div>
+                        <button onclick="stopGame()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold shadow transition">
+                            Tugatish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="feedbackMessage" class="hidden-screen absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div id="feedbackBox" class="px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl transform transition-all scale-110 text-white">
+                        Xabar
+                    </div>
+                </div>
+
+                <!-- Kamera va Canvas -->
+                <video id="videoElement" class="hidden" playsinline autoplay></video>
+                <canvas id="gameCanvas" width="800" height="600" class="w-full max-w-4xl h-auto object-cover rounded-b-2xl md:rounded-2xl"></canvas>
+            </div>
+        </div>
+
+        <!-- Startap afzalliklari qismi -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                <div class="bg-blue-100 p-3 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Kompyuter Ko'rishi (AI)</h3>
+                <p class="text-slate-600">Qo'shimcha sensorlar kerak emas, oddiy veb-kamera orqali bolaning harakatlari yuqori aniqlikda tahlil qilinadi.</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                <div class="bg-green-100 p-3 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Interaktiv Ta'lim</h3>
+                <p class="text-slate-600">O'yin shaklidagi yondashuv bolalarni zeriktirmaydi. Lug'at boyligini oshirish endi harakatli o'yinga aylandi.</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                <div class="bg-purple-100 p-3 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Motorika va Diqqat</h3>
+                <p class="text-slate-600">Barmoqlar bilan obyektlarni ushlash bolaning nozik motorikasini va diqqatini jamlash qobiliyatini o'stiradi.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Asosiy JavaScript Mantig'i -->
+    <script>
+        // --- O'yin Bazasi ---
+        const GAME_LEVELS = [
+            { uz: "Olma", en: "Apple", options: ["Apple", "Banana", "Car"] },
+            { uz: "Kuchuk", en: "Dog", options: ["Cat", "Dog", "Bird"] },
+            { uz: "Kitob", en: "Book", options: ["Pen", "Desk", "Book"] },
+            { uz: "Quyosh", en: "Sun", options: ["Moon", "Sun", "Star"] },
+            { uz: "Suv", en: "Water", options: ["Fire", "Water", "Air"] },
+        ];
+        const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+
+        // --- O'zgaruvchilar ---
+        let gameState = 'menu';
+        let score = 0;
+        let currentLevel = 0;
+        let bubbles = [];
+        let animationId;
+        let lastTime = 0;
+        let cameraStream = null;
+        
+        let handsAI = null;
+        let detectedHands = [];
+        let fakeFinger = null; // Sichqoncha fallback
+
+        // --- DOM Elementlar ---
+        const screens = {
+            menu: document.getElementById('menuScreen'),
+            loading: document.getElementById('loadingScreen'),
+            playing: document.getElementById('playingScreen'),
+            gameover: document.getElementById('gameoverScreen')
+        };
+        const videoEl = document.getElementById('videoElement');
+        const canvasEl = document.getElementById('gameCanvas');
+        const ctx = canvasEl.getContext('2d');
+        const targetWordEl = document.getElementById('targetWord');
+        const scoreEls = { current: document.getElementById('currentScore'), final: document.getElementById('finalScore') };
+        const feedbackMessageEl = document.getElementById('feedbackMessage');
+        const feedbackBoxEl = document.getElementById('feedbackBox');
+
+        // --- Pufaklar klassi ---
+        class Bubble {
+            constructor(text, isCorrect, canvasWidth, canvasHeight) {
+                this.r = Math.min(canvasWidth, canvasHeight) * 0.12;
+                this.x = this.r + Math.random() * (canvasWidth - 2 * this.r);
+                this.y = this.r + Math.random() * (canvasHeight - 2 * this.r);
+                this.text = text;
+                this.isCorrect = isCorrect;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.popped = false;
+                this.hoverTime = 0;
+            }
+
+            update(width, height) {
+                if (this.popped) return;
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < this.r || this.x > width - this.r) this.vx *= -1;
+                if (this.y < this.r || this.y > height - this.r) this.vy *= -1;
+            }
+
+            draw(ctx) {
+                if (this.popped) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                
+                if (this.hoverTime > 0) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = 'white';
+                    ctx.lineWidth = 6 + (this.hoverTime / 10);
+                } else {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.lineWidth = 4;
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.text, this.x, this.y);
+            }
+        }
+
+        // --- Oynalarni boshqarish ---
+        function setScreen(screenName) {
+            gameState = screenName;
+            Object.values(screens).forEach(s => s.classList.add('hidden-screen'));
+            screens[screenName].classList.remove('hidden-screen');
+        }
+
+        function updateScore(points) {
+            score += points;
+            scoreEls.current.innerText = score;
+            scoreEls.final.innerText = score;
+        }
+
+        function showFeedback(text, isSuccess) {
+            feedbackBoxEl.innerText = text;
+            feedbackBoxEl.className = `px-8 py-4 rounded-2xl shadow-2xl font-bold text-2xl transform transition-all scale-110 text-white ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+            feedbackMessageEl.classList.remove('hidden-screen');
+            setTimeout(() => {
+                feedbackMessageEl.classList.add('hidden-screen');
+            }, isSuccess ? 1500 : 1000);
+        }
+
+        // --- O'yinni boshlash va to'xtatish ---
+        async function startGame() {
+            if (typeof window.Hands === 'undefined') {
+                alert("AI model hali yuklanmoqda, biroz kuting va qayta urinib ko'ring.");
+                return;
+            }
+
+            setScreen('loading');
+            score = 0;
+            currentLevel = 0;
+            updateScore(0);
+            
+            // MediaPipe Hands'ni initsializatsiya qilish
+            if (!handsAI) {
+                handsAI = new window.Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+                handsAI.setOptions({
+                    maxNumHands: 2,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.7
+                });
+                handsAI.onResults((results) => {
+                    detectedHands = results.multiHandLandmarks || [];
+                });
+            }
+
+            // Kamerani yoqish
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                videoEl.srcObject = cameraStream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                    initLevel(currentLevel);
+                    setScreen('playing');
+                    lastTime = performance.now();
+                    animationId = requestAnimationFrame(gameLoop);
+                };
+            } catch (err) {
+                console.error("Kamera xatosi:", err);
+                alert("Kameraga ulanib bo'lmadi. Sichqoncha yordamida o'ynashingiz mumkin.");
+                initLevel(currentLevel);
+                setScreen('playing');
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function stopGame() {
+            cancelAnimationFrame(animationId);
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+            setScreen('menu');
+        }
+
+        function initLevel(levelIndex) {
+            if (levelIndex >= GAME_LEVELS.length) {
+                setScreen('gameover');
+                cancelAnimationFrame(animationId);
+                return;
+            }
+            
+            const levelData = GAME_LEVELS[levelIndex];
+            targetWordEl.innerText = levelData.uz;
+            
+            const shuffledOptions = [...levelData.options].sort(() => Math.random() - 0.5);
+            bubbles = shuffledOptions.map(opt => 
+                new Bubble(opt, opt === levelData.en, canvasEl.width, canvasEl.height)
+            );
+        }
+
+        // --- Sichqoncha hodisalari (Kamera yo'q bo'lsa) ---
+        canvasEl.addEventListener('mousemove', (e) => {
+            if (gameState !== 'playing') return;
+            const rect = canvasEl.getBoundingClientRect();
+            const scaleX = canvasEl.width / rect.width;
+            const scaleY = canvasEl.height / rect.height;
+            fakeFinger = {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        });
+        canvasEl.addEventListener('mouseleave', () => fakeFinger = null);
+
+        // --- Asosiy O'yin Tsikli ---
+        let frameCounter = 0;
+        async function gameLoop(time) {
+            if (gameState !== 'playing') return;
+            
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+            // 1. Videoni ko'zgu effektida chizish
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.translate(-canvasEl.width, 0);
+            if (videoEl.readyState >= 2) {
+                ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+                // AI ga videoni yuborish (ish yukini kamaytirish uchun har 2 kadrda 1 marta)
+                frameCounter++;
+                if (handsAI && frameCounter % 2 === 0) {
+                    await handsAI.send({ image: videoEl });
+                }
+            }
+            ctx.restore();
+
+            // 2. Barmoq koordinatasini aniqlash
+            let pointerX = null;
+            let pointerY = null;
+
+            if (detectedHands.length > 0) {
+                const indexFinger = detectedHands[0][8]; // Ko'rsatkich barmoq uchi
+                pointerX = (1 - indexFinger.x) * canvasEl.width; // Ko'zgu effekti uchun X ni teskari qilish
+                pointerY = indexFinger.y * canvasEl.height;
+                drawHandSkeleton(ctx, detectedHands[0]);
+            } else if (fakeFinger) {
+                pointerX = fakeFinger.x;
+                pointerY = fakeFinger.y;
+                ctx.beginPath();
+                ctx.arc(pointerX, pointerY, 15, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fill();
+            }
+
+            // 3. Sharlarni chizish va to'qnashuvni tekshirish
+            bubbles.forEach(bubble => {
+                bubble.update(canvasEl.width, canvasEl.height);
+                bubble.draw(ctx);
+
+                if (pointerX !== null && pointerY !== null && !bubble.popped) {
+                    const dist = Math.hypot(pointerX - bubble.x, pointerY - bubble.y);
+                    if (dist < bubble.r) {
+                        bubble.hoverTime += deltaTime;
+                        if (bubble.hoverTime > 500) { // 0.5 soniya
+                            bubble.popped = true;
+                            handleBubblePop(bubble);
+                        }
+                    } else {
+                        bubble.hoverTime = 0;
+                    }
+                }
+            });
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleBubblePop(bubble) {
+            if (bubble.isCorrect) {
+                showFeedback('Barakalla! To\'g\'ri topdingiz!', true);
+                updateScore(10);
+                setTimeout(() => {
+                    currentLevel++;
+                    initLevel(currentLevel);
+                }, 1500);
+            } else {
+                showFeedback('Xato, qayta urinib ko\'ring!', false);
+                updateScore(-5);
+            }
+        }
+
+        // --- Qo'l skeletini chizish ---
+        function drawHandSkeleton(ctx, landmarks) {
+            const connections = [
+                [0,1], [1,2], [2,3], [3,4],
+                [0,5], [5,6], [6,7], [7,8],
+                [5,9], [9,10], [10,11], [11,12],
+                [9,13], [13,14], [14,15], [15,16],
+                [13,17], [17,18], [18,19], [19,20],
+                [0,17]
+            ];
+            
+            ctx.strokeStyle = '#34d399'; // Yashil chiziqlar
+            ctx.lineWidth = 3;
+            for(let [i, j] of connections) {
+                const p1 = landmarks[i];
+                const p2 = landmarks[j];
+                ctx.beginPath();
+                ctx.moveTo((1 - p1.x) * canvasEl.width, p1.y * canvasEl.height);
+                ctx.lineTo((1 - p2.x) * canvasEl.width, p2.y * canvasEl.height);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#f87171'; // Qizil nuqtalar
+            for(let i=0; i<landmarks.length; i++) {
+                const p = landmarks[i];
+                ctx.beginPath();
+                ctx.arc((1 - p.x) * canvasEl.width, p.y * canvasEl.height, i === 8 ? 10 : 5, 0, Math.PI * 2);
+                ctx.fill();
+                if(i === 8) {
+                    ctx.strokeStyle = 'white';
+                    ctx.stroke();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
