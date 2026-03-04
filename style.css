@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    background-color: #1a0b2e; 
+    font-family: 'Nunito', sans-serif; 
+    user-select: none; 
+    touch-action: none; 
+}
+
+#canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+
+#ui-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+    z-index: 10; pointer-events: none; 
+}
+
+#music-icon, .btn, #restart-btn, #player-name-input {
+    pointer-events: auto !important;
+}
+
+#video-container {
+    position: absolute; bottom: 20px; right: 20px; 
+    width: 200px; height: 150px;
+    border-radius: 20px; border: 3px solid #00ffcc; z-index: 100; 
+    background: #000; overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+    transform: scaleX(-1); /* Oyna effekti */
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+#input-video { 
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; object-fit: cover; 
+}
+#output-canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 2;
+}
+
+#status-message {
+    position: absolute; 
+    bottom: 200px; 
+    right: 20px; 
+    width: 220px;
+    text-align: center;
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.message-bubble {
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ffcc;
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 2px solid #00ffcc;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    white-space: nowrap; 
+}
+.message-bubble.visible { opacity: 1; transform: translateY(0); }
+.message-bubble.pinch-active { background: #00ffcc; color: #000; border-color: #fff; }
+
+#title-container {
+    position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+    text-align: center;
+    width: 100%;
+    pointer-events: none;
+}
+
+h1 { 
+    font-family: 'Fredoka One', cursive; font-size: 2.5rem; 
+    color: #fff; text-shadow: 0 4px 0 #6a0dad; margin: 0;
+    background: rgba(0,0,0,0.4); padding: 8px 30px; border-radius: 30px;
+    backdrop-filter: blur(5px);
+    display: inline-block;
+}
+
+#left-panel {
+    position: absolute; top: 30px; left: 30px;
+    display: flex; flex-direction: column; gap: 20px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+#timer-display {
+    font-family: 'Fredoka One', cursive;
+    color: #ffd700;
+    font-size: 2rem;
+    text-shadow: 2px 2px 0 #000;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 2px solid #ffd700;
+    min-width: 120px;
+    text-align: center;
+}
+
+#steps-container { display: flex; gap: 10px; }
+
+.step-dot {
+    width: 35px; height: 35px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    color: #fff; font-size: 1rem;
+    transition: all 0.3s ease;
+}
+.step-dot.active { background: #00ffcc; color: #000; transform: scale(1.2); box-shadow: 0 0 15px #00ffcc; border-color: #00ffcc; }
+.step-dot.completed { background: #00ff00; border-color: #00ff00; color: #000; }
+
+#progress-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
+#progress-label { color: #fff; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9rem; }
+
+#progress-container {
+    width: 200px; height: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px; border: 2px solid #fff;
+    overflow: hidden;
+}
+#progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #00ff00, #adff2f);
+    transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 0 10px #00ff00;
+}
+
+#countdown-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-family: 'Fredoka One', cursive;
+    font-size: 12rem; text-shadow: 0 0 40px #00ffcc;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+
+#music-icon {
+    position: absolute; bottom: 20px; left: 20px;
+    font-size: 2.5rem; cursor: pointer; color: rgba(255,255,255,0.8);
+    z-index: 150; transition: all 0.3s;
+    background: rgba(0,0,0,0.4); padding: 15px; border-radius: 50%;
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+#music-icon:hover { color: #fff; transform: scale(1.1); background: rgba(0,0,0,0.6); border-color: #00ffcc; }
+#music-icon:active { transform: scale(0.95); }
+
+.overlay-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(20, 10, 40, 0.95); z-index: 50; 
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: white; text-align: center;
+    transition: opacity 0.5s;
+    pointer-events: auto;
+}
+
+.btn {
+    background: linear-gradient(45deg, #00ccff, #0066ff); border: none; padding: 18px 50px;
+    color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px;
+    box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
+    font-family: 'Fredoka One', cursive;
+    transition: transform 0.1s;
+}
+.btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
+
+#player-name-input {
+    padding: 15px 25px;
+    font-size: 1.5rem;
+    border-radius: 30px;
+    border: 3px solid #00ffcc;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    text-align: center;
+    outline: none;
+    margin-bottom: 10px;
+    font-family: 'Nunito', sans-serif;
+    width: 80%;
+    max-width: 300px;
+    transition: all 0.3s;
+}
+#player-name-input:focus {
+    box-shadow: 0 0 20px #00ffcc;
+    transform: scale(1.05);
+}
+#player-name-input::placeholder { color: rgba(255,255,255,0.5); }
+
+#leaderboard {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#leaderboard h2 {
+    margin: 0 0 15px 0;
+    color: #ffd700;
+    font-size: 2rem;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.lb-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 1.2rem;
+    color: #fff;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { font-weight: bold; color: #00ffcc; width: 40px; text-align: left; }
+.lb-name { flex-grow: 1; text-align: left; padding-left: 10px; }
+.lb-time { font-weight: bold; color: #ffd700; font-family: monospace; }
+.lb-highlight { background: rgba(0, 255, 204, 0.3); border-radius: 10px; border: 1px solid #00ffcc; }
+
+.loader {
+    border: 5px solid #f3f3f3; border-top: 5px solid #00ffcc;
+    border-radius: 50%; width: 50px; height: 50px;
+    animation: spin 1s linear infinite; margin-bottom: 20px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.hidden { display: none !important; }
+.fade-out { opacity: 0; pointer-events: none; }
+
+@media (max-width: 768px) {
+    #video-container { width: 120px; height: 90px; bottom: 10px; right: 10px; top: auto; border-width: 2px; }
+    #status-message { bottom: 110px; top: auto; right: 10px; width: 150px; }
+    .message-bubble { font-size: 0.8rem; padding: 5px 10px; }
+    #left-panel { top: 10px; left: 10px; gap: 10px; transform: scale(0.8); transform-origin: top left; }
+    h1 { font-size: 1.5rem; padding: 5px 20px; }
+    #title-container { top: 80px; }
+    #countdown-overlay { font-size: 6rem !important; }
+    .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
+    #music-icon { width: 40px; height: 40px; font-size: 1.8rem; bottom: 10px; left: 10px; }
+    #leaderboard { width: 95%; padding: 10px; }
+    .lb-row { font-size: 1rem; }
+    #player-name-input { font-size: 1.2rem; }
+    #timer-display { font-size: 1.5rem; padding: 5px 15px; }
+}

@@ -3,838 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kosmik Sayohat: Final</title>
+    <title>Sehrli Pufaklar: O'rgatish Bosqichi</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700&display=swap');
 
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: #1a0b2e; 
-            font-family: 'Nunito', sans-serif; 
-            user-select: none; 
-            touch-action: none; 
-        }
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Nunito', sans-serif; }
         
-        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            z-index: 10; pointer-events: none;
+        /* Fon uchun gradient (Osmon) */
+        #bg-gradient {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            z-index: -1;
         }
 
-        /* --- O'ZGARISH: Kamera O'ng Pastda --- */
+        #canvas-container { width: 100%; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        /* Maskot (Yordamchi Robot) */
+        #mascot-container {
+            position: absolute; bottom: 20px; left: 20px; z-index: 10;
+            display: flex; align-items: flex-end; gap: 15px;
+            pointer-events: none;
+        }
+        #mascot-avatar {
+            font-size: 80px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            animation: bounce 2s infinite ease-in-out;
+        }
+        #mascot-bubble {
+            background: white; color: #333; padding: 20px; border-radius: 20px 20px 20px 0;
+            font-size: 1.2rem; font-weight: bold; max-width: 300px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(20px); transition: all 0.5s;
+        }
+        #mascot-bubble.visible { opacity: 1; transform: translateY(0); }
+
+        /* Kamera oynasi */
         #video-container {
-            position: absolute; bottom: 20px; right: 20px; 
-            width: 220px; height: 165px;
-            border-radius: 20px; border: 4px solid #00ffcc; z-index: 100; 
-            background: #000; overflow: hidden;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
-            transform: scaleX(-1);
-            transition: all 0.3s ease;
+            position: absolute; top: 20px; right: 20px; 
+            width: 160px; height: 120px;
+            border-radius: 15px; border: 4px solid white; z-index: 100; 
+            background: #000; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: scaleX(-1); /* Oyna effekti */
         }
-        
-        #input-video { 
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; object-fit: cover; 
-        }
-        #output-canvas {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 2;
-        }
+        #input-video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- O'ZGARISH: Xabarlar Kameraning Tepasida --- */
-        #status-message {
-            position: absolute; 
-            bottom: 200px; /* Kamera balandligidan teparoqda */
-            right: 20px; 
-            width: 220px;
-            text-align: center;
-            pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .message-bubble {
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ffcc;
-            padding: 10px 20px;
-            border-radius: 15px;
-            border: 2px solid #00ffcc;
-            font-weight: bold;
-            font-size: 1.1rem;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            white-space: nowrap; 
-        }
-        .message-bubble.visible { opacity: 1; transform: translateY(0); }
-
-        /* Sarlavha */
-        #title-container {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            text-align: center;
-            width: 100%;
-            pointer-events: none;
-        }
-
-        h1 { 
-            font-family: 'Fredoka One', cursive; font-size: 2.5rem; 
-            color: #fff; text-shadow: 0 4px 0 #6a0dad; margin: 0;
-            background: rgba(0,0,0,0.4); padding: 8px 30px; border-radius: 30px;
-            backdrop-filter: blur(5px);
-            display: inline-block;
-        }
-
-        /* Chap Panel (Progress) */
-        #left-panel {
-            position: absolute; top: 30px; left: 30px;
-            display: flex; flex-direction: column; gap: 20px;
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-
-        #steps-container { display: flex; gap: 10px; }
-        
-        .step-dot {
-            width: 35px; height: 35px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Fredoka One', cursive;
-            color: #fff; font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .step-dot.active { background: #00ffcc; color: #000; transform: scale(1.2); box-shadow: 0 0 15px #00ffcc; border-color: #00ffcc; }
-        .step-dot.completed { background: #00ff00; border-color: #00ff00; color: #000; }
-
-        #progress-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
-        #progress-label { color: #fff; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9rem; }
-
-        #progress-container {
-            width: 200px; height: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px; border: 2px solid #fff;
-            overflow: hidden;
-        }
-        #progress-fill {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, #00ff00, #adff2f);
-            transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
-            box-shadow: 0 0 10px #00ff00;
-        }
-
-        /* --- RESPONSIVE / MOBILE STYLES --- */
-        @media (max-width: 768px) {
-            #video-container {
-                width: 120px; height: 90px; 
-                bottom: 10px; right: 10px; /* Pasga tushirildi */
-                top: auto; /* Top ni bekor qilish */
-                border-width: 2px;
-            }
-            
-            #status-message {
-                bottom: 110px; /* Kamera tepasida */
-                top: auto;
-                right: 10px;
-                width: 150px;
-            }
-            
-            .message-bubble {
-                font-size: 0.8rem;
-                padding: 5px 10px;
-            }
-
-            #left-panel {
-                top: 10px; left: 10px;
-                gap: 10px;
-                transform: scale(0.8); 
-                transform-origin: top left;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-                padding: 5px 20px;
-            }
-            
-            #title-container {
-                top: 80px; 
-            }
-
-            #countdown-overlay { font-size: 6rem !important; }
-            .step-dot { width: 30px; height: 30px; font-size: 0.9rem; }
-        }
-
-        /* Landscape Mobile */
-        @media (max-height: 500px) and (orientation: landscape) {
-            #title-container { top: 10px; }
-            h1 { font-size: 1.2rem; }
-            #left-panel { transform: scale(0.7); }
-            #status-message { bottom: 110px; }
-        }
-
-        #countdown-overlay {
+        /* Start tugmasi */
+        #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 60;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-family: 'Fredoka One', cursive;
-            font-size: 12rem; text-shadow: 0 0 40px #00ffcc;
-            pointer-events: none; opacity: 0; transition: opacity 0.3s;
+            background: rgba(0,0,0,0.7); z-index: 200; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
         }
-
-        .overlay-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(20, 10, 40, 0.95); z-index: 50; 
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white; text-align: center;
-            transition: opacity 0.5s;
-        }
-        
         .btn {
-            background: linear-gradient(45deg, #00ccff, #0066ff); border: none; padding: 18px 50px;
-            color: white; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 30px;
-            box-shadow: 0 8px 0 #0044cc, 0 10px 20px rgba(0,0,0,0.4); 
-            font-family: 'Fredoka One', cursive;
+            background: #ffcc00; border: none; padding: 15px 40px;
+            font-family: 'Fredoka One', cursive; font-size: 2rem; color: #d35400;
+            border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #e67e22;
+            transition: transform 0.1s;
         }
-        .btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #0044cc; }
-        
-        .loader {
-            border: 5px solid #f3f3f3; border-top: 5px solid #00ffcc;
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #e67e22; }
 
+        /* Hisoblagich */
+        #score-board {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.3); padding: 10px 30px; border-radius: 30px;
+            font-family: 'Fredoka One', cursive; font-size: 2rem; color: white;
+            z-index: 10; backdrop-filter: blur(5px); border: 2px solid white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .hidden { display: none !important; }
-        .fade-out { opacity: 0; pointer-events: none; }
     </style>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-    <div id="countdown-overlay" class="hidden">3</div>
+    <div id="bg-gradient"></div>
 
-    <div id="start-screen" class="overlay-screen">
-        <h1 style="font-size: 3.5rem; margin-top: 0;">KOSMIK SARGUZASHT</h1>
-        <p style="font-size: 1.3rem; color: #ddd; margin: 20px; line-height: 1.6;">
-            O'ng pastda o'zingizni ko'rasiz ↘️<br>
-            ✋ <b>Ochiq qo'l:</b> Tanlash<br>
-            👌 <b>Chimchilash:</b> Ushlash
-        </p>
-        <div id="loading-container">
-            <div class="loader"></div>
-            <div>AI Yuklanmoqda...</div>
-        </div>
-        <button id="start-btn" class="btn hidden">BOSHLASH 🚀</button>
+    <div id="overlay">
+        <h1 style="color:white; font-family:'Fredoka One'; font-size: 3rem; margin-bottom: 20px;">SEHRLI PUFAKLAR 🫧</h1>
+        <button id="start-btn" class="btn">BOSHLASH</button>
+        <p style="color:white; margin-top: 15px;">Kamera ruxsatini bering!</p>
     </div>
 
-    <div id="ui-layer" class="hidden">
-        <div id="left-panel">
-            <div id="steps-container"></div>
-            <div id="progress-wrapper">
-                <div id="progress-label">BOSQICH PROGRESSI</div>
-                <div id="progress-container">
-                    <div id="progress-fill"></div>
-                </div>
-            </div>
-        </div>
+    <div id="score-board">Yorilgan: <span id="score">0</span></div>
 
-        <div id="title-container">
-            <h1 id="task-title">SHAKLLAR</h1>
-        </div>
-
-        <!-- Kamera tepasidagi xabarlar -->
-        <div id="status-message">
-            <div id="hint-bubble" class="message-bubble">✊ USHLANG!</div>
-        </div>
-    </div>
-    
-    <div id="win-screen" class="overlay-screen hidden" style="background: rgba(20,10,40,0.8);">
-        <h1 style="font-size: 4rem; color: #FFD700; margin-top:0;">G'ALABA! 🎉</h1>
-        <p style="font-size: 1.5rem;">Barcha bosqichlar tugadi!</p>
-        <div style="font-size: 4rem;">🏆</div>
-        <button id="restart-btn" class="btn">QAYTA O'YNASH 🔄</button>
+    <div id="mascot-container">
+        <div id="mascot-avatar">🤖</div>
+        <div id="mascot-bubble" class="visible">Salom! Men Turonboyman. Bugun pufaklarni yoramiz!</div>
     </div>
 
     <div id="video-container">
-        <video id="input-video" playsinline webkit-playsinline muted autoplay></video>
-        <canvas id="output-canvas"></canvas>
+        <video id="input-video" playsinline muted autoplay></video>
     </div>
     
     <div id="canvas-container"></div>
 
 <script>
+    // --- OVOZ TIZIMI (Synth) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(type) {
+    
+    function playPopSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+        
+        // Pufak ovozi (tez pasayuvchi sinus to'lqin)
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
-
-        if (type === 'select') { 
-            osc.frequency.setValueAtTime(500, now);
-            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-            gain.gain.setValueAtTime(0.05, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
-        } else if (type === 'pop') { 
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.3);
-            osc.start(now); osc.stop(now + 0.3);
-        } else if (type === 'count') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(440, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
-        } else if (type === 'win') {
-            [440, 554, 659, 880].forEach((f, i) => {
-                const o = audioCtx.createOscillator();
-                const g = audioCtx.createGain();
-                o.connect(g); g.connect(audioCtx.destination);
-                o.type = 'triangle';
-                o.frequency.value = f;
-                g.gain.setValueAtTime(0, now);
-                g.gain.linearRampToValueAtTime(0.2, now + 0.1 + i*0.1);
-                g.gain.exponentialRampToValueAtTime(0.01, now + 2);
-                o.start(now); o.stop(now + 2);
-            });
-        }
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    const CONFIG = {
-        sensitivityX: 3.0, 
-        sensitivityY: 2.2,
-        snapDistance: 1.5,
+    function playSuccessSound() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    // --- O'YIN SOZLAMALARI ---
+    const state = {
+        score: 0,
+        handPos: { x: 0, y: 0 },
+        isPinching: false,
+        bubbles: [],
+        particles: []
     };
 
-    const LEVELS = [
-        { title: "BOSHLANISH", items: [{ emoji: "⭐", name: "YULDUZ" }], color: 0x44aaff },
-        { title: "JUFTLIK", items: [{ emoji: "🍎", name: "OLMA" }, { emoji: "🍌", name: "BANAN" }], color: 0xffaa00 },
-        { title: "UCHLIK", items: [{ emoji: "🟥", name: "KVADRAT" }, { emoji: "🔵", name: "DOIRA" }, { emoji: "🔺", name: "UCHBURCHAK" }], color: 0xff0055 },
-        { title: "KOSMOS", items: [{ emoji: "🌍", name: "YER" }, { emoji: "🚀", name: "RAKETA" }, { emoji: "🛸", name: "UCHAR LAKOP" }, { emoji: "🪐", name: "SATURN" }], color: 0x6a0dad },
-        { title: "HAYVONOT BOG'I", items: [{ emoji: "🦁", name: "SHER" }, { emoji: "🐼", name: "PANDA" }, { emoji: "🦊", name: "TULKI" }, { emoji: "🐘", name: "FIL" }, { emoji: "🐰", name: "QUYON" }], color: 0x228B22 }
+    const mascotTexts = [
+        "Qo'lingizni kameraga ko'rsating! ✋",
+        "Zo'r! Endi ko'rsatkich va bosh barmog'ingizni birlashtiring 👌",
+        "Ana shunday! Endi pufaklarni ushlab ko'ring!",
+        "Juda yaxshi ketyapsiz! Davom eting! 🚀"
     ];
 
-    const state = {
-        levelIdx: 0,
-        handPos: { x: 0, y: 0 },
-        gesture: 'IDLE',
-        handVisible: false,
-        handLabel: 'Right',
-        grabbedObj: null,
-        hoveredObj: null,
-        lockedCount: 0,
-        totalPieces: 0,
-        isTransitioning: false,
-        worldSize: { width: 10, height: 10 }
-    };
-
-    const ui = {
-        hintBubble: document.getElementById('hint-bubble'),
-        startBtn: document.getElementById('start-btn'),
-        startScreen: document.getElementById('start-screen'),
-        winScreen: document.getElementById('win-screen'),
-        uiLayer: document.getElementById('ui-layer'),
-        loading: document.getElementById('loading-container'),
-        video: document.getElementById('input-video'),
-        outCanvas: document.getElementById('output-canvas'),
-        title: document.getElementById('task-title'),
-        stepsContainer: document.getElementById('steps-container'),
-        countdown: document.getElementById('countdown-overlay'),
-        progressFill: document.getElementById('progress-fill'),
-        restartBtn: document.getElementById('restart-btn')
-    };
-    
-    const canvasCtx = ui.outCanvas.getContext('2d');
-
+    // --- THREE.JS SAHNASI ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a0b2e);
-    scene.fog = new THREE.FogExp2(0x1a0b2e, 0.025);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 10;
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.sortObjects = true; 
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Yorug'lik
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
-    
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
     dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const piecesGroup = new THREE.Group();
-    const slotsGroup = new THREE.Group();
-    const particlesGroup = new THREE.Group();
-    const trailsGroup = new THREE.Group(); 
-    scene.add(piecesGroup);
-    scene.add(slotsGroup);
-    scene.add(particlesGroup);
-    scene.add(trailsGroup);
+    // Qo'l kursorini yaratish
+    const cursorGeo = new THREE.RingGeometry(0.3, 0.4, 32);
+    const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, side: THREE.DoubleSide });
+    const cursor = new THREE.Mesh(cursorGeo, cursorMat);
+    cursor.visible = false;
+    scene.add(cursor);
 
-    function createCursorTexture(emoji) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-        ctx.font = '100px Arial';
-        ctx.textAlign = 'center'; 
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = "rgba(0,255,204,0.8)";
-        ctx.shadowBlur = 15;
-        ctx.fillText(emoji, 64, 70);
-        return new THREE.CanvasTexture(canvas);
-    }
+    // Pufak materiali (Shaffof va yaltiroq)
+    const bubbleGeo = new THREE.SphereGeometry(1, 32, 32);
+    const bubbleMat = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.1,
+        roughness: 0,
+        transmission: 0.9, // Shaffoflik (Glass effect)
+        thickness: 1.5,
+        envMapIntensity: 1,
+        clearcoat: 1,
+        clearcoatRoughness: 0.1
+    });
 
-    const texHandOpen = createCursorTexture('✋');
-    const texHandPinch = createCursorTexture('👌');
-
-    const cursorMat = new THREE.SpriteMaterial({ map: texHandOpen, color: 0xffffff, transparent: true, depthTest: false, depthWrite: false });
-    const cursorSprite = new THREE.Sprite(cursorMat);
-    cursorSprite.scale.set(1.5, 1.5, 1);
-    cursorSprite.renderOrder = 999; 
-    scene.add(cursorSprite);
-
-    function createSlotTexture(text, name, colorHex) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 300; canvas.height = 400; 
-        const ctx = canvas.getContext('2d');
-        const centerX = 150; const centerY = 150; const radius = 115;
-        const hex = '#' + new THREE.Color(colorHex).getHexString();
-        ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 4; 
-        ctx.setLineDash([10, 10]); ctx.stroke(); ctx.setLineDash([]);
-        ctx.font = 'bold 120px "Segoe UI Emoji", Arial';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.globalAlpha = 0.3; ctx.fillText(text, centerX, centerY + 10); ctx.globalAlpha = 1.0;
-        ctx.font = 'bold 45px "Fredoka One", sans-serif'; 
-        ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 6;
-        ctx.strokeText(name, centerX, 360); ctx.fillText(name, centerX, 360);
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.encoding = THREE.sRGBEncoding;
-        return tex;
-    }
-
-    function createPieceTexture(text, colorHex) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256; canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        const centerX = 128; const centerY = 128; const radius = 115;
-        const hex = '#' + new THREE.Color(colorHex).getHexString();
-        const grad = ctx.createRadialGradient(centerX,centerY,10, centerX,centerY,120);
-        grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.3, hex); grad.addColorStop(1, '#000000');
-        ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
-        ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 10; ctx.stroke();
-        ctx.font = 'bold 130px "Segoe UI Emoji", Arial';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff'; 
-        ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=10;
-        ctx.fillText(text, centerX, centerY + 10);
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.encoding = THREE.sRGBEncoding;
-        return tex;
-    }
-
-    function updateLayout() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-
-        const isMobile = window.innerWidth < 768;
-        const isPortrait = window.innerHeight > window.innerWidth;
-
-        if (isPortrait) {
-            camera.position.z = 18; 
-        } else {
-            camera.position.z = isMobile ? 14 : 11;
-        }
-
-        const vFOV = THREE.Math.degToRad(camera.fov);
-        const height = 2 * Math.tan(vFOV / 2) * camera.position.z;
-        const width = height * camera.aspect;
-        state.worldSize = { width, height };
-    }
-
-    function initLevel(idx) {
-        state.isTransitioning = true;
+    function createBubble() {
+        const bubble = new THREE.Mesh(bubbleGeo, bubbleMat);
+        // Tasodifiy joylashuv
+        const x = (Math.random() - 0.5) * 15;
+        const y = -10; // Pastdan chiqadi
+        const z = (Math.random() - 0.5) * 5;
         
-        while(piecesGroup.children.length) piecesGroup.remove(piecesGroup.children[0]);
-        while(slotsGroup.children.length) slotsGroup.remove(slotsGroup.children[0]);
+        bubble.position.set(x, y, z);
+        bubble.scale.setScalar(Math.random() * 0.5 + 0.8);
         
-        state.levelIdx = idx;
-        state.lockedCount = 0;
-        const lvl = LEVELS[idx];
-        state.totalPieces = lvl.items.length;
+        // Har bir pufakning o'z tezligi bor
+        bubble.userData = { 
+            velocity: Math.random() * 0.05 + 0.02,
+            wobble: Math.random() * Math.PI 
+        };
         
-        ui.title.innerText = lvl.title;
-        updateStepsUI();
-        updateProgress(0); 
-
-        const targetColor = new THREE.Color(lvl.color).lerp(new THREE.Color(0x000000), 0.7);
-        scene.background = targetColor;
-        scene.fog.color = targetColor;
-
-        const isMobile = window.innerWidth < 600;
-        const radius = isMobile ? 2.2 : 3.5; 
-        const angleStep = (Math.PI*2)/lvl.items.length;
-
-        lvl.items.forEach((item, i) => {
-            const angle = i * angleStep - Math.PI/2;
-            const targetPos = new THREE.Vector3(Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
-
-            const slotGeo = new THREE.PlaneGeometry(2.5, 3.33); 
-            const slotTex = createSlotTexture(item.emoji, item.name, lvl.color);
-            const slotMat = new THREE.MeshBasicMaterial({ map: slotTex, transparent: true, opacity: 0.8 });
-            const slot = new THREE.Mesh(slotGeo, slotMat);
-            slot.position.copy(targetPos);
-            slot.position.y -= 0.5; 
-            slot.position.z = -0.5; 
-            slot.renderOrder = 1;
-            slotsGroup.add(slot);
-
-            const pieceGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.3, 32);
-            const pieceMatBody = new THREE.MeshStandardMaterial({ color: lvl.color, roughness: 0.2, metalness: 0.3 });
-            const piece = new THREE.Mesh(pieceGeo, pieceMatBody);
-            piece.rotation.x = Math.PI / 2;
-            
-            const faceGeo = new THREE.PlaneGeometry(2.0, 2.0);
-            const faceTex = createPieceTexture(item.emoji, lvl.color);
-            const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true });
-            const face = new THREE.Mesh(faceGeo, faceMat);
-            face.position.y = 0.16; 
-            face.rotation.x = -Math.PI / 2;
-            piece.add(face);
-            
-            const uniqueZ = 0.5 + (i * 0.1);
-            const spread = isMobile ? 1.5 : 3.0;
-            piece.position.set(
-                (Math.random()-0.5)*spread * 2, 
-                (Math.random()-0.5)*spread, 
-                uniqueZ 
-            );
-            piece.renderOrder = 10 + i; 
-
-            piece.userData = { 
-                id: i, targetPos: targetPos, isLocked: false, floatOffset: Math.random() * 100,
-                baseZ: uniqueZ 
-            };
-            piecesGroup.add(piece);
-        });
-        state.isTransitioning = false;
+        scene.add(bubble);
+        state.bubbles.push(bubble);
     }
 
-    function spawnTrail(pos) {
-        if(Math.random() > 0.3) return;
-        const el = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true }));
-        el.position.copy(pos); el.position.z = 2.5; el.userData = { life: 20 }; trailsGroup.add(el);
-    }
-    function updateTrail() {
-        for(let i=trailsGroup.children.length-1; i>=0; i--) {
-            const t = trailsGroup.children[i]; t.userData.life--; t.material.opacity = t.userData.life/20; t.scale.setScalar(t.userData.life/20); if(t.userData.life<=0) trailsGroup.remove(t);
-        }
-    }
-    function createConfetti() {
-        const count = 80; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(count*3); const velArr = [];
+    function createParticles(pos) {
+        const geometry = new THREE.BufferGeometry();
+        const count = 30;
+        const positions = new Float32Array(count * 3);
+        const velocities = [];
+
         for(let i=0; i<count; i++) {
-            posArr[i*3] = (Math.random()-0.5)*2; posArr[i*3+1] = (Math.random()-0.5)*2; posArr[i*3+2] = 0;
-            velArr.push({x: (Math.random()-0.5)*0.5, y: (Math.random()-0.5)*0.5+0.2, z: (Math.random()-0.5)*0.5});
+            positions[i*3] = pos.x;
+            positions[i*3+1] = pos.y;
+            positions[i*3+2] = pos.z;
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.5,
+                y: (Math.random() - 0.5) * 0.5,
+                z: (Math.random() - 0.5) * 0.5
+            });
         }
-        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-        const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3 });
-        const sys = new THREE.Points(geo, mat); sys.userData = { vels: velArr, life: 100 }; particlesGroup.add(sys);
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, transparent: true });
+        const particles = new THREE.Points(geometry, material);
+        particles.userData = { velocities: velocities, life: 60 };
+        scene.add(particles);
+        state.particles.push(particles);
     }
-    function updateParticles() {
-        for(let i=particlesGroup.children.length-1; i>=0; i--) {
-            const p = particlesGroup.children[i]; p.userData.life--;
-            const pos = p.geometry.attributes.position.array;
-            for(let j=0; j<p.userData.vels.length; j++) {
-                pos[j*3] += p.userData.vels[j].x; pos[j*3+1] += p.userData.vels[j].y; pos[j*3+2] += p.userData.vels[j].z; p.userData.vels[j].y -= 0.01; 
+
+    // --- MEDIAPIPE (Qo'l aniqlash) ---
+    const videoElement = document.getElementById('input-video');
+    
+    function onResults(results) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+            
+            // Koordinatalarni olish (Barmoq uchlari)
+            const indexTip = landmarks[8];
+            const thumbTip = landmarks[4];
+
+            // 3D olamga o'tkazish (Taxminiy proyeksiyalash)
+            const x = (1 - indexTip.x) * 2 - 1; // Mirror effect uchun 1-x
+            const y = (1 - indexTip.y) * 2 - 1;
+            
+            // Kursor harakati (Smooth)
+            const vector = new THREE.Vector3(x * 10, y * 6, 0); 
+            state.handPos.x += (vector.x - state.handPos.x) * 0.3;
+            state.handPos.y += (vector.y - state.handPos.y) * 0.3;
+            
+            cursor.position.set(state.handPos.x, state.handPos.y, 0);
+            cursor.visible = true;
+
+            // Pinch (Chimchilash) masofasini o'lchash
+            const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+            const wasPinching = state.isPinching;
+            state.isPinching = distance < 0.08; // Sezgirlik chegarasi
+
+            // Rang o'zgarishi
+            if (state.isPinching) {
+                cursor.material.color.setHex(0x00ff00); // Yashil
+                cursor.scale.setScalar(0.8);
+            } else {
+                cursor.material.color.setHex(0xffcc00); // Sariq
+                cursor.scale.setScalar(1);
             }
-            p.geometry.attributes.position.needsUpdate = true; p.scale.setScalar(p.userData.life/100); if(p.userData.life<=0) particlesGroup.remove(p);
+            
+            // Maskot gapi
+            if(state.score === 0 && !state.isPinching) updateMascot(1); 
+            if(state.score === 0 && state.isPinching) updateMascot(2);
+
+        } else {
+            cursor.visible = false;
         }
     }
-    function updateStepsUI() {
-        ui.stepsContainer.innerHTML = '';
-        LEVELS.forEach((lvl, idx) => {
-            const dot = document.createElement('div'); dot.className = 'step-dot'; dot.innerText = idx + 1;
-            if (idx < state.levelIdx) { dot.classList.add('completed'); dot.innerText = '✓'; } 
-            else if (idx === state.levelIdx) { dot.classList.add('active'); }
-            ui.stepsContainer.appendChild(dot);
-        });
-    }
-    function updateProgress(percent) { ui.progressFill.style.width = percent + '%'; }
 
     const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
-
-    function onResults(results) {
-        ui.outCanvas.width = ui.video.videoWidth;
-        ui.outCanvas.height = ui.video.videoHeight;
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, ui.outCanvas.width, ui.outCanvas.height);
-        
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            const lm = results.multiHandLandmarks[0];
-            drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
-            drawLandmarks(canvasCtx, lm, {color: '#FF0000', lineWidth: 2, radius: 4});
-
-            if(results.multiHandedness && results.multiHandedness.length > 0) {
-                state.handLabel = results.multiHandedness[0].label; 
-            }
-
-            state.handVisible = true;
-            
-            // --- O'ZGARISH: Oldingi sekin va aniq logika qaytarildi ---
-            const x = (1 - lm[9].x) * 2 - 1; 
-            const y = (1 - lm[9].y) * 2 - 1;
-            
-            state.handPos.x += (x * CONFIG.sensitivityX - state.handPos.x) * 0.5;
-            state.handPos.y += (y * CONFIG.sensitivityY - state.handPos.y) * 0.5;
-
-            const thumb = lm[4];
-            const index = lm[8];
-            const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
-            
-            if (dist < 0.06) state.gesture = 'PINCH';
-            else state.gesture = 'IDLE';
-        } else {
-            state.handVisible = false;
-        }
-        canvasCtx.restore();
-    }
-    
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     hands.onResults(onResults);
 
+    // --- GAME LOOP ---
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function updateGame() {
-        if(state.isTransitioning) return;
-        updateParticles();
-        updateTrail();
+    function update() {
+        // 1. Pufaklar harakati
+        if (Math.random() < 0.02) createBubble(); // Yangi pufak
 
-        const time = Date.now() * 0.002;
-        piecesGroup.children.forEach(obj => {
-            if(!obj.userData.isLocked && obj !== state.grabbedObj) {
-                obj.position.y += Math.sin(time + obj.userData.floatOffset) * 0.005;
-                obj.rotation.z = Math.sin(time * 0.5 + obj.userData.floatOffset) * 0.1;
-                obj.position.z = obj.userData.baseZ; 
-            } else if (obj.userData.isLocked) {
-                obj.rotation.z = Math.sin(time) * 0.1; 
-                obj.rotation.x = Math.PI/2; 
-                obj.rotation.y = 0;
+        for (let i = state.bubbles.length - 1; i >= 0; i--) {
+            const b = state.bubbles[i];
+            b.position.y += b.userData.velocity;
+            b.position.x += Math.sin(Date.now() * 0.002 + b.userData.wobble) * 0.02;
+
+            // Ekrandan chiqib ketsa o'chirish
+            if (b.position.y > 8) {
+                scene.remove(b);
+                state.bubbles.splice(i, 1);
             }
-        });
-
-        if (!state.handVisible) {
-            cursorSprite.visible = false;
-            return;
         }
 
-        mouse.x = state.handPos.x;
-        mouse.y = state.handPos.y;
-        
-        raycaster.setFromCamera(mouse, camera);
-        const targetZ = 0;
-        const distZ = (targetZ - camera.position.z) / raycaster.ray.direction.z;
-        const worldPos = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(distZ));
-        
-        cursorSprite.position.copy(worldPos);
-        cursorSprite.position.z = 3; 
-        cursorSprite.visible = true;
-
-        if (state.handLabel === 'Left') cursorSprite.scale.x = 1.5; 
-        else cursorSprite.scale.x = -1.5; 
-
-        if (state.gesture === 'PINCH') {
-            cursorSprite.material.map = texHandPinch;
-        } else {
-            cursorSprite.material.map = texHandOpen;
-        }
-        
-        spawnTrail(cursorSprite.position);
-
-        if (state.gesture === 'PINCH') {
-            showMessage("USHLANDI! (👌)", "#00ffcc");
+        // 2. Partikullar harakati
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+            const p = state.particles[i];
+            const positions = p.geometry.attributes.position.array;
+            p.userData.life--;
             
-            if (!state.grabbedObj && state.hoveredObj) {
-                state.grabbedObj = state.hoveredObj;
-                playSound('select');
+            for(let j=0; j<p.userData.velocities.length; j++) {
+                positions[j*3] += p.userData.velocities[j].x;
+                positions[j*3+1] += p.userData.velocities[j].y;
+                positions[j*3+2] += p.userData.velocities[j].z;
             }
-        } else {
-            if (state.grabbedObj) {
-                const obj = state.grabbedObj;
-                const target = obj.userData.targetPos;
-                const dist2D = Math.hypot(obj.position.x - target.x, obj.position.y - target.y);
-
-                if (dist2D < CONFIG.snapDistance) {
-                    obj.position.copy(target);
-                    obj.position.z = 0; 
-                    obj.userData.isLocked = true;
-                    
-                    const light = new THREE.PointLight(0xffff00, 1, 5);
-                    obj.add(light);
-                    
-                    playSound('pop');
-                    createConfetti();
-                    
-                    state.lockedCount++;
-                    updateProgress((state.lockedCount / state.totalPieces) * 100);
-                    
-                    if(state.lockedCount === state.totalPieces) {
-                        playSound('win');
-                        state.isTransitioning = true;
-                        
-                        if(state.levelIdx < LEVELS.length - 1) {
-                             ui.winScreen.classList.remove('hidden');
-                             ui.winScreen.querySelector('h1').innerText = "G'ALABA!";
-                             ui.winScreen.querySelector('p').innerText = "Keyingi bosqichga tayyormisiz?";
-                             
-                             setTimeout(() => {
-                                ui.winScreen.classList.add('hidden');
-                                startCountdown();
-                             }, 2000);
-                        } else {
-                            ui.winScreen.classList.remove('hidden');
-                            ui.winScreen.querySelector('h1').innerText = "SUPER G'OLIB!";
-                            ui.winScreen.querySelector('p').innerText = "Siz barcha bosqichlarni tugatdingiz!";
-                        }
-                    }
-                }
-                state.grabbedObj = null;
+            p.geometry.attributes.position.needsUpdate = true;
+            p.material.opacity = p.userData.life / 60;
+            
+            if(p.userData.life <= 0) {
+                scene.remove(p);
+                state.particles.splice(i, 1);
             }
         }
 
-        const intersects = raycaster.intersectObjects(piecesGroup.children);
-        if (intersects.length > 0 && !state.grabbedObj) {
-            const obj = intersects[0].object;
-            const realObj = obj.parent.type === 'Group' ? obj : obj.parent;
-            
-            if (realObj && realObj.userData && !realObj.userData.isLocked) {
-                state.hoveredObj = realObj;
-                realObj.scale.setScalar(1.1);
-                if(state.gesture !== 'PINCH') {
-                    showMessage("CHIMCHILANG (👌)", "#ffff00");
+        // 3. To'qnashuvni tekshirish (Faqat Chimchilaganda)
+        if (state.isPinching && cursor.visible) {
+            // Raycaster kursordan oldinga qarab otiladi
+            const origin = new THREE.Vector3(state.handPos.x, state.handPos.y, 10);
+            const direction = new THREE.Vector3(0, 0, -1);
+            raycaster.set(origin, direction);
+
+            // Raycaster o'rniga oddiy masofa (Sphere Collision) tekshirsa ham bo'ladi, lekin bu aniqroq
+            // Keling, oddiy masofa bilan ishlaymiz, tezroq ishlaydi
+            for (let i = state.bubbles.length - 1; i >= 0; i--) {
+                const b = state.bubbles[i];
+                const dist = cursor.position.distanceTo(b.position);
+                
+                if (dist < 1.2) { // Agar qo'l pufakka tegsa
+                    // POP!
+                    playPopSound();
+                    createParticles(b.position);
+                    scene.remove(b);
+                    state.bubbles.splice(i, 1);
+                    state.score++;
+                    document.getElementById('score').innerText = state.score;
+                    
+                    if(state.score === 1) updateMascot(3);
                 }
             }
-        } else {
-            if (state.hoveredObj && state.hoveredObj !== state.grabbedObj) {
-                state.hoveredObj.scale.setScalar(1);
-            }
-            state.hoveredObj = null;
-            if(state.gesture !== 'PINCH') hideMessage();
         }
 
-        if (state.grabbedObj) {
-            state.grabbedObj.position.lerp(worldPos, 0.4);
-            state.grabbedObj.position.z = 2; 
-            
-            const target = state.grabbedObj.userData.targetPos;
-            const dist2D = Math.hypot(state.grabbedObj.position.x - target.x, state.grabbedObj.position.y - target.y);
-            
-            if (dist2D < CONFIG.snapDistance) {
-                state.grabbedObj.position.x += (target.x - state.grabbedObj.position.x) * 0.2;
-                state.grabbedObj.position.y += (target.y - state.grabbedObj.position.y) * 0.2;
-            }
-        }
-    }
-    
-    function showMessage(text, color) {
-        ui.hintBubble.innerText = text;
-        ui.hintBubble.style.color = color;
-        ui.hintBubble.style.borderColor = color;
-        ui.hintBubble.classList.add('visible');
-    }
-
-    function hideMessage() {
-        ui.hintBubble.classList.remove('visible');
-    }
-    
-    function startCountdown() {
-        let count = 3;
-        ui.countdown.classList.remove('hidden');
-        ui.countdown.style.opacity = 1;
-        ui.countdown.innerText = count;
-        playSound('count');
-
-        const interval = setInterval(() => {
-            count--;
-            if(count > 0) {
-                ui.countdown.innerText = count;
-                playSound('count');
-            } else {
-                clearInterval(interval);
-                ui.countdown.innerText = "KETDIK! 🚀";
-                setTimeout(() => {
-                    ui.countdown.classList.add('hidden');
-                    state.levelIdx++;
-                    if(state.levelIdx >= LEVELS.length) state.levelIdx = 0;
-                    initLevel(state.levelIdx);
-                }, 1000);
-            }
-        }, 1000);
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        if(!ui.video.paused) hands.send({image: ui.video});
-        updateGame();
         renderer.render(scene, camera);
+        requestAnimationFrame(update);
     }
-
-    hands.initialize().then(() => {
-        ui.loading.style.display = 'none';
-        ui.startBtn.classList.remove('hidden');
-        updateLayout(); 
-        updateStepsUI();
-    });
-
-    ui.startBtn.addEventListener('click', async () => {
-        ui.startBtn.innerText = "Yuklanmoqda...";
+    
+    // --- KAMERA VA BOSHLASH ---
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('overlay');
+    
+    startBtn.addEventListener('click', async () => {
+        startBtn.innerText = "Yuklanmoqda...";
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
-            ui.video.srcObject = stream;
-            ui.video.onloadeddata = () => {
-                ui.startScreen.classList.add('fade-out');
-                setTimeout(() => ui.startScreen.classList.add('hidden'), 500);
-                ui.uiLayer.classList.remove('hidden');
-                updateLayout();
-                initLevel(0);
-                animate();
-            };
-        } catch(e) {
-            alert("Kamera xatosi: " + e.message);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            videoElement.srcObject = stream;
+            
+            const cameraUtils = new Camera(videoElement, {
+                onFrame: async () => { await hands.send({image: videoElement}); },
+                width: 640, height: 480
+            });
+            cameraUtils.start();
+            
+            overlay.classList.add('hidden');
+            updateMascot(0);
+            update(); // O'yinni boshlash
+
+        } catch (e) {
+            alert("Kamerani yoqib bo'lmadi. Ruxsat bering!");
+            console.error(e);
         }
     });
-    
-    ui.restartBtn.addEventListener('click', () => {
-        ui.winScreen.classList.add('hidden');
-        state.levelIdx = 0;
-        initLevel(0);
-    });
 
+    // Maskot matnini o'zgartirish
+    function updateMascot(index) {
+        const bubble = document.getElementById('mascot-bubble');
+        bubble.classList.remove('visible');
+        setTimeout(() => {
+            bubble.innerText = mascotTexts[index];
+            bubble.classList.add('visible');
+        }, 500);
+    }
+
+    // Ekran o'lchami o'zgarganda
     window.addEventListener('resize', () => {
-        updateLayout();
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
 </script>
 </body>
-</html>
+</html> 

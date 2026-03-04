@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Astro-Kids: Oyga Yumshoq Qo'nish</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MediaPipe Kutubxonalari -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #020617; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; 
+        }
+        canvas { display: block; }
+        
+        #camera-preview { transform: scaleX(-1); }
+
+        @keyframes handMove {
+            0% { transform: translateY(20px) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-30px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(20px) scale(1); opacity: 0.8; }
+        }
+        .animate-hand { animation: handMove 1.5s infinite ease-in-out; }
+
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .alarm-glow { animation: pulseRed 1s infinite; }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .low-fuel-blink { animation: blink 0.5s infinite; }
+
+        .moon-icon {
+            width: 80px; height: 80px;
+            background: radial-gradient(circle at 30% 30%, #e2e8f0, #94a3b8);
+            border-radius: 50%;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.2);
+            position: relative;
+        }
+        .moon-icon::before, .moon-icon::after {
+            content: ''; position: absolute; border-radius: 50%; background: rgba(0,0,0,0.15);
+        }
+        .moon-icon::before { width: 15px; height: 15px; top: 20px; left: 20px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
+        .moon-icon::after { width: 25px; height: 25px; bottom: 15px; right: 15px; box-shadow: inset 3px 3px 5px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="text-white select-none">
+
+    <canvas id="gameCanvas" class="w-full h-screen absolute top-0 left-0 z-0"></canvas>
+
+    <div class="absolute bottom-4 left-4 z-20 w-32 h-24 md:w-48 md:h-36 bg-black/60 border-2 border-indigo-500 rounded-xl overflow-hidden shadow-lg shadow-indigo-500/50 flex flex-col transition-all">
+        <div class="text-[8px] md:text-[10px] text-center bg-indigo-600 font-bold py-1">AI KAMERA 🟢</div>
+        <div class="relative flex-1">
+            <video id="webcam" class="hidden" autoplay playsinline></video>
+            <canvas id="camera-preview" class="w-full h-full object-cover"></canvas>
+        </div>
+    </div>
+
+    <div id="ui-start" class="absolute inset-0 z-30 flex flex-col justify-center items-center bg-slate-900/90 backdrop-blur-md transition-opacity duration-500 px-4">
+        <div class="mb-4 relative">
+            <div class="text-6xl absolute -top-10 -left-10 animate-[bounce_3s_infinite]">👨‍🚀</div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500 text-center drop-shadow-lg leading-tight">Astro-Kids</h1>
+        </div>
+        <h2 class="text-xl md:text-2xl font-bold text-white mb-8 text-center bg-slate-800/50 px-6 py-2 rounded-full border border-slate-700">Oyga Yumshoq Qo'nish 🚀</h2>
+        
+        <button id="btn-start" class="w-full max-w-sm px-8 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xl md:text-2xl font-bold rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(99,102,241,0.6)] disabled:opacity-50 disabled:cursor-not-allowed">
+            Kamera ulanmoqda...
+        </button>
+        <p class="mt-6 text-slate-400 text-sm max-w-md text-center">Yosh muhandislar uchun maxsus fizika va sun'iy intellektga asoslangan simulyator.</p>
+    </div>
+
+    <div id="ui-info" class="absolute inset-0 z-30 flex flex-col justify-center items-center bg-slate-900/95 backdrop-blur-lg hidden opacity-0 transition-opacity duration-500 px-4">
+        <div class="bg-slate-800 border border-indigo-500/50 p-6 md:p-10 rounded-3xl max-w-2xl w-full shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            
+            <div class="flex flex-col md:flex-row items-center gap-6 mb-8 relative z-10">
+                <div class="moon-icon shrink-0"></div>
+                <div>
+                    <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">Haqiqiy Kosmik Fizika!</h2>
+                    <p class="text-slate-300">Ushbu simulyator aniq muhandislik parametrlariga asoslangan:</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4 mb-8 relative z-10">
+                <div class="flex items-start gap-4 bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                    <div class="text-3xl">⚖️</div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">Raketa Massasi: 1500 kg</h3>
+                        <p class="text-sm text-slate-300">Fizika qonunlariga ko'ra (F=m*a), raketa qanchalik og'ir bo'lsa, uni to'xtatish uchun shuncha kuchli dvigatel quvvati talab etiladi.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                    <div class="text-3xl">📉</div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">Oy Gravitatsiyasi: 1.62 m/s²</h3>
+                        <p class="text-sm text-slate-300">Yerdagiga qaraganda 6 marta kam tortishish kuchi. Tezlikni yonboshdagi gologramma oynadan kuzatib boring!</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                    <div class="text-3xl">🌌</div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">Xavf: Ochiq koinot!</h3>
+                        <p class="text-sm text-slate-300">Dvigatelni keragidan ortiq yoqsangiz (Max: 4500 Nyuton), tortishish maydonidan chiqib ketasiz va koinotga yo'qolasiz.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-info-next" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xl font-bold rounded-xl hover:bg-emerald-400 transition-colors shadow-lg relative z-10">
+                Tushundim, parvozga tayyorman! 🚀
+            </button>
+        </div>
+    </div>
+
+    <div id="ui-tutorial" class="absolute inset-0 z-40 flex flex-col justify-center items-center bg-slate-900/85 backdrop-blur-sm hidden">
+        <div class="text-7xl md:text-9xl mb-6 animate-hand">✋</div>
+        <h2 class="text-2xl md:text-4xl font-bold text-white mb-2 text-center px-4">Dvigatelni yoqish uchun qo'lingizni ko'taring!</h2>
+        
+        <div class="relative flex justify-center items-center w-32 h-32 md:w-40 md:h-40 mt-8">
+            <svg class="absolute inset-0 w-full h-full text-indigo-500 animate-[spin_1s_linear_infinite]" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="70 200" stroke-linecap="round"></circle>
+            </svg>
+            <div id="countdown-text" class="text-5xl md:text-7xl font-extrabold text-white z-10">3</div>
+        </div>
+    </div>
+
+    <div id="ui-result" class="absolute inset-0 z-30 flex flex-col justify-center items-center bg-slate-900/95 backdrop-blur-md hidden transition-opacity duration-300 px-4">
+        <div id="result-emoji" class="text-6xl md:text-8xl mb-4"></div>
+        <h2 id="result-title" class="text-3xl md:text-5xl font-extrabold mb-4 text-center"></h2>
+        <p id="result-desc" class="text-base md:text-xl text-slate-300 mb-6 text-center max-w-md"></p>
+        
+        <div id="telemetry-panel" class="bg-slate-800 border border-slate-600 rounded-xl p-4 w-full max-w-sm mb-8 shadow-lg">
+            <h3 class="text-center text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-700 pb-2 mb-3">Muhandislik Hisoboti</h3>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-300">Oxirgi tezlik:</span>
+                <span id="rep-speed" class="font-mono font-bold text-white">0.0 m/s</span>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-300">Qolgan yoqilg'i:</span>
+                <span id="rep-fuel" class="font-mono font-bold text-white">0%</span>
+            </div>
+            <div class="flex justify-between items-center mt-4 pt-2 border-t border-slate-700">
+                <span class="text-slate-300 font-bold">Umumiy Baho:</span>
+                <span id="rep-grade" class="text-3xl font-extrabold">A+</span>
+            </div>
+        </div>
+
+        <button id="btn-restart" class="w-full max-w-xs px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg md:text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(99,102,241,0.6)]">
+            Qayta uchish 🚀
+        </button>
+    </div>
+
+    <div id="hud-panel" class="absolute top-4 left-4 z-10 bg-slate-800/80 p-3 md:p-4 rounded-xl border border-slate-600 backdrop-blur-sm w-[150px] md:w-[220px] transition-all hidden">
+        <!-- Massani shu yerga qo'shamiz -->
+        <div class="flex justify-between items-center mb-1 md:mb-2 border-b border-slate-600 pb-2">
+            <div class="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider">Massa</div>
+            <div id="hud-mass" class="text-sm md:text-xl font-mono text-white font-bold">1500 kg</div>
+        </div>
+        <div class="flex justify-between items-center mb-1 md:mb-2 border-b border-slate-600 pb-2">
+            <div class="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider">Balandlik</div>
+            <div id="hud-alt" class="text-sm md:text-2xl font-mono text-white font-bold">0m</div>
+        </div>
+        <div class="flex justify-between items-center mb-2 pt-1">
+            <div class="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider">Tezlik</div>
+            <div id="hud-speed-container" class="px-2 py-1 rounded transition-colors">
+                <div id="hud-speed" class="text-sm md:text-2xl font-mono text-emerald-400 font-bold">0.0</div>
+            </div>
+        </div>
+        <div class="mt-3 mb-2">
+            <div class="flex justify-between text-[10px] md:text-xs text-slate-400 font-bold uppercase mb-1">
+                <span>Yoqilg'i</span>
+                <span id="hud-fuel-txt" class="text-cyan-400">100%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                <div id="hud-fuel" class="h-full bg-cyan-500 w-full transition-all duration-75"></div>
+            </div>
+        </div>
+        <div class="mt-2 border-t border-slate-700 pt-2">
+            <div class="flex justify-between text-[10px] md:text-xs text-slate-400 font-bold uppercase mb-1">
+                <span>Dvigatel (Nyuton)</span>
+                <span id="hud-thrust-txt" class="text-orange-400">0 N</span>
+            </div>
+            <div class="w-full h-1 md:h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                <div id="hud-thrust" class="h-full bg-gradient-to-r from-orange-500 to-yellow-400 w-0 transition-all duration-75"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="altimeter-bar" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 md:w-6 h-[60%] bg-slate-800/60 rounded-full border border-slate-600 backdrop-blur-sm hidden flex-col justify-end overflow-hidden pb-1 z-10">
+        <div class="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs md:text-sm">🌕</div>
+        <div id="altimeter-indicator" class="w-full bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981] transition-all duration-75" style="height: 100%; min-height: 20px;">
+            <div class="absolute -left-6 top-0 text-sm">🚀</div>
+        </div>
+    </div>
+
+    <script>
+        const gameCanvas = document.getElementById('gameCanvas');
+        const ctx = gameCanvas.getContext('2d');
+        const videoElement = document.getElementById('webcam');
+        const previewCanvas = document.getElementById('camera-preview');
+        const previewCtx = previewCanvas.getContext('2d');
+        
+        const uiStart = document.getElementById('ui-start');
+        const uiInfo = document.getElementById('ui-info');
+        const uiTutorial = document.getElementById('ui-tutorial');
+        const uiResult = document.getElementById('ui-result');
+        const hudPanel = document.getElementById('hud-panel');
+        const altimeterBar = document.getElementById('altimeter-bar');
+        
+        const btnStart = document.getElementById('btn-start');
+        const btnInfoNext = document.getElementById('btn-info-next');
+        const btnRestart = document.getElementById('btn-restart');
+        
+        const resultTitle = document.getElementById('result-title');
+        const resultDesc = document.getElementById('result-desc');
+        const resultEmoji = document.getElementById('result-emoji');
+        const countdownText = document.getElementById('countdown-text');
+        
+        const repSpeed = document.getElementById('rep-speed');
+        const repFuel = document.getElementById('rep-fuel');
+        const repGrade = document.getElementById('rep-grade');
+        
+        const hudAlt = document.getElementById('hud-alt');
+        const hudSpeed = document.getElementById('hud-speed');
+        const hudSpeedContainer = document.getElementById('hud-speed-container');
+        const hudThrust = document.getElementById('hud-thrust');
+        const hudThrustTxt = document.getElementById('hud-thrust-txt');
+        const hudFuel = document.getElementById('hud-fuel');
+        const hudFuelTxt = document.getElementById('hud-fuel-txt');
+        const altimeterIndicator = document.getElementById('altimeter-indicator');
+
+        let width, height;
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            gameCanvas.width = width;
+            gameCanvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // ==========================================
+        // HAQIQIY FIZIKA KONSTANTALARI
+        // ==========================================
+        const ROCKET_MASS = 1500;       // Raketa massasi (kg)
+        const MOON_GRAVITY = 1.62;      // Oyning erkin tushish tezlanishi (m/s^2)
+        const MAX_THRUST_N = 4500;      // Dvigatelning maksimal kuchi (Nyuton)
+        const DT = 1 / 60;              // Simulyatsiya vaqti qadami (60 FPS)
+        const PIXEL_SCALE = 3.5;        // 1 vizual metr = 3.5 piksel (ekranda moslashish uchun)
+        
+        const SAFE_LANDING_SPEED = 2.0; // Maksimal xavfsiz qo'nish tezligi (m/s)
+        const FUEL_BURN_RATE = 0.2;     // Yoqilg'i yonish koeffitsiyenti
+        
+        let gameState = 'LOADING'; 
+        let aiLoaded = false;
+        
+        let isTouching = false;
+        let detectedAIThrust = 0;
+        let startMaxAltitude = 0; 
+
+        // ==========================================
+        // WEB AUDIO API
+        // ==========================================
+        let audioCtx;
+        let engineNode, engineGain, engineFilter;
+        let lastAlarmTime = 0;
+
+        function initAudio() {
+            if (audioCtx) return; 
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; 
+            
+            engineNode = audioCtx.createBufferSource();
+            engineNode.buffer = buffer;
+            engineNode.loop = true;
+            
+            engineFilter = audioCtx.createBiquadFilter();
+            engineFilter.type = 'lowpass';
+            engineFilter.frequency.value = 100; 
+            
+            engineGain = audioCtx.createGain();
+            engineGain.gain.value = 0; 
+            
+            engineNode.connect(engineFilter);
+            engineFilter.connect(engineGain);
+            engineGain.connect(audioCtx.destination);
+            engineNode.start();
+        }
+
+        function playBeep(freq, type = 'sine', duration = 0.1, vol = 0.5) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playAlarm() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            if (now - lastAlarmTime > 0.4) {
+                playBeep(1200, 'square', 0.1, 0.2);
+                playBeep(1500, 'square', 0.1, 0.2);
+                lastAlarmTime = now;
+            }
+        }
+
+        function playExplosionSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1.5);
+            gain.gain.setValueAtTime(1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+        }
+
+        function playWinSound() {
+            if (!audioCtx) return;
+            setTimeout(() => playBeep(523.25, 'triangle', 0.2), 0);
+            setTimeout(() => playBeep(659.25, 'triangle', 0.2), 150);
+            setTimeout(() => playBeep(783.99, 'triangle', 0.4), 300);
+            setTimeout(() => playBeep(1046.50, 'triangle', 0.8), 500);
+        }
+
+        const rocket = {
+            x: width / 2,
+            y: 50,
+            realVy: 0, // Haqiqiy tezlik m/s da
+            width: width < 500 ? 30 : 40,
+            height: width < 500 ? 45 : 60,
+            thrustLevel: 0,
+            fuel: 100,
+            isLanded: false
+        };
+
+        const stars = Array.from({ length: width < 500 ? 100 : 200 }).map(() => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            size: Math.random() * 2 + 0.5,
+            alpha: Math.random(),
+            speed: Math.random() * 0.8 + 0.2
+        }));
+
+        let particles = [];
+
+        function handlePointerDown(e) { if(gameState === 'PLAYING') isTouching = true; }
+        function handlePointerUp(e) { isTouching = false; }
+        
+        window.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('mouseup', handlePointerUp);
+        window.addEventListener('touchstart', handlePointerDown, {passive: true});
+        window.addEventListener('touchend', handlePointerUp, {passive: true});
+
+        let isTransitioning = false;
+
+        btnStart?.addEventListener('click', () => {
+            if(isTransitioning) return;
+            isTransitioning = true;
+            uiStart?.classList.add('opacity-0');
+            setTimeout(() => {
+                uiStart?.classList.add('hidden');
+                uiInfo?.classList.remove('hidden');
+                setTimeout(() => uiInfo?.classList.remove('opacity-0'), 50);
+                isTransitioning = false;
+            }, 500);
+        });
+
+        btnInfoNext?.addEventListener('click', startTutorialSequence);
+        btnRestart?.addEventListener('click', startTutorialSequence);
+
+        function startTutorialSequence() {
+            if(isTransitioning) return;
+            isTransitioning = true;
+
+            initAudio();
+            if (audioCtx?.state === 'suspended') audioCtx.resume();
+
+            uiInfo?.classList.add('opacity-0');
+            uiResult?.classList.add('hidden');
+            
+            setTimeout(() => {
+                uiInfo?.classList.add('hidden');
+                uiTutorial?.classList.remove('hidden');
+                
+                rocket.x = width / 2;
+                rocket.y = height * 0.2; 
+                rocket.realVy = 0;
+                rocket.thrustLevel = 0;
+                rocket.fuel = 100; 
+                rocket.isLanded = false;
+                particles = [];
+                isTouching = false;
+                
+                const groundY = height - 100;
+                startMaxAltitude = Math.max(0, groundY - (rocket.y + rocket.height/2 + rocket.height/6)) / PIXEL_SCALE;
+                
+                hudPanel?.classList.add('hidden');
+                altimeterBar?.classList.add('hidden');
+                
+                let count = 3;
+                if(countdownText) countdownText.textContent = count;
+                
+                const countInterval = setInterval(() => {
+                    count--;
+                    if(count > 0) {
+                        if(countdownText) countdownText.textContent = count;
+                        playBeep(440); 
+                    } else if(count === 0) {
+                        if(countdownText) countdownText.textContent = "🚀";
+                        playBeep(880, 'square', 0.4); 
+                    } else {
+                        clearInterval(countInterval);
+                        uiTutorial?.classList.add('hidden');
+                        hudPanel?.classList.remove('hidden');
+                        if(altimeterBar) {
+                            altimeterBar.classList.remove('hidden');
+                            altimeterBar.classList.add('flex');
+                        }
+                        gameState = 'PLAYING';
+                        isTransitioning = false;
+                    }
+                }, 1000);
+            }, 500);
+        }
+
+        function enableSensorMode() {
+            console.warn("Kamera topilmadi yoki ruxsat yo'q. Sensor rejimiga o'tilmoqda.");
+            if(btnStart) {
+                btnStart.innerHTML = "👆 Sensor orqali Boshlash";
+                btnStart.disabled = false;
+            }
+            aiLoaded = true;
+        }
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6
+        });
+
+        hands.onResults((results) => {
+            previewCanvas.width = videoElement.videoWidth;
+            previewCanvas.height = videoElement.videoHeight;
+            previewCtx.save();
+            previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            previewCtx.drawImage(results.image, 0, 0, previewCanvas.width, previewCanvas.height);
+
+            detectedAIThrust = 0;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                drawConnectors(previewCtx, landmarks, HAND_CONNECTIONS, {color: '#10b981', lineWidth: 2});
+                drawLandmarks(previewCtx, landmarks, {color: '#f97316', lineWidth: 1, radius: 2});
+
+                let handY = landmarks[9].y;
+                detectedAIThrust = Math.max(0, Math.min(1, (0.8 - handY) / 0.5));
+            }
+            previewCtx.restore();
+        });
+
+        // Xatoliklarga qarshi kuchli tekshiruv (try-catch)
+        try {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => { await hands.send({image: videoElement}); },
+                    width: 320, height: 240
+                });
+
+                camera.start().then(() => {
+                    aiLoaded = true;
+                    if(btnStart) {
+                        btnStart.textContent = "🚀 Uchamiz!";
+                        btnStart.disabled = false;
+                    }
+                }).catch(err => {
+                    console.error("Kamera ishga tushmadi: ", err);
+                    enableSensorMode();
+                });
+            } else {
+                enableSensorMode();
+            }
+        } catch(e) {
+            console.error("MediaDevices xatoligi: ", e);
+            enableSensorMode();
+        }
+
+        function drawBackground() {
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            bgGrad.addColorStop(0, '#020617'); 
+            bgGrad.addColorStop(1, '#0f172a'); 
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.alpha;
+                ctx.beginPath(); ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2); ctx.fill();
+                
+                star.alpha += (Math.random() - 0.5) * 0.05;
+                if(star.alpha < 0.1) star.alpha = 0.1;
+                if(star.alpha > 1) star.alpha = 1;
+                
+                if(gameState === 'PLAYING') {
+                    // Yulduzlar harakati real tezlikka moslandi
+                    star.y -= (rocket.realVy * star.speed * 0.5); 
+                    if(star.y < 0) star.y = height;
+                    if(star.y > height) star.y = 0;
+                }
+            });
+            ctx.globalAlpha = 1.0;
+
+            const groundY = height - 100;
+            
+            let moonOffset = 0;
+            if(rocket.y < height/2 && rocket.realVy < 0) {
+                moonOffset = (height/2 - rocket.y) * 0.5; 
+            }
+
+            let moonGrad = ctx.createLinearGradient(0, groundY - 20 + moonOffset, 0, height + moonOffset);
+            moonGrad.addColorStop(0, '#64748b'); 
+            moonGrad.addColorStop(1, '#0f172a'); 
+            
+            ctx.fillStyle = moonGrad;
+            ctx.beginPath();
+            ctx.ellipse(width/2, height + 40 + moonOffset, width * 0.9, 160, 0, Math.PI, 0);
+            ctx.fill();
+            
+            ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.ellipse(width*0.15, groundY+40+moonOffset, 50, 18, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.ellipse(width*0.15 - 4, groundY+37+moonOffset, 40, 12, 0, 0, Math.PI*2); ctx.fill();
+
+            ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.ellipse(width*0.85, groundY+60+moonOffset, 70, 25, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.ellipse(width*0.85 - 6, groundY+56+moonOffset, 55, 18, 0, 0, Math.PI*2); ctx.fill();
+
+            const padWidth = Math.min(180, width * 0.5); 
+            ctx.fillStyle = '#064e3b'; 
+            ctx.beginPath(); ctx.ellipse(width/2, groundY+moonOffset, padWidth/2, 14, 0, 0, Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle = '#10b981'; 
+            ctx.shadowBlur = 20; ctx.shadowColor = '#34d399';
+            ctx.beginPath(); ctx.ellipse(width/2, groundY - 4 + moonOffset, padWidth/2.2, 10, 0, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0; 
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.save();
+            ctx.translate(width/2, groundY - 4 + moonOffset);
+            ctx.scale(1, 0.4); 
+            ctx.fillText('H', 0, 0);
+            ctx.restore();
+        }
+
+        function drawRocket() {
+            const rx = rocket.x;
+            const ry = rocket.y;
+            const rw = rocket.width;
+            const rh = rocket.height;
+
+            ctx.save();
+            ctx.translate(rx, ry);
+
+            if (rocket.thrustLevel > 0.05 && !rocket.isLanded && rocket.fuel > 0) {
+                const flameLength = rocket.thrustLevel * (rh * 2) + Math.random() * 15;
+                ctx.globalCompositeOperation = "lighter"; 
+                
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.4)'; ctx.shadowBlur = 25; ctx.shadowColor = '#ef4444';
+                ctx.beginPath(); ctx.moveTo(-rw/2.2, rh/2); ctx.quadraticCurveTo(0, rh/2 + flameLength*1.3, rw/2.2, rh/2); ctx.fill();
+                
+                ctx.fillStyle = 'rgba(249, 115, 22, 0.8)'; ctx.shadowBlur = 10; ctx.shadowColor = '#f97316';
+                ctx.beginPath(); ctx.moveTo(-rw/3, rh/2); ctx.quadraticCurveTo(0, rh/2 + flameLength, rw/3, rh/2); ctx.fill();
+                
+                ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 5; ctx.shadowColor = '#ffffff';
+                ctx.beginPath(); ctx.moveTo(-rw/6, rh/2); ctx.lineTo(0, rh/2 + flameLength * 0.5); ctx.lineTo(rw/6, rh/2); ctx.fill();
+                
+                ctx.globalCompositeOperation = "source-over"; ctx.shadowBlur = 0;
+
+                for(let k=0; k<3; k++) {
+                    particles.push({
+                        x: rx + (Math.random() - 0.5) * (rw/1.5),
+                        y: ry + rh/2,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: Math.random() * 5 + 4,
+                        life: 1.0,
+                        color: Math.random() > 0.5 ? '#f97316' : '#fcd34d'
+                    });
+                }
+            }
+
+            const bodyGrad = ctx.createLinearGradient(-rw/2, 0, rw/2, 0);
+            bodyGrad.addColorStop(0, '#475569'); bodyGrad.addColorStop(0.3, '#f1f5f9'); bodyGrad.addColorStop(1, '#1e293b'); 
+            ctx.fillStyle = bodyGrad; 
+            ctx.beginPath();
+            ctx.moveTo(-rw/2, rh/2); ctx.lineTo(-rw/2, -rh/4); ctx.quadraticCurveTo(0, -rh*1.2, rw/2, -rh/4); ctx.lineTo(rw/2, rh/2); 
+            ctx.quadraticCurveTo(0, rh/2 + rh/6, -rw/2, rh/2); ctx.fill();
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.rect(-rw/2, -rh/4, rw, rh/8); ctx.fill();
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath(); ctx.rect(0, -rh/4, rw/2, rh/8); ctx.fill(); 
+
+            ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(0, -rh/10, rw/3.5, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = rw/12; ctx.stroke();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.beginPath(); ctx.ellipse(-rw/12, -rh/10 - rw/12, rw/12, rw/20, Math.PI/4, 0, Math.PI*2); ctx.fill(); 
+
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = rw/6; ctx.lineCap = "round";
+            ctx.beginPath(); ctx.moveTo(-rw/2.5, rh/4); ctx.lineTo(-rw*1.2, rh/2 + rh/4); ctx.stroke();
+            ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(-rw*1.2, rh/2 + rh/4, rw/3, rw/8, 0, 0, Math.PI*2); ctx.fill(); 
+            
+            ctx.beginPath(); ctx.moveTo(rw/2.5, rh/4); ctx.lineTo(rw*1.2, rh/2 + rh/4); ctx.stroke();
+            ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.ellipse(rw*1.2, rh/2 + rh/4, rw/3, rw/8, 0, 0, Math.PI*2); ctx.fill(); 
+
+            ctx.restore();
+
+            // ===============================================
+            // GOLOGRAMMA UI (Faqat Tezlik qoldirildi, sodda va qulay)
+            // ===============================================
+            if (gameState === 'PLAYING' || gameState === 'WIN' || gameState === 'LOSE' || gameState === 'ESCAPED') {
+                ctx.save();
+                ctx.translate(rx + rw + 15, ry - 5); 
+                
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(0, 0, 65, 25, 6);
+                ctx.fill();
+                ctx.stroke();
+
+                let speedText = Math.abs(rocket.realVy).toFixed(1);
+                ctx.fillStyle = (rocket.realVy > SAFE_LANDING_SPEED) ? '#ef4444' : '#10b981';
+                ctx.font = 'bold 12px monospace';
+                ctx.fillText(speedText + ' m/s', 8, 16);
+                
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(-15, 12);
+                ctx.lineTo(0, 12);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            ctx.globalCompositeOperation = "lighter";
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03; 
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, (rw/6) * p.life, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = "source-over";
+        }
+
+        function updatePhysics() {
+            if (gameState !== 'PLAYING') return;
+
+            let targetThrust = isTouching ? 1.0 : detectedAIThrust;
+            
+            if(rocket.fuel <= 0) {
+                targetThrust = 0;
+            }
+
+            rocket.thrustLevel += (targetThrust - rocket.thrustLevel) * 0.05;
+
+            if(rocket.thrustLevel > 0.05 && rocket.fuel > 0) {
+                rocket.fuel -= (rocket.thrustLevel * FUEL_BURN_RATE);
+                if(rocket.fuel < 0) rocket.fuel = 0;
+            }
+
+            if (engineGain && engineFilter) {
+                engineGain.gain.setValueAtTime(rocket.thrustLevel * 0.6, audioCtx.currentTime);
+                engineFilter.frequency.setValueAtTime(100 + rocket.thrustLevel * 1500, audioCtx.currentTime);
+            }
+
+            // ===============================================
+            // HAQIQIY FIZIKA HISOBI (Nyutonning 2-qonuni)
+            // ===============================================
+            let currentThrustForce = rocket.thrustLevel * MAX_THRUST_N;
+            // netForce = m*g - F_thrust (Pastga qarab musbat yo'nalish)
+            let netForce = (ROCKET_MASS * MOON_GRAVITY) - currentThrustForce;
+            let acceleration = netForce / ROCKET_MASS; // a = F / m
+            
+            // Haqiqiy tezlikni hisoblash (v = v0 + a*t)
+            rocket.realVy += acceleration * DT;
+            
+            // Vizual pozitsiyani yangilash (Ekranga mashtablash)
+            rocket.y += rocket.realVy * DT * PIXEL_SCALE;
+            rocket.x = width / 2; 
+
+            // ===============================================
+
+            if (rocket.y < -rocket.height) {
+                gameState = 'ESCAPED';
+                if(engineGain) engineGain.gain.value = 0;
+                playWinSound(); 
+                showResult("🌌 Koinotga Sayr!", "Siz Oyga qo'nish o'rniga ochiq koinotga uchib ketdingiz! Tezlikni pastroq ushlash kerak edi.", "text-indigo-400", "🛸", Math.abs(rocket.realVy), rocket.fuel);
+                rocket.realVy = 0;
+                rocket.thrustLevel = 0;
+                if(hudSpeedContainer) hudSpeedContainer.className = "px-2 py-1 rounded bg-transparent";
+                return;
+            }
+
+            const groundY = height - 100;
+            let rawAltitude = Math.max(0, groundY - (rocket.y + rocket.height/2 + rocket.height/4)) / PIXEL_SCALE;
+            
+            if(hudAlt) hudAlt.textContent = Math.floor(rawAltitude).toLocaleString('uz-UZ') + ' m';
+            
+            let currentSpeed = Math.abs(rocket.realVy);
+            if(hudSpeed) hudSpeed.textContent = currentSpeed.toFixed(1); 
+            
+            if (rocket.realVy > SAFE_LANDING_SPEED) {
+                if(hudSpeed) hudSpeed.className = "text-sm md:text-2xl font-mono text-red-100 font-bold";
+                if(hudSpeedContainer) hudSpeedContainer.className = "px-2 py-1 rounded bg-red-600 alarm-glow transition-all";
+                playAlarm(); 
+            } else {
+                if(hudSpeed) hudSpeed.className = "text-sm md:text-2xl font-mono text-emerald-400 font-bold";
+                if(hudSpeedContainer) hudSpeedContainer.className = "px-2 py-1 rounded bg-transparent transition-all";
+            }
+            
+            if(hudThrustTxt) hudThrustTxt.textContent = Math.floor(currentThrustForce) + ' N';
+            if(hudThrust) hudThrust.style.width = Math.floor((currentThrustForce/MAX_THRUST_N)*100) + '%';
+
+            let fPercent = Math.floor(rocket.fuel);
+            if(hudFuelTxt) hudFuelTxt.textContent = fPercent + '%';
+            if(hudFuel) hudFuel.style.width = fPercent + '%';
+            
+            if(hudFuel && hudFuelTxt) {
+                if(fPercent <= 20 && fPercent > 0) {
+                    hudFuel.className = "h-full bg-red-500 w-full transition-all duration-75 low-fuel-blink";
+                    hudFuelTxt.className = "text-red-400 font-bold low-fuel-blink";
+                } else if (fPercent === 0) {
+                    hudFuel.className = "h-full bg-red-600 w-full";
+                    hudFuelTxt.className = "text-red-500 font-bold";
+                } else {
+                    hudFuel.className = "h-full bg-cyan-500 w-full transition-all duration-75";
+                    hudFuelTxt.className = "text-cyan-400";
+                }
+            }
+
+            if(startMaxAltitude > 0 && altimeterIndicator) {
+                let altPercent = (rawAltitude / startMaxAltitude) * 100;
+                altimeterIndicator.style.height = `${Math.max(5, altPercent)}%`;
+                
+                if(altPercent < 30) {
+                    altimeterIndicator.className = "w-full bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] transition-all duration-75";
+                } else {
+                    altimeterIndicator.className = "w-full bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981] transition-all duration-75";
+                }
+            }
+
+            if (rawAltitude <= 0 && rocket.realVy >= 0) {
+                rocket.y = groundY - rocket.height/2 - rocket.height/4;
+                rocket.isLanded = true;
+                
+                if (currentSpeed <= SAFE_LANDING_SPEED) {
+                    gameState = 'WIN';
+                    if(engineGain) engineGain.gain.value = 0; 
+                    playWinSound(); 
+                    showResult("🎉 Qoyilmaqom!", `Siz raketani Oy sirtiga xavfsiz qo'ndirdingiz.`, "text-emerald-400", "🏆", currentSpeed, rocket.fuel);
+                } else {
+                    gameState = 'LOSE';
+                    if(engineGain) engineGain.gain.value = 0; 
+                    createExplosion(rocket.x, rocket.y);
+                    playExplosionSound(); 
+                    showResult("💥 Halokat!", `Raketa pachoq bo'ldi. Limit: ${SAFE_LANDING_SPEED.toFixed(1)} m/s`, "text-red-500", "🔥", currentSpeed, rocket.fuel);
+                }
+                rocket.realVy = 0;
+                rocket.thrustLevel = 0;
+                if(hudSpeedContainer) hudSpeedContainer.className = "px-2 py-1 rounded bg-transparent"; 
+            }
+        }
+
+        function createExplosion(x, y) {
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 25,
+                    vy: (Math.random() - 0.5) * 25 - 5,
+                    life: 2.0,
+                    color: Math.random() > 0.5 ? '#ef4444' : '#f59e0b'
+                });
+            }
+        }
+
+        function showResult(title, desc, titleColor, emoji, speed, fuelLeft) {
+            if(resultTitle) {
+                resultTitle.textContent = title;
+                resultTitle.className = `text-4xl md:text-6xl font-extrabold mb-4 text-center ${titleColor}`;
+            }
+            if(resultDesc) resultDesc.textContent = desc;
+            if(resultEmoji) resultEmoji.textContent = emoji;
+            
+            if(repSpeed) {
+                repSpeed.textContent = speed.toFixed(1) + ' m/s';
+                repSpeed.className = speed <= SAFE_LANDING_SPEED ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-500";
+            }
+            if(repFuel) repFuel.textContent = Math.floor(fuelLeft) + '%';
+            
+            let grade = "F";
+            let gradeColor = "text-red-500";
+            
+            if(gameState === 'WIN') {
+                if(speed <= 0.5 && fuelLeft > 40) { grade = "A+"; gradeColor = "text-emerald-400"; }
+                else if(speed <= 1.0 && fuelLeft > 20) { grade = "A"; gradeColor = "text-emerald-400"; }
+                else if(speed <= 1.5 && fuelLeft > 5) { grade = "B"; gradeColor = "text-yellow-400"; }
+                else { grade = "C"; gradeColor = "text-orange-400"; }
+            } else if (gameState === 'ESCAPED') {
+                grade = "U"; 
+                gradeColor = "text-indigo-400";
+            }
+            
+            if(repGrade) {
+                repGrade.textContent = grade;
+                repGrade.className = `text-4xl font-extrabold ${gradeColor}`;
+            }
+
+            if(hudPanel) hudPanel.classList.add('hidden');
+            if(altimeterBar) {
+                altimeterBar.classList.add('hidden');
+                altimeterBar.classList.remove('flex');
+            }
+            if(uiResult) uiResult.classList.remove('hidden');
+        }
+
+        function gameLoop() {
+            drawBackground();
+            if (gameState === 'PLAYING' || gameState === 'WIN' || gameState === 'LOSE' || gameState === 'ESCAPED') {
+                updatePhysics();
+                if(gameState !== 'LOSE' || particles.length > 0) {
+                    drawRocket();
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
