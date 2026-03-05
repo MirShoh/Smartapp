@@ -17,7 +17,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif}
 /* NAV */
 nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:300;box-shadow:0 2px 16px rgba(13,179,158,.08)}
 .logo{display:flex;align-items:center;gap:9px;font-size:23px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer}
-.logo-box{width:32px;height:32px;background:var(--grad);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.logo-box{width:32px;height:32px;background:var(--grad);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;-webkit-text-fill-color:#fff}
 .nav-search{display:flex;align-items:center;background:var(--off);border:1.5px solid var(--border);border-radius:10px;padding:0 12px;width:320px;gap:7px;transition:border .2s}
 .nav-search:focus-within{border-color:var(--teal)}
 .nav-search input{border:none;outline:none;background:transparent;font-size:13px;font-family:'Outfit',sans-serif;flex:1;padding:8px 0;color:var(--slate)}
@@ -39,10 +39,10 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .hero h1{font-family:'Sora',sans-serif;font-size:42px;font-weight:700;line-height:1.15;letter-spacing:-1px;margin-bottom:12px}
 .hero h1 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero p{font-size:15px;color:var(--gray);line-height:1.7;margin-bottom:26px;max-width:440px}
-.hero-btns{display:flex;gap:11px;margin-bottom:32px}
-.bh{background:var(--grad);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:800;transition:.2s;box-shadow:0 4px 18px rgba(13,179,158,.3)}
+.hero-btns{display:flex;gap:11px;margin-bottom:32px;flex-wrap:wrap;}
+.bh{background:var(--grad);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:800;transition:.2s;box-shadow:0 4px 18px rgba(13,179,158,.3); text-align:center;}
 .bh:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(13,179,158,.4)}
-.bh2{background:#fff;color:var(--teal);border:2px solid var(--teal);padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;transition:.2s}
+.bh2{background:#fff;color:var(--teal);border:2px solid var(--teal);padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;transition:.2s; text-align:center;}
 .bh2:hover{background:#e0f5f2}
 .hstats{display:flex;gap:26px}
 .snum{font-size:23px;font-weight:900;color:var(--teal)}
@@ -50,8 +50,8 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 
 .hero-vis{flex:0 0 390px;background:linear-gradient(145deg,#e0f5f2,#deedf8);border-radius:22px;padding:24px;overflow:hidden}
 .hbar{display:flex;background:#fff;border-radius:11px;padding:9px 13px;gap:7px;align-items:center;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.hbar input{border:none;outline:none;flex:1;font-size:13px;font-family:'Outfit',sans-serif;background:transparent}
-.hbar button{background:var(--grad);border:none;color:#fff;padding:6px 14px;border-radius:7px;font-size:11px;font-weight:700}
+.hbar input{border:none;outline:none;flex:1;font-size:13px;font-family:'Outfit',sans-serif;background:transparent;min-width:0;}
+.hbar button{background:var(--grad);border:none;color:#fff;padding:6px 14px;border-radius:7px;font-size:11px;font-weight:700;flex-shrink:0;}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .mc{background:#fff;border-radius:11px;padding:13px;cursor:pointer;transition:.2s;box-shadow:0 2px 7px rgba(0,0,0,.05)}
 .mc:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.1)}
@@ -62,10 +62,10 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 /* QSEARCH */
 .qsearch{background:#fff;border-bottom:1px solid var(--border);padding:12px 28px}
 .qsi{max-width:780px;margin:0 auto;display:flex;gap:9px;align-items:center}
-.qsi input{flex:1;border:1.5px solid var(--border);outline:none;padding:10px 16px;border-radius:9px;font-size:13px;font-family:'Outfit',sans-serif;transition:.2s}
+.qsi input{flex:1;border:1.5px solid var(--border);outline:none;padding:10px 16px;border-radius:9px;font-size:13px;font-family:'Outfit',sans-serif;transition:.2s;min-width:0;}
 .qsi input:focus{border-color:var(--teal)}
-.qsi select{border:1.5px solid var(--border);outline:none;padding:10px 12px;border-radius:9px;font-size:13px;font-family:'Outfit',sans-serif;background:#fff}
-.qsi button{background:var(--grad);border:none;color:#fff;padding:10px 24px;border-radius:9px;font-size:13px;font-weight:700}
+.qsi select{border:1.5px solid var(--border);outline:none;padding:10px 12px;border-radius:9px;font-size:13px;font-family:'Outfit',sans-serif;background:#fff;min-width:0;}
+.qsi button{background:var(--grad);border:none;color:#fff;padding:10px 24px;border-radius:9px;font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 
 /* SECTIONS */
 .sw{max-width:1200px;margin:0 auto;padding:48px 28px}
@@ -73,7 +73,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .st{font-size:24px;font-weight:800;letter-spacing:-.5px}
 .st span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .ss{font-size:13px;color:var(--gray);margin-top:3px}
-.sa{color:var(--teal);font-size:13px;font-weight:700;cursor:pointer}
+.sa{color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:10px;}
 .sa:hover{text-decoration:underline}
 
 /* CATEGORY */
@@ -89,19 +89,19 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 
 /* PRODUCT CARD */
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:17px}
-.pc{background:#fff;border-radius:13px;overflow:hidden;border:1.5px solid var(--border);transition:.25s;cursor:pointer}
+.pc{background:#fff;border-radius:13px;overflow:hidden;border:1.5px solid var(--border);transition:.25s;cursor:pointer;display:flex;flex-direction:column;}
 .pc:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.09);border-color:var(--teal)}
-.pi{background:linear-gradient(145deg,#e0f5f2,#deedf8);height:140px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
+.pi{background:linear-gradient(145deg,#e0f5f2,#deedf8);height:140px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;flex-shrink:0;}
 .ptag{position:absolute;top:8px;left:8px;background:var(--grad);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px}
 .pfav{position:absolute;top:8px;right:8px;background:#fff;border:none;width:26px;height:26px;border-radius:7px;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(0,0,0,.1);transition:.2s}
 .pfav:hover{background:#ffe8e8}
-.pb{padding:13px}
+.pb{padding:13px;flex:1;display:flex;flex-direction:column;justify-content:space-between;}
 .pb h4{font-size:12px;font-weight:700;margin-bottom:2px;line-height:1.35}
 .pbr{font-size:11px;color:var(--gray);margin-bottom:9px}
-.pf{display:flex;align-items:center;justify-content:space-between}
+.pf{display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
 .pr{font-size:16px;font-weight:900;color:var(--teal)}
 .pro{font-size:11px;color:var(--gray);text-decoration:line-through;margin-top:1px}
-.pab{width:30px;height:30px;background:var(--grad);border:none;border-radius:7px;color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:.2s;line-height:1}
+.pab{width:30px;height:30px;background:var(--grad);border:none;border-radius:7px;color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:.2s;line-height:1;flex-shrink:0;}
 .pab:hover{opacity:.85;transform:scale(1.07)}
 
 /* FEATURES DARK */
@@ -127,7 +127,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .pinputs input:focus{border-color:var(--teal)}
 .afbtn{width:100%;background:var(--grad);color:#fff;border:none;padding:8px;border-radius:7px;font-size:12px;font-weight:700;margin-top:11px}
 .rarea{flex:1}
-.rtbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.rtbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
 .rcnt{font-size:13px;color:var(--gray)}
 .rcnt b{color:var(--slate)}
 .swrap{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--gray)}
@@ -138,8 +138,8 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .dlayout{display:flex;max-width:1200px;margin:0 auto;padding:22px 28px;gap:30px}
 .dimg{flex:0 0 340px}
 .dmain{background:linear-gradient(145deg,#e0f5f2,#deedf8);border-radius:16px;height:280px;display:flex;align-items:center;justify-content:center;font-size:76px;margin-bottom:11px}
-.dths{display:flex;gap:9px}
-.dth{width:60px;height:60px;background:linear-gradient(145deg,#e0f5f2,#deedf8);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid transparent;cursor:pointer;transition:.2s}
+.dths{display:flex;gap:9px;overflow-x:auto;}
+.dth{width:60px;height:60px;background:linear-gradient(145deg,#e0f5f2,#deedf8);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid transparent;cursor:pointer;transition:.2s;flex-shrink:0;}
 .dth.active,.dth:hover{border-color:var(--teal)}
 .dinfo{flex:1}
 .dven{font-size:12px;color:var(--teal);font-weight:700;margin-bottom:5px}
@@ -158,9 +158,9 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .qctrl button{background:#fff;border:none;width:36px;height:36px;font-size:17px;font-weight:700;color:var(--slate);transition:.2s}
 .qctrl button:hover{background:var(--off)}
 .qctrl span{width:40px;text-align:center;font-size:15px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);padding:7px 0}
-.bbuy{flex:1;background:var(--grad);color:#fff;border:none;padding:12px 22px;border-radius:9px;font-size:14px;font-weight:800;transition:.2s}
+.bbuy{flex:1;background:var(--grad);color:#fff;border:none;padding:12px 22px;border-radius:9px;font-size:14px;font-weight:800;transition:.2s;text-align:center;}
 .bbuy:hover{opacity:.9;transform:translateY(-1px)}
-.bcart{flex:1;background:#fff;color:var(--teal);border:2px solid var(--teal);padding:11px 22px;border-radius:9px;font-size:14px;font-weight:700;transition:.2s}
+.bcart{flex:1;background:#fff;color:var(--teal);border:2px solid var(--teal);padding:11px 22px;border-radius:9px;font-size:14px;font-weight:700;transition:.2s;text-align:center;}
 .bcart:hover{background:#e0f5f2}
 .div{border:none;border-top:1.5px solid var(--border);margin:20px 0}
 .spectable{width:100%;border-collapse:collapse;font-size:13px}
@@ -180,8 +180,8 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .citem{background:#fff;border-radius:13px;border:1.5px solid var(--border);padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:11px;transition:.2s}
 .citem:hover{border-color:var(--teal)}
 .cimg{width:68px;height:68px;background:linear-gradient(145deg,#e0f5f2,#deedf8);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
-.cinfo{flex:1}
-.cinfo h4{font-size:13px;font-weight:700;margin-bottom:2px}
+.cinfo{flex:1;min-width:0;}
+.cinfo h4{font-size:13px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cinfo p{font-size:11px;color:var(--gray)}
 .cpr{font-size:16px;font-weight:900;color:var(--teal);white-space:nowrap}
 .cdel{background:none;border:1.5px solid var(--border);width:30px;height:30px;border-radius:7px;color:var(--red);font-size:14px;transition:.2s;flex-shrink:0}
@@ -191,10 +191,10 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .srow{display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px;color:var(--gray)}
 .srow.tot{font-size:17px;font-weight:900;color:var(--slate);padding-top:11px;border-top:2px solid var(--border);margin-top:3px}
 .pinput{display:flex;gap:7px;margin-bottom:16px}
-.pinput input{flex:1;border:1.5px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Outfit',sans-serif;outline:none}
+.pinput input{flex:1;border:1.5px solid var(--border);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Outfit',sans-serif;outline:none;min-width:0;}
 .pinput input:focus{border-color:var(--teal)}
-.pinput button{background:var(--off);border:1.5px solid var(--border);padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--slate)}
-.bchk{width:100%;background:var(--grad);color:#fff;border:none;padding:13px;border-radius:9px;font-size:14px;font-weight:800;margin-top:12px;transition:.2s}
+.pinput button{background:var(--off);border:1.5px solid var(--border);padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--slate);white-space:nowrap;}
+.bchk{width:100%;background:var(--grad);color:#fff;border:none;padding:13px;border-radius:9px;font-size:14px;font-weight:800;margin-top:12px;transition:.2s;text-align:center;}
 .bchk:hover{opacity:.9;transform:translateY(-1px)}
 
 /* CHECKOUT */
@@ -242,7 +242,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .sehero::after{content:'🏪';position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:90px;opacity:.12;pointer-events:none}
 .sehero h1{font-size:29px;font-weight:900;margin-bottom:9px}
 .sehero p{font-size:14px;opacity:.85;line-height:1.6;margin-bottom:20px;max-width:460px}
-.bsel{background:#fff;color:var(--teal2);border:none;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:800;transition:.2s}
+.bsel{background:#fff;color:var(--teal2);border:none;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:800;transition:.2s;display:inline-block;}
 .bsel:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.15)}
 .sebens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
 .sebc{background:#fff;border-radius:13px;border:1.5px solid var(--border);padding:20px;transition:.2s}
@@ -307,7 +307,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:64px;display:fl
 .fb{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;font-size:10px;font-weight:800;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 
 /* BREADCRUMB */
-.bc{padding:11px 28px;font-size:12px;color:var(--gray);display:flex;gap:7px;align-items:center}
+.bc{padding:11px 28px;font-size:12px;color:var(--gray);display:flex;gap:7px;align-items:center;white-space:nowrap;overflow-x:auto;}
 .bc span{cursor:pointer;color:var(--teal)}
 .bc span:hover{text-decoration:underline}
 
@@ -319,20 +319,102 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
 .fcol ul a{color:rgba(255,255,255,.45);font-size:12px;text-decoration:none;transition:.2s}
 .fcol ul a:hover{color:var(--teal)}
 .fbot{max-width:1200px;margin:0 auto;border-top:1px solid rgba(255,255,255,.08);padding-top:20px;display:flex;justify-content:space-between;font-size:12px}
+
+/* =========================================
+   📱 RESPONSIVE MEDIA QUERIES (MOBILE)
+========================================= */
+@media (max-width: 850px) {
+  /* Navigatsiya */
+  nav { height: auto; padding: 12px 16px; flex-wrap: wrap; }
+  .logo-wrapper { order: 1; }
+  .nav-right { order: 2; gap: 6px; }
+  .nav-search { order: 3; width: 100%; margin-top: 12px; }
+  .nav-right .bsm-g { display: none; } /* Kichik ekranda joy tejash uchun */
+
+  /* Asosiy ekran (Hero) */
+  .hero { flex-direction: column; padding: 30px 16px; gap: 30px; text-align: center; }
+  .hero-text p { margin: 0 auto 26px auto; }
+  .hero h1 { font-size: 32px; }
+  .hero-btns { justify-content: center; }
+  .hero-vis { flex: none; width: 100%; }
+  .hstats { flex-wrap: wrap; gap: 15px; justify-content: center; }
+  
+  /* Qidiruv bloki */
+  .qsearch { padding: 16px; }
+  .qsi { flex-direction: column; align-items: stretch; }
+  .qsi input, .qsi select, .qsi button { width: 100%; }
+
+  /* Gridlar (Mahsulotlar va Kategoriyalar) */
+  .sw { padding: 30px 16px; }
+  .catg { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .pg { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .fg { grid-template-columns: 1fr; }
+  .fdark { padding: 40px 16px; }
+  .pc .pb h4 { font-size: 11px; }
+  .pc .pr { font-size: 14px; }
+  .pc .pab { width: 28px; height: 28px; font-size: 15px; }
+
+  /* Qidiruv sahifasi */
+  .slayout { flex-direction: column; padding: 16px; gap: 20px; }
+  .fsidebar { flex: none; width: 100%; }
+  .sgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* Mahsulot detali */
+  .dlayout { flex-direction: column; padding: 16px; gap: 20px; }
+  .dimg { flex: none; width: 100%; }
+  .dmain { height: 240px; font-size: 50px; }
+  .qrow { flex-wrap: wrap; }
+  .bbuy, .bcart { flex: 1; min-width: 45%; padding: 12px 10px; font-size: 13px;}
+
+  /* Savatcha va Checkout */
+  .clayout, .colayout { padding: 16px; }
+  .crow, .colayout { flex-direction: column; }
+  .osum, .coa { flex: none; width: 100%; position: static; margin-top: 10px; }
+  .citem { flex-wrap: wrap; }
+  .cinfo { flex: 1 1 100%; margin-top: 5px; }
+  .cdel { margin-left: auto; }
+  .frow { grid-template-columns: 1fr; }
+
+  /* Sotuvchi sahifasi */
+  .selayout { padding: 16px; }
+  .sehero { flex-direction: column; padding: 26px 16px; text-align: center; }
+  .sehero::after { display: none; }
+  .sebens { grid-template-columns: 1fr; }
+  .sefwrap { padding: 20px 16px; }
+  .sbar { flex-wrap: wrap; gap: 10px; }
+  .sln { display: none; }
+  .sbarit { justify-content: flex-start; flex: 1 1 45%; margin-bottom: 10px;}
+
+  /* Footer */
+  footer { padding: 30px 16px 20px; }
+  .fi { grid-template-columns: 1fr; gap: 24px; }
+  .fbot { flex-direction: column; gap: 12px; text-align: center; }
+
+  /* Float button & Breadcrumb */
+  .fc { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
+  .bc { padding: 11px 16px; }
+}
 </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="mainNav">
-  <div class="logo" onclick="goPage('home')">
-    <div class="logo-box">🏥</div>MUIRFA
+  <div class="logo-wrapper" style="cursor:pointer; display:flex; align-items:center;" onclick="goPage('home')">
+    <!-- Yangi logotip rasmi (Agar rasm topilmasa eski text/emoji chiqadi) -->
+    <img src="Logo.png" alt="MUIRFA Logo" style="height: 80px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; document.getElementById('fb-logo').style.display='flex';">
+    <!-- Zaxira logotip (Fallback) -->
+    <div id="fb-logo" class="logo" style="display:none;">
+      <div class="logo-box">🏥</div>MUIRFA
+    </div>
   </div>
+  
   <div class="nav-search">
     <span>🔍</span>
     <input type="text" id="nsInput" placeholder="Mahsulot qidirish..." onkeydown="if(event.key==='Enter')nsSearch()">
     <button onclick="nsSearch()">Izlash</button>
   </div>
+  
   <div class="nav-right">
     <button class="nav-icon" onclick="goPage('cart')" title="Savatcha">🛒<span class="badge" id="cartBadge">0</span></button>
     <button class="nav-icon" title="Sevimlilar">❤️<span class="badge" id="favBadge">0</span></button>
@@ -361,7 +443,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
       </div>
       <div class="hero-vis">
         <div class="hbar">
-          <input type="text" id="hsInput" placeholder="igna, skapel, xalat, mikroskop...">
+          <input type="text" id="hsInput" placeholder="igna, skapel, xalat...">
           <button onclick="hsSearch()">Topish</button>
         </div>
         <div class="mgrid">
@@ -386,7 +468,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
     </div>
   </div>
   <div class="sw">
-    <div class="sh"><div><div class="st">Kategoriyalar</div><div class="ss">Kerakli bo'limni tanlang</div></div><span class="sa" onclick="goPage('search');runSearch()">Barchasini ko'rish →</span></div>
+    <div class="sh"><div><div class="st">Kategoriyalar</div><div class="ss">Kerakli bo'limni tanlang</div></div><span class="sa" onclick="goPage('search');runSearch()">Barchasi →</span></div>
     <div class="catg" id="catGrid"></div>
   </div>
   <div style="background:#fff;padding:48px 0">
@@ -396,7 +478,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
     </div>
   </div>
   <div class="sw">
-    <div class="sh"><div><div class="st">🎓 Talabalar uchun <span>maxsus narxlar</span></div><div class="ss">15–30% chegirma</div></div><span class="sa" onclick="sCat('O\'quv Materiallari')">Ko'proq →</span></div>
+    <div class="sh"><div><div class="st">🎓 Talabalar uchun <span>chegirmalar</span></div><div class="ss">15–30% chegirma</div></div><span class="sa" onclick="sCat('O\'quv Materiallari')">Ko'proq →</span></div>
     <div class="pg" id="studGrid"></div>
   </div>
   <div class="fdark">
@@ -416,14 +498,20 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
   <footer>
     <div class="fi">
       <div>
-        <div class="logo" style="font-size:19px;margin-bottom:11px"><div class="logo-box" style="width:27px;height:27px;font-size:13px">🏥</div>MUIRFA</div>
-        <p style="font-size:12px;line-height:1.6;max-width:240px">O'zbekistondagi yagona tibbiy online marketplace. Sertifikatlangan, tezkor, ishonchli.</p>
+        <div style="cursor:pointer; display:flex; align-items:center; margin-bottom:11px;" onclick="goPage('home')">
+           <!-- Footer logotipi -->
+           <img src="image_4ecea0.png" alt="MUIRFA Logo" style="height: 30px;" onerror="this.onerror=null; this.style.display='none'; document.getElementById('fb-logo-footer').style.display='flex';">
+           <div id="fb-logo-footer" class="logo" style="display:none; font-size:19px;">
+             <div class="logo-box" style="width:27px;height:27px;font-size:13px">🏥</div>MUIRFA
+           </div>
+        </div>
+        <p style="font-size:12px;line-height:1.6;max-width:240px; margin-top: 10px;">O'zbekistondagi yagona tibbiy online marketplace. Sertifikatlangan, tezkor, ishonchli.</p>
       </div>
       <div class="fcol"><h4>Mahsulotlar</h4><ul><li><a href="#">Tibbiy asboblar</a></li><li><a href="#">Kiyimlar</a></li><li><a href="#">Laboratoriya</a></li><li><a href="#">O'quv materiallari</a></li></ul></div>
       <div class="fcol"><h4>Kompaniya</h4><ul><li><a href="#" onclick="goPage('seller');return false">Sotuvchi bo'lish</a></li><li><a href="#">Klinikalar uchun</a></li><li><a href="#">Talabalar</a></li><li><a href="#">Blog</a></li></ul></div>
       <div class="fcol"><h4>Aloqa</h4><ul><li><a href="#">📞 +998 71 200-00-00</a></li><li><a href="#">✉️ info@muirfa.uz</a></li><li><a href="#">Telegram</a></li><li><a href="#">Instagram</a></li></ul></div>
     </div>
-    <div class="fbot"><span>© 2025 MUIRFA. Barcha huquqlar himoyalangan.</span><span>Maxfiylik · Shartlar</span></div>
+    <div class="fbot"><span>© 2026 MUIRFA. Barcha huquqlar himoyalangan.</span><span>Maxfiylik · Shartlar</span></div>
   </footer>
 </div>
 
@@ -467,7 +555,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
       <div class="dtags" id="dTags"></div>
       <div class="qrow">
         <div class="qctrl"><button onclick="chQty(-1)">−</button><span id="qVal">1</span><button onclick="chQty(1)">+</button></div>
-        <button class="bbuy" onclick="buyNow()">💳 Hozir sotib olish</button>
+        <button class="bbuy" onclick="buyNow()">💳 Xarid</button>
         <button class="bcart" onclick="addCurToCart()">🛒 Savatchaga</button>
       </div>
       <hr class="div">
@@ -534,7 +622,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
           <label class="ropt" onclick="selOpt(this,'#payGrp')"><input type="radio" name="pay"><span class="ric">💵</span><div><strong>Naqd pul</strong><p>Kuryer kelganda</p></div></label>
         </div>
       </div>
-      <button class="bpob" onclick="placeOrder()">✅ Buyurtmani tasdiqlash</button>
+      <button class="bpob" onclick="placeOrder()">✅ Tasdiqlash</button>
     </div>
     <div class="coa">
       <div class="osum">
@@ -563,9 +651,9 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
       <div class="sti"><div class="std pen">🚚</div><div class="stinfo"><strong>Yo'lda</strong><p>Kuryer olib ketadi</p></div></div>
       <div class="sti"><div class="std pen">🏠</div><div class="stinfo"><strong>Yetkazib berildi</strong><p></p></div></div>
     </div>
-    <div style="display:flex;gap:11px;justify-content:center">
+    <div style="display:flex;gap:11px;justify-content:center; flex-wrap:wrap;">
       <button class="bh" onclick="goPage('home')">Bosh sahifaga</button>
-      <button class="bh2" onclick="goPage('search');runSearch()">Xarid davom ettirish</button>
+      <button class="bh2" onclick="goPage('search');runSearch()">Xaridni davom ettirish</button>
     </div>
   </div>
 </div>
@@ -598,7 +686,7 @@ footer{background:var(--slate);padding:44px 28px 24px;color:rgba(255,255,255,.45
         <div class="sln" id="sln2"></div>
         <div class="sbarit"><div class="scircle" id="sc3">3</div><div class="slbl" id="sl3">Bank</div></div>
         <div class="sln" id="sln3"></div>
-        <div><div class="scircle" id="sc4">4</div><div class="slbl" id="sl4">Tasdiqlash</div></div>
+        <div class="sbarit"><div class="scircle" id="sc4">4</div><div class="slbl" id="sl4">Tasdiqlash</div></div>
       </div>
       <div class="fstep active" id="fstep1">
         <div class="frow"><div class="fl"><label>Kompaniya nomi</label><input type="text" id="s_co" placeholder="MedSupply UZ"></div><div class="fl"><label>Yuridik shakl</label><select style="border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;width:100%"><option>MChJ</option><option>XK</option><option>YT (Yakka tartib)</option></select></div></div>
