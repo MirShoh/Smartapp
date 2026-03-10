@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="uz" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ═══ SEO META ═══ -->
+<title>LifeHacks UZ — O'zbekiston Eng To'liq Onlayn Resurslar Katalogi 2025</title>
+<meta name="description" content="O'zbekiston aholisi uchun 300+ onlayn resurs: davlat xizmatlari, tibbiyot, ta'lim, huquq, tarix, iqtisodiyot, AI vositalar, mobil ilovalar va ko'proq. Barchasini bir joydan toping!">
+<meta name="keywords" content="o'zbekiston onlayn resurslar, uz ilovalar, my.gov.uz, dmed.uz, hemis.uz, lex.uz, payme, click, uzum, uzbekistan apps, o'zbek platformalar, davlat xizmatlari, tibbiyot portali, ta'lim portali, lifehacks uz">
+<meta name="author" content="LifeHacks UZ">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="https://lifehacks.uz/">
+<meta name="theme-color" content="#8b5cf6">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lifehacks.uz/">
+<meta property="og:title" content="LifeHacks UZ — O'zbekiston Eng To'liq Onlayn Resurslar Katalogi">
+<meta property="og:description" content="300+ resurs bitta joyda: davlat xizmatlari, tibbiyot, ta'lim, huquq, AI, mobil ilovalar va ko'proq. O'zbekiston aholisi uchun!">
+<meta property="og:image" content="https://lifehacks.uz/og-image.png">
+<meta property="og:locale" content="uz_UZ">
+<meta property="og:site_name" content="LifeHacks UZ">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="LifeHacks UZ — O'zbekiston Onlayn Resurslar">
+<meta name="twitter:description" content="300+ resurs bitta joyda — O'zbekiston aholisi uchun mukammal platforma">
+<meta name="twitter:image" content="https://lifehacks.uz/og-image.png">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "LifeHacks UZ",
+  "alternateName": "LifeHacks O'zbekiston",
+  "url": "https://lifehacks.uz/",
+  "description": "O'zbekiston aholisi uchun 300+ onlayn resurs va mobil ilovalar katalogi",
+  "inLanguage": "uz",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://lifehacks.uz/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "LifeHacks UZ",
+    "url": "https://lifehacks.uz/"
+  }
+}
+</script>
+
+<!-- Preload fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Dark mode flicker fix -->
+<script>
+(function(){
+  var d=document.documentElement;
+  if(localStorage.lh_theme==='dark'||(!('lh_theme' in localStorage)&&window.matchMedia('(prefers-color-scheme: dark)').matches)) d.classList.add('dark');
+  else d.classList.remove('dark');
+})();
+</script>
+
+<script>
+tailwind.config={
+  darkMode:'class',
+  theme:{extend:{
+    fontFamily:{sans:['"Plus Jakarta Sans"','sans-serif']},
+    animation:{
+      'fade-up':'fadeUp .28s ease-out forwards',
+      'pop':'pop .18s ease-out forwards',
+    },
+    keyframes:{
+      fadeUp:{'0%':{opacity:'0',transform:'translateY(8px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
+      pop:{'0%':{transform:'scale(.9)'},'60%':{transform:'scale(1.08)'},'100%':{transform:'scale(1)'}},
+    }
+  }}
+}
+</script>
+
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Plus Jakarta Sans",sans-serif}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,.55)}
+.no-sc{-ms-overflow-style:none;scrollbar-width:none}
+.no-sc::-webkit-scrollbar{display:none}
+
+/* safe area */
+.pt-safe{padding-top:max(.5rem,env(safe-area-inset-top))}
+.pb-safe{padding-bottom:max(1rem,env(safe-area-inset-bottom))}
+
+/* glass */
+.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(0,0,0,.07)}
+.dark .glass{background:rgba(8,12,28,.85);border:1px solid rgba(255,255,255,.07)}
+
+/* bg */
+.bg-app{position:fixed;inset:0;z-index:-1;background:#eff1fb;
+  background-image:
+    radial-gradient(at 0% 0%,rgba(139,92,246,.14) 0,transparent 52%),
+    radial-gradient(at 100% 3%,rgba(6,182,212,.11) 0,transparent 52%),
+    radial-gradient(at 55% 100%,rgba(236,72,153,.09) 0,transparent 50%)}
+.dark .bg-app{background:#060a18;
+  background-image:
+    radial-gradient(at 0% 0%,rgba(139,92,246,.22) 0,transparent 52%),
+    radial-gradient(at 100% 3%,rgba(6,182,212,.16) 0,transparent 52%),
+    radial-gradient(at 55% 100%,rgba(236,72,153,.12) 0,transparent 50%)}
+
+/* ── CARD ── */
+.card{
+  transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.card:hover{transform:translateY(-4px) scale(1.018);box-shadow:0 12px 32px -8px rgba(139,92,246,.2)}
+.dark .card:hover{box-shadow:0 12px 32px -8px rgba(139,92,246,.35)}
+
+/* visit btn (always visible) */
+/* .visit-btn{
+  position:absolute;bottom:10px;right:10px;
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#8b5cf6,#d946ef);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+  box-shadow:0 4px 12px rgba(139,92,246,.4);
+  transition:transform .18s,box-shadow .18s;
+  z-index:5;
+} */
+.card:hover .visit-btn{transform:scale(1.12);box-shadow:0 6px 18px rgba(139,92,246,.55)}
+
+/* logo fallback */
+.logo-wrap{width:40px;height:40px;border-radius:10px;background:#f1f5f9;border:1px solid rgba(0,0,0,.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.dark .logo-wrap{background:rgba(30,41,59,.8);border-color:rgba(255,255,255,.07)}
+.logo-img{width:28px;height:28px;object-fit:contain;transition:transform .3s}
+.card:hover .logo-img{transform:scale(1.12)}
+.logo-fallback{width:22px;height:22px;color:#8b5cf6;opacity:.7}
+
+/* click counter */
+.click-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:99px;
+  background:rgba(139,92,246,.1);color:#7c3aed;
+  transition:all .2s;
+}
+.dark .click-badge{background:rgba(139,92,246,.2);color:#a78bfa}
+.click-badge.hot{background:rgba(239,68,68,.1);color:#dc2626}
+.dark .click-badge.hot{background:rgba(239,68,68,.2);color:#f87171}
+
+/* trending badge */
+.trending-tag{
+  position:absolute;top:8px;left:8px;
+  font-size:8px;font-weight:800;
+  padding:1px 6px;border-radius:99px;letter-spacing:.3px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;
+  z-index:4;
+}
+.new-tag{
+  position:absolute;top:8px;left:8px;
+  font-size:8px;font-weight:800;
+  padding:1px 6px;border-radius:99px;letter-spacing:.3px;
+  background:linear-gradient(135deg,#10b981,#059669);color:#fff;
+  z-index:4;
+}
+
+/* nav active */
+.nav-active{background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(217,70,239,.09));color:#8b5cf6;font-weight:700}
+.dark .nav-active{background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(217,70,239,.15))}
+.pill-active{background:linear-gradient(135deg,#8b5cf6,#d946ef)!important;color:#fff!important;border-color:transparent!important}
+
+/* chips */
+.chip{transition:all .16s;border:1.5px solid;cursor:pointer;user-select:none}
+.chip.on{background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff;border-color:transparent}
+.chip.off{background:rgba(255,255,255,.7);border-color:rgba(148,163,184,.3);color:#64748b}
+.dark .chip.off{background:rgba(30,41,59,.6);border-color:rgba(100,116,139,.3);color:#94a3b8}
+
+/* badges */
+.b-free{background:rgba(16,185,129,.1);color:#059669}
+.b-paid{background:rgba(245,158,11,.1);color:#d97706}
+.b-mob{background:rgba(59,130,246,.1);color:#2563eb}
+.b-web{background:rgba(139,92,246,.1);color:#7c3aed}
+.dark .b-free{background:rgba(16,185,129,.18);color:#34d399}
+.dark .b-paid{background:rgba(245,158,11,.18);color:#fbbf24}
+.dark .b-mob{background:rgba(59,130,246,.18);color:#60a5fa}
+.dark .b-web{background:rgba(139,92,246,.18);color:#a78bfa}
+
+/* search */
+.s-drop{box-shadow:0 20px 44px -8px rgba(0,0,0,.13);max-height:350px;overflow-y:auto}
+.dark .s-drop{box-shadow:0 20px 44px -8px rgba(0,0,0,.55)}
+.s-row{transition:background .13s;border-radius:8px}
+.s-row:hover{background:rgba(139,92,246,.08)}
+
+/* highlight */
+mark{background:rgba(139,92,246,.22);color:inherit;border-radius:3px;padding:0 2px}
+.dark mark{background:rgba(139,92,246,.38)}
+
+/* sort select arrow */
+.sort-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .4rem center;background-size:1.1em}
+
+/* fav btn */
+.fav-btn{transition:transform .15s,background .15s}
+.fav-btn:hover{transform:scale(1.15)}
+
+/* animate pop on click */
+.do-pop{animation:pop .18s ease-out}
+</style>
+</head>
+
+<body class="text-slate-800 dark:text-slate-200 antialiased overflow-hidden h-screen flex">
+<div class="bg-app"></div>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="w-[17rem] hidden md:flex flex-col border-r border-slate-200/60 dark:border-slate-800/60 glass z-20 shrink-0 h-screen">
+
+  <div class="p-4 pb-1.5 shrink-0">
+    <!-- Brand -->
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-violet-500/35 shrink-0">
+        <i class="fa-solid fa-layer-group text-sm"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[17px] font-black text-slate-900 dark:text-white leading-tight tracking-tight">LifeHacks <span class="text-violet-500">UZ</span></h1>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest" id="sidebarCount">...</p>
+      </div>
+    </div>
+
+    <!-- Search desk -->
+    <div class="relative mb-3" id="deskSWrap">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+      <input id="deskSrc" type="text" autocomplete="off" spellcheck="false"
+        placeholder="Qidirish... (Ctrl+K)"
+        class="w-full text-sm bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-xl pl-8 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-slate-400 transition-all"/>
+      <button id="deskClr" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hidden items-center justify-center hover:bg-violet-100 hover:text-violet-600 transition-all">
+        <i class="fa-solid fa-xmark text-[10px]"></i>
+      </button>
+      <div id="deskDrop" class="hidden absolute top-full mt-1.5 left-0 right-0 glass rounded-xl z-[60] s-drop">
+        <div id="deskDropIn" class="p-2"></div>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="flex flex-wrap gap-1.5 mb-3" id="deskChips"></div>
+
+    <!-- Sort + clear -->
+    <div class="flex items-center gap-2 mb-2.5">
+      <select id="sSort" class="sort-sel flex-1 text-[11px] bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-lg px-2.5 pr-6 py-1.5 text-slate-600 dark:text-slate-400 focus:outline-none cursor-pointer">
+        <option value="def">Standart tartib</option>
+        <option value="popular">🔥 Eng mashhur</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <button id="clrFilters" title="Tozalash" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-red-50 hover:text-red-400 transition-colors flex items-center justify-center opacity-0 pointer-events-none">
+        <i class="fa-solid fa-rotate-left text-xs"></i>
+      </button>
+    </div>
+
+    <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 px-0.5">Kategoriyalar</p>
+  </div>
+
+  <!-- Nav -->
+  <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-px" id="sidebarNav"></div>
+
+  <!-- Theme + stats -->
+  <div class="shrink-0 p-3 border-t border-slate-200/60 dark:border-slate-800/60 space-y-2">
+    <div class="flex items-center justify-between text-[10px] text-slate-400 px-1">
+      <span>Jami kliklар: <b id="totalClicks" class="text-violet-500">0</b></span>
+      <button onclick="resetClicks()" class="hover:text-red-400 transition-colors" title="Klik statistikasini tozalash">
+        <i class="fa-solid fa-trash-can text-[9px]"></i>
+      </button>
+    </div>
+    <button id="themeBtn" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold text-slate-600 dark:text-slate-300">
+      <i id="themeIco" class="fa-solid fa-moon"></i>
+      <span id="themeTxt">Tungi rejim</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden">
+
+  <!-- Mobile header -->
+  <header class="md:hidden glass border-b border-slate-200/60 dark:border-slate-800/60 z-40 shrink-0 pt-safe">
+    <div class="flex items-center justify-between px-4 pt-3 pb-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-layer-group text-xs"></i>
+        </div>
+        <span class="font-black text-slate-900 dark:text-white text-[15px]">LifeHacks <span class="text-violet-500">UZ</span></span>
+      </div>
+      <div class="flex gap-2">
+        <button id="themeBtnMob" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <i id="themeIcoMob" class="fa-solid fa-moon text-sm"></i>
+        </button>
+        <button id="shareBtn" class="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400">
+          <i class="fa-solid fa-share-nodes text-sm"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile search -->
+    <div class="px-4 pb-2 relative" id="mobSWrap">
+      <i class="fa-solid fa-magnifying-glass absolute left-7 top-1/2 -translate-y-1/2 text-slate-400 text-xs z-10 pointer-events-none"></i>
+      <input id="mobSrc" type="text" autocomplete="off" placeholder="Qidirish..."
+        class="w-full text-sm bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-2xl pl-8 pr-9 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-slate-400"/>
+      <button id="mobClr" class="absolute right-7 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hidden items-center justify-center text-[10px]">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div id="mobDrop" class="hidden absolute top-full mt-1 left-4 right-4 glass rounded-xl z-[60] s-drop">
+        <div id="mobDropIn" class="p-2"></div>
+      </div>
+    </div>
+    <!-- Mobile filters -->
+    <div class="flex gap-1.5 px-4 pb-2 overflow-x-auto no-sc" id="mobChips"></div>
+    <!-- Mobile categories -->
+    <div class="flex gap-1.5 px-4 pb-3 overflow-x-auto no-sc" id="mobNav"></div>
+  </header>
+
+  <!-- Content area -->
+  <main class="flex-1 overflow-y-auto scroll-smooth" id="mainScroll">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 py-5 pb-28 md:pb-14 pb-safe">
+
+      <!-- Desktop top bar -->
+      <div class="hidden md:flex items-start justify-between mb-6 gap-4">
+        <div class="min-w-0">
+          <h2 id="pageTitle" class="text-2xl font-black text-slate-900 dark:text-white mb-1 truncate">Barcha Resurslar</h2>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="resultCount" class="text-sm text-slate-400 font-medium"></span>
+            <div id="activeBadges" class="flex gap-1.5 flex-wrap"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <select id="topSort" class="sort-sel text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 pr-7 py-2 text-slate-600 dark:text-slate-400 focus:outline-none cursor-pointer shadow-sm">
+            <option value="def">Standart</option>
+            <option value="popular">🔥 Mashhur</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+          </select>
+          <button id="shareBtnDesk" class="flex items-center gap-2 bg-slate-900 dark:bg-violet-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:opacity-90 transition-opacity shadow-lg">
+            <i class="fa-solid fa-share-nodes"></i> Ulashish
+          </button>
+        </div>
+      </div>
+
+
+      <!-- Main grid -->
+      <div id="appsContainer" class="space-y-8"></div>
+
+      <!-- No results -->
+      <div id="noResults" class="hidden flex-col items-center justify-center py-28 text-center">
+        <div class="w-20 h-20 mb-5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-300 dark:text-slate-600">
+          <i class="fa-solid fa-magnifying-glass text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">Hech narsa topilmadi</h3>
+        <p class="text-slate-400 text-sm max-w-xs mb-4">Boshqa kalit so'z bilan qidiring yoki filtrlarni o'zgartiring</p>
+        <button onclick="clearAll()" class="text-xs font-bold text-violet-500 hover:text-violet-700 transition-colors border border-violet-300 dark:border-violet-700 px-4 py-2 rounded-xl">
+          <i class="fa-solid fa-rotate-left mr-1.5"></i>Barcha filtrlarni tozalash
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile FAB -->
+  <button id="scrollTop" class="md:hidden fixed bottom-5 right-4 w-11 h-11 rounded-full bg-slate-900/90 dark:bg-violet-600/90 text-white shadow-xl flex items-center justify-center z-50 transition-all duration-300 opacity-0 translate-y-16 backdrop-blur-md">
+    <i class="fa-solid fa-arrow-up text-sm"></i>
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-4 md:top-auto md:bottom-4 glass bg-slate-900/95 dark:bg-slate-50/95 text-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 z-[300] opacity-0 pointer-events-none transition-all duration-300">
+  <i id="toastIco" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+  <span id="toastMsg" class="font-bold text-sm"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA — 300+ platformalar, yangilangan va tekshirilgan
+// ═══════════════════════════════════════════════════════════
+const DATA = [
+
+{id:'gov',title:"🏛️ Davlat va Fuqarolik",icon:"fa-building-columns",gr:"from-blue-600 to-sky-500",
+items:[
+  {n:"My.gov.uz",         u:"https://my.gov.uz/",               d:"Yagona elektron davlat xizmatlari portali",     t:['uz','bepul','web'],       ico:"fa-id-card"},
+  {n:"Soliq.uz",          u:"https://soliq.uz/",                d:"Soliq xizmatlari, keshbek va deklaratsiya",     t:['uz','bepul','web'],       ico:"fa-receipt"},
+  {n:"eGov.uz",           u:"https://egov.uz/",                 d:"Elektron hukumat portali",                      t:['uz','bepul','web'],       ico:"fa-landmark"},
+  {n:"Murojaat.gov.uz",   u:"https://murojaat.gov.uz/",         d:"Davlat organlariga onlayn murojaatlar",          t:['uz','bepul','web'],       ico:"fa-envelope-open-text"},
+  {n:"President.uz",      u:"https://president.uz/",            d:"O'zbekiston Prezidenti rasmiy sayti",            t:['uz','bepul','web'],       ico:"fa-star"},
+  {n:"Gov.uz",            u:"https://www.gov.uz/",              d:"O'zbekiston hukumati rasmiy portali",            t:['uz','bepul','web'],       ico:"fa-flag"},
+  {n:"Stat.uz",           u:"https://stat.uz/",                 d:"Milliy statistika qo'mitasi ma'lumotlari",       t:['uz','bepul','web'],       ico:"fa-chart-bar"},
+  {n:"Opendata.uz",       u:"https://data.egov.uz/",            d:"Ochiq davlat ma'lumotlari portali",             t:['uz','bepul','web'],       ico:"fa-database"},
+  {n:"Xarid.uz",          u:"https://xarid.uzex.uz/",          d:"Davlat xaridlari portali",                       t:['uz','bepul','web'],       ico:"fa-file-contract"},
+  {n:"Anticorruption.uz", u:"https://anticorruption.uz/",       d:"Korrupsiyaga qarshi kurash agentligi",           t:['uz','bepul','web'],       ico:"fa-shield"},
+]},
+
+{id:'law',title:"⚖️ Huquq va Qonunchilik",icon:"fa-scale-balanced",gr:"from-slate-600 to-blue-700",
+items:[
+  {n:"Lex.uz",            u:"https://lex.uz/",                  d:"Qonunlar, farmonlar, hujjatlar bazasi",          t:['uz','bepul','web'],       ico:"fa-book-open"},
+  {n:"Norma.uz",          u:"https://www.norma.uz/",            d:"Huquqiy ma'lumotlar tizimi (premium)",           t:['uz','pullik','web'],      ico:"fa-gavel"},
+  {n:"Sud.uz",            u:"https://sud.uz/",                  d:"O'zbekiston sudlari rasmiy portali",             t:['uz','bepul','web'],       ico:"fa-scale-balanced"},
+  {n:"Adliya.uz",         u:"https://adliya.uz/",              d:"Adliya vazirligi — yuridik xizmatlar",           t:['uz','bepul','web'],       ico:"fa-landmark"},
+  {n:"Prokuror.uz",       u:"https://prokuror.uz/",             d:"Prokuratura portali va murojaatlar",             t:['uz','bepul','web'],       ico:"fa-user-tie"},
+  {n:"E-ijro.uz",         u:"https://e-ijro.uz/",              d:"Ijro hujjatlari — elektron tizim",               t:['uz','bepul','web'],       ico:"fa-file-signature"},
+  {n:"Passport.gov.uz",   u:"https://passport.gov.uz/",         d:"Pasport va fuqarolik holati xizmatlari",         t:['uz','bepul','web'],       ico:"fa-passport"},
+  {n:"Notariat.uz",       u:"https://notariat.uz/",             d:"Notariat palatasi — notariat xizmatlari",        t:['uz','bepul','web'],       ico:"fa-pen-fancy"},
+]},
+
+{id:'medicine',title:"🏥 Tibbiyot va Sog'liq",icon:"fa-hospital",gr:"from-red-500 to-rose-500",
+items:[
+  {n:"Dmed.uz",           u:"https://dmed.uz/",                 d:"Onlayn tibbiy navbat va shifokorlar",            t:['uz','bepul','web','mobil'],ico:"fa-stethoscope"},
+  {n:"My-doc.uz",         u:"https://my-doc.uz/",               d:"Shifokor bilan onlayn konsultatsiya",            t:['uz','bepul','web','mobil'],ico:"fa-user-doctor"},
+  {n:"Apteka.uz",         u:"https://apteka.uz/",               d:"Onlayn dorilar va aptekalar",                    t:['uz','bepul','web','mobil'],ico:"fa-pills"},
+  {n:"Tabletki.uz",       u:"https://tabletki.uz/",             d:"Dori vositalar ma'lumotlar bazasi",              t:['uz','bepul','web'],       ico:"fa-capsules"},
+  {n:"Sog'lom.uz",        u:"https://soglom.uz/",               d:"Sog'lom turmush tarzi platformasi",              t:['uz','bepul','web','mobil'],ico:"fa-heart-pulse"},
+  {n:"Baby.uz",           u:"https://baby.uz/",                 d:"Bolalar salomatligi va rivojlanishi",            t:['uz','bepul','web'],       ico:"fa-baby"},
+  {n:"Psixologlar.uz",    u:"https://psixologlar.uz/",          d:"Psixologik yordam va onlayn konsultatsiya",      t:['uz','bepul','web'],       ico:"fa-brain"},
+  {n:"WebMD",             u:"https://www.webmd.com/",           d:"Tibbiy ma'lumotlar, alomatlar va kasalliklar",   t:['dunyo','bepul','web','mobil'],ico:"fa-notes-medical"},
+  {n:"Hevy",              u:"https://www.hevyapp.com/",         d:"Mashg'ulotlarni yozib borish ilovasi",           t:['dunyo','bepul','mobil'],  ico:"fa-dumbbell"},
+  {n:"MyFitnessPal",      u:"https://www.myfitnesspal.com/",    d:"Kaloriya va ovqatlanish kuzatish",               t:['dunyo','bepul','web','mobil'],ico:"fa-apple-whole"},
+  {n:"Strava",            u:"https://www.strava.com/",          d:"Yugurish va velosiped trekeri",                  t:['dunyo','bepul','web','mobil'],ico:"fa-person-running"},
+  {n:"Calm",              u:"https://www.calm.com/",            d:"Meditatsiya, uyqu va relaksatsiya",              t:['dunyo','pullik','web','mobil'],ico:"fa-cloud"},
+  {n:"Sleep Cycle",       u:"https://www.sleepcycle.com/",      d:"Aqlli uyqu tahlili va uyg'otgich",               t:['dunyo','bepul','mobil'],  ico:"fa-moon"},
+]},
+
+{id:'edu',title:"🎓 Ta'lim Portallari",icon:"fa-graduation-cap",gr:"from-violet-500 to-purple-600",
+items:[
+  {n:"Hemis.uz",          u:"https://hemis.uz/",                d:"Oliy ta'lim axborot tizimi HEMIS",               t:['uz','bepul','web'],       ico:"fa-university"},
+  {n:"Edu.uz",            u:"https://edu.uz/",                  d:"Xalq ta'limi vazirligi portali",                 t:['uz','bepul','web'],       ico:"fa-school"},
+  {n:"Dtm.uz",            u:"https://dtm.uz/",                  d:"Davlat test markazi rasmiy sayti",               t:['uz','bepul','web'],       ico:"fa-pen-to-square"},
+  {n:"Imtihon.uz",        u:"https://imtihon.uz/",              d:"DTM imtihon sinovlari platformasi",              t:['uz','bepul','web'],       ico:"fa-file-pen"},
+  {n:"Ziyonet.uz",        u:"https://ziyonet.uz/",              d:"Ta'limga oid elektron resurslar",                t:['uz','bepul','web'],       ico:"fa-book"},
+  {n:"eMaktab",           u:"https://emaktab.uz/",              d:"Elektron kundalik va raqamli ta'lim",            t:['uz','bepul','web','mobil'],ico:"fa-chalkboard-user"},
+  {n:"Ustoz.uz",          u:"https://ustoz.uz/",                d:"O'qituvchilar uchun ta'lim platformasi",         t:['uz','bepul','web','mobil'],ico:"fa-person-chalkboard"},
+  {n:"Ustoz AI",          u:"https://ustoz.ai/",                d:"O'zbek tilidagi AI ta'lim yordamchisi",          t:['uz','bepul','web'],       ico:"fa-robot"},
+  {n:"Ibrat.uz",          u:"https://ibrat.uz/",                d:"Xorijiy tillarni bepul o'rganish",               t:['uz','bepul','web','mobil'],ico:"fa-language"},
+  {n:"Edumarket.uz",      u:"https://edumarket.uz/",            d:"O'zbek tilida online kurslar bozori",            t:['uz','bepul','web','mobil'],ico:"fa-store"},
+  {n:"Coursera",          u:"https://www.coursera.org/",        d:"Dunyo universitetlaridan sertifikatli kurslar",  t:['dunyo','bepul','web','mobil'],ico:"fa-graduation-cap"},
+  {n:"Udemy",             u:"https://www.udemy.com/",           d:"200,000+ kurslar platformasi",                   t:['dunyo','pullik','web','mobil'],ico:"fa-laptop-code"},
+  {n:"Khan Academy",      u:"https://uz.khanacademy.org/",      d:"O'zbek va ingliz tilida bepul ta'lim",           t:['uz','bepul','web','mobil'],ico:"fa-book-open"},
+  {n:"Duolingo",          u:"https://www.duolingo.com/",        d:"O'yin shaklida 40+ tilda til o'rganish",         t:['dunyo','bepul','web','mobil'],ico:"fa-language"},
+  {n:"freeCodeCamp",      u:"https://www.freecodecamp.org/",    d:"Bepul veb dasturlash bootcamp",                  t:['dunyo','bepul','web'],    ico:"fa-code"},
+  {n:"Skillbox.uz",       u:"https://skillbox.uz/",             d:"IT va kreativ mutaxassislik kurslari",           t:['uz','pullik','web'],      ico:"fa-medal"},
+  {n:"Anki",              u:"https://apps.ankiweb.net/",        d:"Intervalli takror orqali yodlash",               t:['dunyo','bepul','web','mobil'],ico:"fa-layer-group"},
+]},
+
+{id:'economics',title:"💹 Iqtisodiyot va Moliya",icon:"fa-chart-line",gr:"from-emerald-500 to-green-600",
+items:[
+  {n:"CBU.uz",            u:"https://cbu.uz/",                  d:"Markaziy bank — valyuta kurslari va statistika", t:['uz','bepul','web'],       ico:"fa-building-columns"},
+  {n:"Mf.uz",             u:"https://mf.uz/",                   d:"Moliya vazirligi va byudjet ma'lumotlari",       t:['uz','bepul','web'],       ico:"fa-file-invoice-dollar"},
+  {n:"Invest.gov.uz",     u:"https://invest.gov.uz/",           d:"O'zbekistonga investitsiya portali",             t:['uz','bepul','web'],       ico:"fa-hand-holding-dollar"},
+  {n:"Narx.uz",           u:"https://narx.uz/",                 d:"Bozor narxlari va tahlili",                      t:['uz','bepul','web'],       ico:"fa-tags"},
+  {n:"Payme",             u:"https://payme.uz/",                d:"Ishonchli to'lovlar va o'tkazmalar",             t:['uz','bepul','web','mobil'],ico:"fa-credit-card"},
+  {n:"Click",             u:"https://click.uz/",                d:"Tezkor to'lov tizimi va keshbeklar",             t:['uz','bepul','web','mobil'],ico:"fa-bolt"},
+  {n:"Uzum Bank",         u:"https://uzumbank.uz/",             d:"Raqamli bank va moliya xizmatlari",              t:['uz','bepul','web','mobil'],ico:"fa-bank"},
+  {n:"Humans.uz",         u:"https://humans.uz/",               d:"Milliy mobil operator va bank",                  t:['uz','bepul','web','mobil'],ico:"fa-mobile-screen"},
+  {n:"TradingView",       u:"https://www.tradingview.com/",     d:"Moliya grafiklar va tahlil platformasi",         t:['dunyo','bepul','web','mobil'],ico:"fa-chart-candlestick"},
+  {n:"Investing.com",     u:"https://uz.investing.com/",        d:"Moliya bozori va investitsiya yangiliklari",     t:['dunyo','bepul','web','mobil'],ico:"fa-arrow-trend-up"},
+  {n:"Wise",              u:"https://wise.com/",                d:"Arzon xalqaro pul o'tkazmalari",                 t:['dunyo','bepul','web','mobil'],ico:"fa-money-bill-transfer"},
+  {n:"Binance",           u:"https://www.binance.com/",         d:"Kripto valyuta birjasi",                         t:['dunyo','bepul','web','mobil'],ico:"fa-bitcoin-sign"},
+  {n:"Splitwise",         u:"https://www.splitwise.com/",       d:"Do'stlar bilan xarajatlarni bo'lish",            t:['dunyo','bepul','web','mobil'],ico:"fa-receipt"},
+  {n:"YNAB",              u:"https://www.youneedabudget.com/",  d:"Zero-based byudjetlash metodologiyasi",          t:['dunyo','pullik','web','mobil'],ico:"fa-piggy-bank"},
+]},
+
+{id:'history',title:"📜 Tarix va Meros",icon:"fa-landmark",gr:"from-amber-600 to-yellow-500",
+items:[
+  {n:"Uzbekistan.travel", u:"https://uzbekistan.travel/",       d:"Rasmiy O'zbekiston turizm va meros portali",    t:['uz','bepul','web'],       ico:"fa-map-location-dot"},
+  {n:"Tariximiz.uz",      u:"https://tariximiz.uz/",            d:"O'zbek tarixi maqolalari va ma'lumotlari",      t:['uz','bepul','web'],       ico:"fa-scroll"},
+  {n:"Milliy meros",      u:"https://milliymeroslar.uz/",       d:"Milliy meros va madaniyat portali",             t:['uz','bepul','web'],       ico:"fa-monument"},
+  {n:"Wikipedia UZ",      u:"https://uz.wikipedia.org/",        d:"O'zbek tilidagi Wikipedia entsiklopediyasi",    t:['uz','bepul','web'],       ico:"fa-w"},
+  {n:"Samarkand.info",    u:"https://samarkand.info/",          d:"Samarqand tarixi va manzillari",                t:['uz','bepul','web'],       ico:"fa-mosque"},
+  {n:"Silk Road",         u:"https://silkroad.uz/",             d:"Buyuk ipak yo'li tarixi va marshrutlari",       t:['uz','bepul','web'],       ico:"fa-route"},
+  {n:"World History Enc", u:"https://www.worldhistory.org/",    d:"Jahon tarixi entsiklopediyasi",                 t:['dunyo','bepul','web'],    ico:"fa-earth-europe"},
+  {n:"Britannica",        u:"https://www.britannica.com/",      d:"Jahon entsiklopediyasi — ishonchli manba",      t:['dunyo','bepul','web'],    ico:"fa-book-atlas"},
+  {n:"Archive.org",       u:"https://archive.org/",             d:"Internet arxivi — qadimgi sahifalar va fayllar",t:['dunyo','bepul','web'],    ico:"fa-box-archive"},
+]},
+
+{id:'culture',title:"🎭 San'at va Madaniyat",icon:"fa-masks-theater",gr:"from-fuchsia-500 to-pink-500",
+items:[
+  {n:"Afisha.uz",         u:"https://afisha.uz/",               d:"Toshkent tadbirlari, kino va spektakl afishasi", t:['uz','bepul','web','mobil'],ico:"fa-calendar-days"},
+  {n:"Concert.uz",        u:"https://concert.uz/",              d:"O'zbek konsertlar va tadbirlar afishasi",        t:['uz','bepul','web','mobil'],ico:"fa-music"},
+  {n:"Music.uz",          u:"https://music.uz/",                d:"O'zbek milliy musiqa portali",                   t:['uz','bepul','web','mobil'],ico:"fa-headphones"},
+  {n:"Ziyouz.com",        u:"https://ziyouz.com/",              d:"O'zbek adabiyoti, she'riyati va nasri",          t:['uz','bepul','web'],       ico:"fa-feather-pointed"},
+  {n:"Kutubxona.uz",      u:"https://kutubxona.uz/",            d:"Milliy kutubxona elektron resurslari",           t:['uz','bepul','web'],       ico:"fa-building-columns"},
+  {n:"Nashriyot.uz",      u:"https://nashriyot.uz/",            d:"Kitob nashriyotlari va yangi kitoblar",          t:['uz','bepul','web'],       ico:"fa-print"},
+  {n:"Artstation",        u:"https://www.artstation.com/",      d:"Raqamli san'at va dizayn portfolio",            t:['dunyo','bepul','web'],    ico:"fa-paint-brush"},
+  {n:"Deviantart",        u:"https://www.deviantart.com/",      d:"Raqamli san'at hamjamiyati",                    t:['dunyo','bepul','web'],    ico:"fa-palette"},
+  {n:"Spotify",           u:"https://open.spotify.com/",        d:"100M+ qo'shiqlar, podkastlar va audiokitoblar", t:['dunyo','bepul','web','mobil'],ico:"fa-spotify"},
+  {n:"Deezer",            u:"https://www.deezer.com/",          d:"Musiqa strimling xizmati",                       t:['dunyo','bepul','web','mobil'],ico:"fa-music"},
+]},
+
+{id:'vr360',title:"🥽 VR va 360° Virtual",icon:"fa-vr-cardboard",gr:"from-cyan-500 to-blue-600",
+items:[
+  {n:"Google Arts",       u:"https://artsandculture.google.com/",d:"Muzeylar virtual sayohati va 360° rasmlar",    t:['dunyo','bepul','web'],    ico:"fa-panorama"},
+  {n:"Samarkand 360",     u:"https://samarkand360.uz/",          d:"Samarqand yodgorliklarini virtual tomosha",    t:['uz','bepul','web'],       ico:"fa-mosque"},
+  {n:"Google Street View",u:"https://streetview.google.com/",   d:"Dunyoni 360° ko'rish va virtual sayohat",      t:['dunyo','bepul','web'],    ico:"fa-street-view"},
+  {n:"Matterport",        u:"https://matterport.com/",           d:"3D virtual ko'rgazmalar va binolar",           t:['dunyo','bepul','web'],    ico:"fa-cube"},
+  {n:"360cities",         u:"https://www.360cities.net/",        d:"Butun dunyo 360° fotolar va panoramalar",      t:['dunyo','bepul','web'],    ico:"fa-earth-americas"},
+  {n:"Airpano",           u:"https://www.airpano.com/",          d:"Aerial 360° panorama fotografiyalari",         t:['dunyo','bepul','web'],    ico:"fa-helicopter"},
+  {n:"Sketchfab",         u:"https://sketchfab.com/",            d:"3D modellar va VR ko'rgazmalar",               t:['dunyo','bepul','web'],    ico:"fa-cubes"},
+  {n:"NASA 3D",           u:"https://nasa3d.arc.nasa.gov/",      d:"NASA 3D modellari va VR tajribalari",          t:['dunyo','bepul','web'],    ico:"fa-rocket"},
+  {n:"Louvre Virtual",    u:"https://www.louvre.fr/en/online-tours",d:"Luv muzeyi onlayn ko'riklar",              t:['dunyo','bepul','web'],    ico:"fa-building"},
+]},
+
+{id:'food',title:"🍽️ Oziq-ovqat va Retseptlar",icon:"fa-utensils",gr:"from-orange-500 to-red-500",
+items:[
+  {n:"Express24",         u:"https://express24.uz/",             d:"Toshkentdagi restoran va dorixonalardan yetkazish",t:['uz','bepul','mobil','web'],ico:"fa-motorcycle"},
+  {n:"Yandex Eats",       u:"https://eats.yandex.com/uz/",      d:"Ovqat va mahsulot yetkazib berish",             t:['uz','bepul','mobil','web'],ico:"fa-bag-shopping"},
+  {n:"Zood.uz",           u:"https://zood.uz/",                  d:"Tezkor oziq-ovqat yetkazib berish",            t:['uz','bepul','mobil'],     ico:"fa-bicycle"},
+  {n:"Menu.uz",           u:"https://menu.uz/",                  d:"Retseptlar va o'zbek taomlar",                 t:['uz','bepul','web','mobil'],ico:"fa-bowl-food"},
+  {n:"Oshxona.uz",        u:"https://oshxona.uz/",               d:"O'zbek milliy va jahon taomlarining retseptlari",t:['uz','bepul','web'],      ico:"fa-kitchen-set"},
+  {n:"Allrecipes",        u:"https://www.allrecipes.com/",       d:"Millionlab retseptlar va pishirish ko'rsatmalar",t:['dunyo','bepul','web','mobil'],ico:"fa-book-open"},
+  {n:"Yummly",            u:"https://www.yummly.com/",           d:"AI tavsiyali retseptlar va menyular",          t:['dunyo','bepul','web','mobil'],ico:"fa-star"},
+  {n:"Restoran.uz",       u:"https://restoran.uz/",              d:"Toshkent restoranlari sharhlari va bronlash",   t:['uz','bepul','web','mobil'],ico:"fa-star-half-stroke"},
+  {n:"TripAdvisor",       u:"https://www.tripadvisor.com/",      d:"Restoran va sayyohlik sharhlari",              t:['dunyo','bepul','web','mobil'],ico:"fa-circle-dot"},
+]},
+
+{id:'agro',title:"🌾 Qishloq Xo'jaligi",icon:"fa-wheat-awn",gr:"from-green-500 to-lime-500",
+items:[
+  {n:"Agro.uz",           u:"https://agro.uz/",                  d:"Qishloq xo'jaligi vazirligi portali",          t:['uz','bepul','web'],       ico:"fa-tractor"},
+  {n:"Fermer.uz",         u:"https://fermer.uz/",                d:"Fermerlar uchun resurslar va bozor",           t:['uz','bepul','web'],       ico:"fa-seedling"},
+  {n:"Agroportal.uz",     u:"https://agroportal.uz/",            d:"Fermer va dehqon uchun ma'lumotlar",           t:['uz','bepul','web'],       ico:"fa-leaf"},
+  {n:"Uzhydromet.uz",     u:"https://uzhydromet.uz/",            d:"O'zbekiston gidrometeorologiya ob-havosi",      t:['uz','bepul','web','mobil'],ico:"fa-cloud-sun"},
+  {n:"FAO O'zbekiston",   u:"https://www.fao.org/uzbekistan/",   d:"BMT oziq-ovqat va qishloq tashkiloti",         t:['dunyo','bepul','web'],    ico:"fa-globe"},
+  {n:"Weather.com",       u:"https://weather.com/",              d:"Dunyo bo'ylab ob-havo ma'lumotlari",           t:['dunyo','bepul','web','mobil'],ico:"fa-sun"},
+]},
+
+{id:'realestate',title:"🏗️ Ko'chmas Mulk",icon:"fa-building",gr:"from-slate-500 to-slate-700",
+items:[
+  {n:"Arenda.uz",         u:"https://arenda.uz/",                d:"Uy-joy ijarasi va sotish e'lonlari",           t:['uz','bepul','web','mobil'],ico:"fa-house"},
+  {n:"OLX Nedvizhimost",  u:"https://www.olx.uz/nedvizhimost/", d:"OLX ko'chmas mulk bo'limi",                    t:['uz','bepul','web','mobil'],ico:"fa-building"},
+  {n:"Kadastr.uz",        u:"https://kadastr.uz/",              d:"Kadastr va ko'chmas mulk reestri",              t:['uz','bepul','web'],       ico:"fa-map"},
+  {n:"Ipoteka.uz",        u:"https://ipoteka.uz/",              d:"Ipoteka va uy-joy kredit xizmatlari",           t:['uz','bepul','web'],       ico:"fa-key"},
+  {n:"Stroy.uz",          u:"https://stroy.uz/",                d:"Qurilish materiallari va ustalari",             t:['uz','bepul','web','mobil'],ico:"fa-hard-hat"},
+  {n:"Dom.uz",            u:"https://www.dom.uz/",              d:"Uy-joy sotish va ijara e'lonlari",              t:['uz','bepul','web'],       ico:"fa-home"},
+]},
+
+{id:'transport',title:"🚗 Transport",icon:"fa-car",gr:"from-blue-500 to-cyan-500",
+items:[
+  {n:"MyTaxi",            u:"https://mytaxi.uz/",               d:"Milliy taksi va yetkazib berish xizmati",       t:['uz','bepul','mobil'],     ico:"fa-taxi"},
+  {n:"Yandex Go",         u:"https://go.yandex/",              d:"Taksi, kurier va yetkazib berish",              t:['uz','bepul','mobil'],     ico:"fa-car"},
+  {n:"Chipta.uz",         u:"https://chipta.uz/",              d:"Temir yo'l va avtobus chiptalar",               t:['uz','bepul','web','mobil'],ico:"fa-train"},
+  {n:"Uzairways.com",     u:"https://www.uzairways.com/",      d:"O'zbekiston havo yo'llari chiptalar",           t:['uz','bepul','web','mobil'],ico:"fa-plane"},
+  {n:"2GIS",              u:"https://2gis.uz/",                d:"Shahar xaritasi va tashkilotlar",               t:['uz','bepul','web','mobil'],ico:"fa-map-pin"},
+  {n:"Waze",              u:"https://www.waze.com/",           d:"Tirbandliklarni chetlab o'tish navigatsiya",    t:['dunyo','bepul','mobil'],  ico:"fa-road"},
+  {n:"Google Maps",       u:"https://maps.google.com/",        d:"Dunyo bo'ylab eng aniq navigatsiya",            t:['dunyo','bepul','web','mobil'],ico:"fa-location-dot"},
+  {n:"OLX Transport",     u:"https://www.olx.uz/transport/",   d:"OLX avtomobil va transport bo'limi",            t:['uz','bepul','web','mobil'],ico:"fa-car-side"},
+]},
+
+{id:'shop',title:"🛒 Xaridlar",icon:"fa-bag-shopping",gr:"from-orange-500 to-amber-500",
+items:[
+  {n:"Uzum Market",       u:"https://uzum.uz/",                d:"O'zbekistonda eng katta online market",          t:['uz','bepul','web','mobil'],ico:"fa-shop"},
+  {n:"OLX.uz",            u:"https://www.olx.uz/",             d:"Bepul e'lonlar doskasi — hamma narsa",          t:['uz','bepul','web','mobil'],ico:"fa-tag"},
+  {n:"Asaxiy.uz",         u:"https://asaxiy.uz/",              d:"Internet do'kon va kitoblar",                   t:['uz','bepul','web','mobil'],ico:"fa-store"},
+  {n:"Texnomart.uz",      u:"https://texnomart.uz/",           d:"Maishiy texnika va muddatli to'lov",            t:['uz','bepul','web','mobil'],ico:"fa-tv"},
+  {n:"Macbro.uz",         u:"https://macbro.uz/",              d:"Apple va texnika mahsulotlari",                  t:['uz','bepul','web'],       ico:"fa-laptop"},
+  {n:"Amazon",            u:"https://www.amazon.com/",         d:"Dunyo eng katta online do'koni",                t:['dunyo','bepul','web','mobil'],ico:"fa-box"},
+  {n:"AliExpress",        u:"https://www.aliexpress.com/",     d:"Xitoydan arzon va ko'p xil mahsulotlar",        t:['dunyo','bepul','web','mobil'],ico:"fa-cart-shopping"},
+  {n:"eBay",              u:"https://www.ebay.com/",           d:"Onlayn auktsion va xaridlar platformasi",        t:['dunyo','bepul','web','mobil'],ico:"fa-gavel"},
+  {n:"Wildberries",       u:"https://www.wildberries.ru/",     d:"Kiyim va maishiy tovarlar yetkazish",           t:['dunyo','bepul','web','mobil'],ico:"fa-shirt"},
+]},
+
+{id:'science',title:"🔬 Fan va Tadqiqot",icon:"fa-flask",gr:"from-teal-500 to-cyan-600",
+items:[
+  {n:"Google Scholar",    u:"https://scholar.google.com/",     d:"Ilmiy maqolalar qidiruv tizimi",                t:['dunyo','bepul','web'],    ico:"fa-graduation-cap"},
+  {n:"PubMed",            u:"https://pubmed.ncbi.nlm.nih.gov/",d:"Tibbiy va biologik ilmiy maqolalar",            t:['dunyo','bepul','web'],    ico:"fa-microscope"},
+  {n:"ResearchGate",      u:"https://www.researchgate.net/",   d:"Olimlar tarmog'i va maqolalar bazasi",          t:['dunyo','bepul','web'],    ico:"fa-people-group"},
+  {n:"arXiv",             u:"https://arxiv.org/",              d:"Ochiq ilmiy maqolalar arxivi",                  t:['dunyo','bepul','web'],    ico:"fa-file-lines"},
+  {n:"Wolfram Alpha",     u:"https://www.wolframalpha.com/",   d:"Matematik va ilmiy hisob-kitob vositasi",       t:['dunyo','bepul','web'],    ico:"fa-calculator"},
+  {n:"NASA.gov",          u:"https://www.nasa.gov/",           d:"Kosmik tadqiqotlar va kashfiyotlar",            t:['dunyo','bepul','web'],    ico:"fa-rocket"},
+  {n:"PhET Simulations",  u:"https://phet.colorado.edu/",      d:"Fizika, kimyo, biologiya interaktiv simulatsiyalar",t:['dunyo','bepul','web'],ico:"fa-atom"},
+  {n:"Academy.uz",        u:"https://academy.uz/",             d:"O'zbekiston fanlar akademiyasi",                 t:['uz','bepul','web'],       ico:"fa-award"},
+]},
+
+{id:'ai',title:"🤖 AI va Texnologiya",icon:"fa-robot",gr:"from-violet-600 to-indigo-600",
+items:[
+  {n:"ChatGPT",           u:"https://chatgpt.com/",            d:"Eng mashhur va aqlli AI yordamchi",              t:['dunyo','bepul','web','mobil'],ico:"fa-comment-dots"},
+  {n:"Claude",            u:"https://claude.ai/",              d:"Uzoq matnlar va kod uchun ideal AI (Anthropic)", t:['dunyo','bepul','web','mobil'],ico:"fa-brain"},
+  {n:"Gemini",            u:"https://gemini.google.com/",      d:"Google'ning so'nggi kuchli multimodal AI",       t:['dunyo','bepul','web','mobil'],ico:"fa-sparkles"},
+  {n:"Perplexity",        u:"https://www.perplexity.ai/",      d:"Internetdan tezkor AI qidiruv tizimi",           t:['dunyo','bepul','web','mobil'],ico:"fa-magnifying-glass"},
+  {n:"DeepSeek",          u:"https://chat.deepseek.com/",      d:"Kuchli va bepul ochiq AI modeli",               t:['dunyo','bepul','web'],    ico:"fa-robot"},
+  {n:"Midjourney",        u:"https://www.midjourney.com/",     d:"Eng yuqori sifatli AI rasm generatori",         t:['dunyo','pullik','web'],   ico:"fa-image"},
+  {n:"ElevenLabs",        u:"https://elevenlabs.io/",          d:"Matnni tabiiy ovozga o'girish — klonlash",       t:['dunyo','bepul','web'],    ico:"fa-microphone"},
+  {n:"Suno",              u:"https://suno.com/",               d:"Matndan professional musiqa yaratish",          t:['dunyo','bepul','web'],    ico:"fa-music"},
+  {n:"Runway",            u:"https://runwayml.com/",           d:"Pro AI video generatsiya (Gen-3 Alpha)",         t:['dunyo','bepul','web'],    ico:"fa-film"},
+  {n:"Cursor",            u:"https://cursor.sh/",              d:"AI bilan jihozlangan eng zo'r IDE",             t:['dunyo','bepul','web'],    ico:"fa-code"},
+  {n:"v0 by Vercel",      u:"https://v0.dev/",                 d:"Matndan React UI/UX kod yaratish",               t:['dunyo','bepul','web'],    ico:"fa-wand-magic-sparkles"},
+  {n:"Bolt.new",          u:"https://bolt.new/",               d:"Brauzerda to'liq AI web-app yaratish",          t:['dunyo','bepul','web'],    ico:"fa-bolt"},
+  {n:"Lovable",           u:"https://lovable.dev/",            d:"AI bilan MVP va startup yaratish",              t:['dunyo','bepul','web'],    ico:"fa-heart"},
+  {n:"Ovoz AI",           u:"https://ovoz.ai/",                d:"O'zbekcha ovoz sintezi va tahlili",              t:['uz','bepul','web'],       ico:"fa-waveform"},
+]},
+
+{id:'dev',title:"💻 Dasturlash va IT",icon:"fa-code",gr:"from-cyan-500 to-blue-600",
+items:[
+  {n:"GitHub",            u:"https://github.com/",             d:"Dunyo eng yirik kod omborxonasi",               t:['dunyo','bepul','web'],    ico:"fa-code-branch"},
+  {n:"Replit",            u:"https://replit.com/",             d:"Brauzerda AI yordamida dasturlash",              t:['dunyo','bepul','web'],    ico:"fa-terminal"},
+  {n:"Vercel",            u:"https://vercel.com/",             d:"Frontend deploy qilish platformasi",             t:['dunyo','bepul','web'],    ico:"fa-cloud-arrow-up"},
+  {n:"Supabase",          u:"https://supabase.com/",           d:"Ochiq manba Firebase muqobili — BaaS",           t:['dunyo','bepul','web'],    ico:"fa-database"},
+  {n:"Stack Overflow",    u:"https://stackoverflow.com/",      d:"Dasturchilar uchun savol-javob platformasi",    t:['dunyo','bepul','web'],    ico:"fa-question"},
+  {n:"DevDocs.io",        u:"https://devdocs.io/",             d:"Barcha texnologiyalar doku bitta joyda",         t:['dunyo','bepul','web'],    ico:"fa-book"},
+  {n:"Excalidraw",        u:"https://excalidraw.com/",         d:"Arxitektura va sxemalar chizish vositasi",       t:['dunyo','bepul','web'],    ico:"fa-pen-ruler"},
+  {n:"It-park.uz",        u:"https://it-park.uz/",             d:"O'zbekiston IT Park xizmatlari va rezidentlar",  t:['uz','bepul','web'],       ico:"fa-city"},
+  {n:"Postman",           u:"https://www.postman.com/",        d:"API test va hujjatlash vositasi",               t:['dunyo','bepul','web'],    ico:"fa-satellite-dish"},
+  {n:"Docker",            u:"https://www.docker.com/",         d:"Konteynerlash va DevOps vositasi",               t:['dunyo','bepul','web'],    ico:"fa-box"},
+  {n:"Figma",             u:"https://www.figma.com/",          d:"UI/UX dizayn va prototiplash #1 vositasi",       t:['dunyo','bepul','web'],    ico:"fa-vector-square"},
+  {n:"Tailwind CSS",      u:"https://tailwindcss.com/",        d:"Zamonaviy utility CSS freymvorki",               t:['dunyo','bepul','web'],    ico:"fa-paintbrush"},
+]},
+
+{id:'social',title:"🌐 Ijtimoiy Tarmoqlar",icon:"fa-share-nodes",gr:"from-blue-600 to-indigo-600",
+items:[
+  {n:"Telegram",          u:"https://telegram.org/",           d:"Eng tezkor va xavfsiz messenjer ilova",          t:['dunyo','bepul','web','mobil'],ico:"fa-paper-plane"},
+  {n:"Instagram",         u:"https://www.instagram.com/",      d:"Rasm va Reels videolar ijtimoiy tarmog'i",       t:['dunyo','bepul','mobil'],  ico:"fa-instagram"},
+  {n:"YouTube",           u:"https://www.youtube.com/",        d:"Dunyodagi eng katta video platformasi",          t:['dunyo','bepul','web','mobil'],ico:"fa-youtube"},
+  {n:"TikTok",            u:"https://www.tiktok.com/",         d:"Qisqa videolar va kreativ kontent",              t:['dunyo','bepul','mobil'],  ico:"fa-tiktok"},
+  {n:"Facebook",          u:"https://www.facebook.com/",       d:"Eng katta global ijtimoiy tarmoq",               t:['dunyo','bepul','web','mobil'],ico:"fa-facebook"},
+  {n:"LinkedIn",          u:"https://www.linkedin.com/",       d:"Kasbiy aloqalar va ish qidirish tarmog'i",       t:['dunyo','bepul','web','mobil'],ico:"fa-linkedin"},
+  {n:"X (Twitter)",       u:"https://x.com/",                  d:"Yangiliklar, fikrlar va global trendlar",        t:['dunyo','bepul','web','mobil'],ico:"fa-x-twitter"},
+  {n:"Discord",           u:"https://discord.com/",            d:"Hamjamiyatlar, chatlar, ovozli muloqot",         t:['dunyo','bepul','web','mobil'],ico:"fa-discord"},
+  {n:"WhatsApp",          u:"https://www.whatsapp.com/",       d:"Ommabop aloqa va messenjer ilova",               t:['dunyo','bepul','mobil'],  ico:"fa-whatsapp"},
+  {n:"Reddit",            u:"https://www.reddit.com/",         d:"Fikrlar, muhokamalar va hamjamiyatlar",          t:['dunyo','bepul','web','mobil'],ico:"fa-reddit"},
+]},
+
+{id:'mobile_apps',title:"📱 Top Mobil Ilovalar",icon:"fa-mobile-screen",gr:"from-yellow-500 to-orange-500",
+items:[
+  {n:"Telegram",          u:"https://telegram.org/",           d:"Eng tezkor va xavfsiz messenjer",                t:['dunyo','bepul','mobil'],  ico:"fa-paper-plane"},
+  {n:"CapCut",            u:"https://www.capcut.com/",         d:"Mobil video montaj qilish ilovasi",              t:['dunyo','bepul','mobil'],  ico:"fa-scissors"},
+  {n:"Shazam",            u:"https://www.shazam.com/",         d:"Qo'shiqlarni tezkor aniqlash ilovasi",           t:['dunyo','bepul','mobil'],  ico:"fa-music"},
+  {n:"Notion",            u:"https://www.notion.so/",          d:"Qaydlar, wiki va loyiha boshqaruvi",             t:['dunyo','bepul','web','mobil'],ico:"fa-note-sticky"},
+  {n:"Google Translate",  u:"https://translate.google.com/",   d:"100+ tilda tezkor tarjima va kamera tarjima",    t:['dunyo','bepul','web','mobil'],ico:"fa-language"},
+  {n:"Inshot",            u:"https://inshot.com/",             d:"Video, rasm montaj va kollaj qilish",            t:['dunyo','bepul','mobil'],  ico:"fa-video"},
+  {n:"Forest",            u:"https://www.forestapp.cc/",       d:"Diqqatni jamlash — Pomodoro usuli",              t:['dunyo','bepul','mobil'],  ico:"fa-tree"},
+  {n:"Daylio",            u:"https://daylio.net/",             d:"Kayfiyat va odatlar trekeri",                    t:['dunyo','bepul','mobil'],  ico:"fa-face-smile"},
+  {n:"1SE",               u:"https://1se.co/",                 d:"Har kunlik 1 soniyali video kundalik",           t:['dunyo','bepul','mobil'],  ico:"fa-camera"},
+  {n:"Pocket Casts",      u:"https://pocketcasts.com/",        d:"Eng yaxshi podkast pleyeri",                     t:['dunyo','bepul','web','mobil'],ico:"fa-podcast"},
+  {n:"Musicolet",         u:"https://krosbits.in/musicolet/",  d:"Oflayn musiqa pleyeri (Android) — reklama yo'q",t:['dunyo','bepul','mobil'],  ico:"fa-headphones"},
+  {n:"Organic Maps",      u:"https://organicmaps.app/",        d:"Tezkor oflayn xaritalar — maxfiy",               t:['dunyo','bepul','mobil'],  ico:"fa-map"},
+  {n:"Bitwarden",         u:"https://bitwarden.com/",          d:"Ochiq manba xavfsiz parollar menejeri",          t:['dunyo','bepul','web','mobil'],ico:"fa-lock"},
+  {n:"ProtonVPN",         u:"https://protonvpn.com/",          d:"Maxfiy va bepul VPN xizmati",                    t:['dunyo','bepul','web','mobil'],ico:"fa-shield"},
+  {n:"AdGuard",           u:"https://adguard.com/",            d:"Reklama va zararli saytlarni bloklash",          t:['dunyo','bepul','web','mobil'],ico:"fa-ban"},
+  {n:"Authy",             u:"https://authy.com/",              d:"2FA ikki faktorli autentifikatsiya",             t:['dunyo','bepul','mobil'],  ico:"fa-key"},
+  {n:"Sleep Cycle",       u:"https://www.sleepcycle.com/",     d:"Aqlli uyqu tahlili va uyg'otgich",               t:['dunyo','bepul','mobil'],  ico:"fa-moon"},
+  {n:"Meditopia",         u:"https://meditopia.com/",          d:"Meditatsiya va tinch uyqu ilovasi",               t:['dunyo','bepul','mobil'],  ico:"fa-spa"},
+]},
+
+{id:'books',title:"📚 Kitob va Mutolaa",icon:"fa-book-open",gr:"from-amber-500 to-orange-500",
+items:[
+  {n:"Mutolaa.uz",        u:"https://mutolaa.uz/",             d:"O'zbek kitoblari va audiokitoblar",               t:['uz','bepul','web','mobil'],ico:"fa-book"},
+  {n:"Ziyouz.com",        u:"https://ziyouz.com/",             d:"O'zbek adabiyoti va she'riyati",                  t:['uz','bepul','web'],       ico:"fa-feather"},
+  {n:"Goodreads",         u:"https://www.goodreads.com/",      d:"Kitob reytinglari va tavsiyalar tarmog'i",       t:['dunyo','bepul','web','mobil'],ico:"fa-star-half-stroke"},
+  {n:"Z-Library",         u:"https://z-lib.id/",               d:"Katta bepul kitoblar kutubxonasi",               t:['dunyo','bepul','web'],    ico:"fa-warehouse"},
+  {n:"ReadEra",           u:"https://readera.org/",            d:"PDF, EPUB va barcha formatdagi kitoblar",         t:['dunyo','bepul','mobil'],  ico:"fa-tablet-screen-button"},
+  {n:"Blinkist",          u:"https://www.blinkist.com/",       d:"Kitoblar 15 daqiqada xulosa",                    t:['dunyo','pullik','web','mobil'],ico:"fa-bolt"},
+  {n:"Libby",             u:"https://libbyapp.com/",           d:"Kutubxona orqali bepul raqamli kitoblar",        t:['dunyo','bepul','mobil'],  ico:"fa-bookmark"},
+  {n:"Project Gutenberg", u:"https://www.gutenberg.org/",      d:"60,000+ bepul klassik adabiyot asarlari",        t:['dunyo','bepul','web'],    ico:"fa-scroll"},
+]},
+
+{id:'news',title:"📰 Yangiliklar",icon:"fa-newspaper",gr:"from-gray-600 to-gray-800",
+items:[
+  {n:"Kun.uz",            u:"https://kun.uz/",                 d:"O'zbekistonning eng yirik yangiliklar portali",   t:['uz','bepul','web','mobil'],ico:"fa-sun"},
+  {n:"Daryo.uz",          u:"https://daryo.uz/",              d:"Milliy media va texnologiya yangiliklari",         t:['uz','bepul','web','mobil'],ico:"fa-bolt"},
+  {n:"Gazeta.uz",         u:"https://www.gazeta.uz/",         d:"O'zbekiston ijtimoiy-iqtisodiy yangiliklari",     t:['uz','bepul','web'],       ico:"fa-newspaper"},
+  {n:"UzReport News",     u:"https://uzreport.news/",         d:"O'zbekiston yangiliklari ingliz tilida",           t:['uz','bepul','web'],       ico:"fa-globe"},
+  ]},
+
+{id:'travel',title:"✈️ Sayohat va Turizm",icon:"fa-plane",gr:"from-emerald-500 to-teal-500",
+items:[
+  {n:"Uzbekistan.travel", u:"https://uzbekistan.travel/",      d:"Rasmiy O'zbekiston turizm portali",              t:['uz','bepul','web'],       ico:"fa-map-location-dot"},
+  {n:"Booking.com",       u:"https://www.booking.com/",        d:"Mehmonxona va uy ijarasi bronlash",              t:['dunyo','bepul','web','mobil'],ico:"fa-bed"},
+  {n:"Airbnb",            u:"https://www.airbnb.com/",         d:"Mahalliy uylar va noyob tajribalar",              t:['dunyo','bepul','web','mobil'],ico:"fa-house-chimney"},
+  {n:"Skyscanner",        u:"https://www.skyscanner.com/",     d:"Eng arzon aviabilet qidirish tizimi",            t:['dunyo','bepul','web','mobil'],ico:"fa-plane-departure"},
+  {n:"Chipta.uz",         u:"https://chipta.uz/",              d:"O'zbekiston temir yo'l va avtobus chiptalar",    t:['uz','bepul','web','mobil'],ico:"fa-ticket"},
+  {n:"Uzairways.com",     u:"https://www.uzairways.com/",      d:"O'zbekiston havo yo'llari rasmiy sayti",         t:['uz','bepul','web','mobil'],ico:"fa-plane"},
+  {n:"TripAdvisor",       u:"https://www.tripadvisor.com/",    d:"Sayohat sharhlari va tavsiyalar platformasi",    t:['dunyo','bepul','web','mobil'],ico:"fa-circle-dot"},
+  {n:"XE Currency",       u:"https://www.xe.com/",             d:"Valyuta kurslari va konvertor",                  t:['dunyo','bepul','web','mobil'],ico:"fa-money-bill"},
+]},
+
+{id:'cloud',title:"☁️ Bulut va Fayllar",icon:"fa-cloud",gr:"from-sky-500 to-blue-500",
+items:[
+  {n:"Google Drive",      u:"https://drive.google.com/",       d:"15 GB bepul bulut saqlash xizmati",              t:['dunyo','bepul','web','mobil'],ico:"fa-hard-drive"},
+  {n:"Dropbox",           u:"https://www.dropbox.com/",        d:"Fayllarni sinxronlashtirish va ulashish",         t:['dunyo','bepul','web','mobil'],ico:"fa-dropbox"},
+  {n:"Google Docs",       u:"https://docs.google.com/",        d:"Onlayn hujjatlar va hamkorlikda ishlash",         t:['dunyo','bepul','web','mobil'],ico:"fa-file-word"},
+  {n:"Notion",            u:"https://www.notion.so/",          d:"Qaydlar, wiki va loyiha boshqaruvi",              t:['dunyo','bepul','web','mobil'],ico:"fa-note-sticky"},
+  {n:"Mega.nz",           u:"https://mega.nz/",                d:"20 GB bepul shifrlangan bulut saqlash",          t:['dunyo','bepul','web','mobil'],ico:"fa-cloud"},
+  {n:"Proton Drive",      u:"https://proton.me/drive",         d:"Shifrlangan maxfiy bulut saqlash",               t:['dunyo','bepul','web','mobil'],ico:"fa-shield-halved"},
+  {n:"WeTransfer",        u:"https://wetransfer.com/",         d:"Katta fayllarni yuborish — 2GB gacha bepul",     t:['dunyo','bepul','web'],    ico:"fa-file-export"},
+]},
+
+]; // END DATA
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let activeCat  = 'all';
+let query      = '';
+let filters    = [];
+let sortMode   = 'def';
+let favorites  = JSON.parse(localStorage.getItem('lh_favs')  || '[]');
+let srchHist   = JSON.parse(localStorage.getItem('lh_hist')  || '[]');
+let clicks     = JSON.parse(localStorage.getItem('lh_clicks')|| '{}');
+
+const MAX_HIST = 5;
+const FILTERS  = [
+  {id:'bepul', label:'✅ Bepul'},
+  {id:'pullik',label:'💎 Pullik'},
+  {id:'mobil', label:'📱 Mobil'},
+  {id:'web',   label:'🌐 Web'},
+  {id:'uz',    label:'🇺🇿 O\'zbek'},
+  {id:'dunyo', label:'🌍 Jahon'},
+];
+
+const $=id=>document.getElementById(id);
+
+// ═══════════════════════════════════════════════════════════
+//  LOGO & ICON helpers
+// ═══════════════════════════════════════════════════════════
+function getLogoUrl(url){
+  try{return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;}
+  catch(e){return null;}
+}
+// Consistent fallback: FontAwesome icon based on item's ico property
+function iconHTML(item){
+  const logo = getLogoUrl(item.u);
+  const ico  = item.ico || 'fa-globe';
+  if(!logo) return `<i class="logo-fallback fa-solid ${ico}"></i>`;
+  return `<img
+    src="${logo}"
+    alt="${item.n}"
+    loading="lazy"
+    class="logo-img w-7 h-7 object-contain"
+    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+  ><span class="logo-fallback fa-solid ${ico}" style="display:none"></span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CLICK TRACKING
+// ═══════════════════════════════════════════════════════════
+function getClicks(name){return clicks[name]||0;}
+function addClick(name){
+  clicks[name]=(clicks[name]||0)+1;
+  localStorage.setItem('lh_clicks',JSON.stringify(clicks));
+  updateTotalClicks();
+}
+function updateTotalClicks(){
+  const tot=Object.values(clicks).reduce((a,b)=>a+b,0);
+  if($('totalClicks')) $('totalClicks').textContent=tot.toLocaleString();
+}
+window.resetClicks=function(){
+  clicks={};localStorage.setItem('lh_clicks',JSON.stringify(clicks));
+  updateTotalClicks(); renderContent(); renderTrending();
+  showToast('Klik statistikasi tozalandi','fa-trash-can text-red-400');
+};
+
+// click badge HTML
+function clickBadge(name){
+  const c=getClicks(name);
+  if(!c) return '';
+  const hot=c>=5;
+  const ico=hot?'🔥':'👆';
+  return `<span class="click-badge${hot?' hot':''}">${ico} ${c}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TRENDING SECTION
+// ═══════════════════════════════════════════════════════════
+function renderTrending(){
+  const all=[];
+  DATA.forEach(c=>c.items.forEach(i=>{ if(getClicks(i.n)>0) all.push({...i,_cat:c}); }));
+  all.sort((a,b)=>getClicks(b.n)-getClicks(a.n));
+  const top=all.slice(0,10);
+  const sec=$('trendingSection'), grid=$('trendingGrid');
+  if(!top.length){sec.classList.add('hidden');return;}
+  sec.classList.remove('hidden');
+  grid.innerHTML=top.map(item=>`
+    <a href="${item.u}" target="_blank" rel="noopener noreferrer"
+       onclick="addClick('${item.n.replace(/'/g,"\\'")}');event.stopPropagation()"
+       class="flex-shrink-0 glass rounded-xl p-2.5 flex items-center gap-2.5 min-w-[160px] hover:shadow-md transition-all group">
+      <div class="logo-wrap w-8 h-8 rounded-lg shrink-0">${iconHTML(item)}</div>
+      <div class="min-w-0">
+        <p class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">${item.n}</p>
+        <p class="text-[9px] font-bold text-orange-500">🔥 ${getClicks(item.n)} klik</p>
+      </div>
+    </a>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HIGHLIGHT
+// ═══════════════════════════════════════════════════════════
+function hl(s,q){
+  if(!q||!s) return s||'';
+  const rx=new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return s.replace(rx,'<mark>$1</mark>');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MATCH & SORT
+// ═══════════════════════════════════════════════════════════
+function matchItem(item, cat){
+  const q2=query.toLowerCase().trim();
+  const textOk=!q2||item.n.toLowerCase().includes(q2)||(item.d||'').toLowerCase().includes(q2)||cat.title.toLowerCase().includes(q2);
+  const tagOk=!filters.length||filters.every(f=>item.t&&item.t.includes(f));
+  return textOk&&tagOk;
+}
+function sortItems(arr){
+  if(sortMode==='az') return [...arr].sort((a,b)=>a.n.localeCompare(b.n));
+  if(sortMode==='za') return [...arr].sort((a,b)=>b.n.localeCompare(a.n));
+  if(sortMode==='popular') return [...arr].sort((a,b)=>getClicks(b.n)-getClicks(a.n));
+  return arr;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CARD HTML
+// ═══════════════════════════════════════════════════════════
+function card(item, cat){
+  const isFav   = favorites.includes(item.n);
+  const isBepul = item.t?.includes('bepul');
+  const isMob   = item.t?.includes('mobil');
+  const isWeb   = item.t?.includes('web');
+  const q2      = query.trim();
+  const c       = getClicks(item.n);
+  const isHot   = c>=5;
+
+  return `
+  <a href="${item.u}" target="_blank" rel="noopener noreferrer"
+     onclick="addClick('${item.n.replace(/'/g,"\\'")}');setTimeout(()=>rerenderClickFor('${item.n.replace(/'/g,"\\'")}'),50)"
+     class="card glass rounded-2xl p-3.5 flex flex-col h-full group">
+    ${isHot?'<span class="trending-tag">🔥 TRENDING</span>':''}
+    <div class="flex items-start gap-3 mb-2.5 relative z-10">
+      <div class="logo-wrap shrink-0">${iconHTML(item)}</div>
+      <div class="flex-1 min-w-0 pt-0.5">
+        <div class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors line-clamp-1">${hl(item.n,q2)}</div>
+        <div class="flex flex-wrap gap-1 mt-1 items-center">
+          <span class="b-${isBepul?'free':'paid'} text-[9px] font-bold px-1.5 py-0.5 rounded-full">${isBepul?'Bepul':'Pullik'}</span>
+          ${isMob?`<span class="b-mob text-[9px] font-bold px-1.5 py-0.5 rounded-full">📱</span>`:''}
+          ${isWeb?`<span class="b-web text-[9px] font-bold px-1.5 py-0.5 rounded-full">🌐</span>`:''}
+          <span class="click-badge${isHot?' hot':''}" id="cb-${item.n.replace(/[^a-zA-Z0-9]/g,'_')}">${c?`${isHot?'🔥':'👆'} ${c}`:''}</span>
+        </div>
+      </div>
+      <button onclick="event.preventDefault();event.stopPropagation();toggleFav('${item.n.replace(/'/g,"\\'")}',this)" 
+        class="fav-btn w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs ${isFav?'bg-rose-100 text-rose-500 dark:bg-rose-500/20':'bg-slate-100 dark:bg-slate-700/50 text-slate-300 hover:text-rose-400'}">
+        <i class="fa-${isFav?'solid':'regular'} fa-heart"></i>
+      </button>
+    </div>
+    <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed relative z-10 pl-[52px]">${hl(item.d||'',q2)}</p>
+    <!-- Visit button - ALWAYS visible, bottom right -->
+    
+  </a>`;
+}
+
+// Partial re-render click badge without full re-render
+window.rerenderClickFor = function(name){
+  const id='cb-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+  const el=document.getElementById(id);
+  if(!el) return;
+  const c=getClicks(name);
+  const hot=c>=5;
+  el.className='click-badge'+(hot?' hot':'');
+  el.textContent=c?`${hot?'🔥':'👆'} ${c}`:'';
+  el.classList.add('do-pop');
+  setTimeout(()=>el.classList.remove('do-pop'),200);
+  renderTrending();
+};
+
+// ═══════════════════════════════════════════════════════════
+//  FAVORITES
+// ═══════════════════════════════════════════════════════════
+window.toggleFav = function(name, btn){
+  favorites = favorites.includes(name)
+    ? favorites.filter(n=>n!==name)
+    : [...favorites, name];
+  localStorage.setItem('lh_favs', JSON.stringify(favorites));
+  const on = favorites.includes(name);
+  if(on) showToast("Saqlanganlarga qo'shildi!", 'fa-heart text-rose-400');
+  btn.className = `fav-btn w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs ${on?'bg-rose-100 text-rose-500 dark:bg-rose-500/20':'bg-slate-100 dark:bg-slate-700/50 text-slate-300 hover:text-rose-400'}`;
+  btn.innerHTML = `<i class="fa-${on?'solid':'regular'} fa-heart"></i>`;
+  if(activeCat==='favorites') renderContent();
+  renderNav();
+};
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER NAV
+// ═══════════════════════════════════════════════════════════
+function renderNav(){
+  const total=DATA.reduce((a,c)=>a+c.items.length,0);
+  $('sidebarCount').textContent=`${total} ta resurs`;
+
+  let s=`
+    <button onclick="setCat('all')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm group ${activeCat==='all'?'nav-active':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5"><i class="fa-solid fa-border-all w-4 text-center text-xs opacity-60"></i><span>Barchasi</span></div>
+      <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/80 text-slate-500">${total}</span>
+    </button>
+    <button onclick="setCat('favorites')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm group ${activeCat==='favorites'?'bg-rose-50 dark:bg-rose-500/15 text-rose-600 font-bold':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5"><i class="fa-solid fa-heart w-4 text-center text-xs text-rose-400"></i><span>Saqlanganlar</span></div>
+      ${favorites.length?`<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/25 text-rose-500">${favorites.length}</span>`:''}
+    </button>`;
+
+  DATA.forEach(c=>{
+    const cnt=c.items.filter(i=>matchItem(i,c)).length;
+    s+=`<button onclick="setCat('${c.id}')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-sm group ${activeCat===c.id?'nav-active':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5 min-w-0 overflow-hidden">
+        <i class="fa-solid ${c.icon} w-4 text-center text-xs opacity-55 group-hover:opacity-100 transition-opacity shrink-0"></i>
+        <span class="truncate text-left">${c.title}</span>
+      </div>
+      <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-400 shrink-0">${cnt}</span>
+    </button>`;
+  });
+  $('sidebarNav').innerHTML=s;
+
+  // Mobile nav
+  let m=`
+    <button onclick="setCat('all')" class="flex-shrink-0 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all ${activeCat==='all'?'pill-active':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">Barchasi</button>
+    <button onclick="setCat('favorites')" class="flex-shrink-0 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all ${activeCat==='favorites'?'bg-rose-500 text-white border-transparent':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">❤️ ${favorites.length||''}</button>`;
+  DATA.forEach(c=>{
+    m+=`<button onclick="setCat('${c.id}')" class="flex-shrink-0 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all whitespace-nowrap ${activeCat===c.id?'pill-active':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">${c.title}</button>`;
+  });
+  $('mobNav').innerHTML=m;
+
+  renderChips();
+  renderActiveBadges();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CHIPS
+// ═══════════════════════════════════════════════════════════
+function renderChips(){
+  const h=FILTERS.map(f=>`
+    <button onclick="toggleFilter('${f.id}')" class="chip ${filters.includes(f.id)?'on':'off'} text-[11px] font-bold px-2.5 py-1 rounded-full">
+      ${f.label}
+    </button>`).join('');
+  $('deskChips').innerHTML=h;
+  $('mobChips').innerHTML=h;
+  const hasFilter=filters.length>0||sortMode!=='def';
+  $('clrFilters').style.opacity=hasFilter?'1':'0';
+  $('clrFilters').style.pointerEvents=hasFilter?'auto':'none';
+}
+
+function renderActiveBadges(){
+  const b=filters.map(f=>{
+    const fo=FILTERS.find(x=>x.id===f);
+    return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">
+      ${fo?.label||f}
+      <button onclick="toggleFilter('${f}')" class="hover:text-red-500 ml-0.5 leading-none">×</button>
+    </span>`;
+  }).join('');
+  $('activeBadges').innerHTML=b;
+}
+
+window.toggleFilter=function(id){
+  filters=filters.includes(id)?filters.filter(x=>x!==id):[...filters,id];
+  renderNav(); renderContent();
+};
+window.clearAll=function(){
+  filters=[];sortMode='def';
+  if($('sSort')) $('sSort').value='def';
+  if($('topSort')) $('topSort').value='def';
+  renderNav(); renderContent();
+};
+
+// ═══════════════════════════════════════════════════════════
+//  SET CATEGORY
+// ═══════════════════════════════════════════════════════════
+window.setCat=function(id){
+  activeCat=id; query='';
+  $('deskSrc').value=$('mobSrc').value='';
+  $('deskClr').classList.add('hidden');$('mobClr').classList.add('hidden');
+  hideDrop();
+  if(id==='all') $('pageTitle').textContent='Barcha Resurslar';
+  else if(id==='favorites') $('pageTitle').textContent='Saqlanganlar';
+  else $('pageTitle').textContent=DATA.find(c=>c.id===id)?.title||'';
+  renderNav(); renderContent();
+  $('mainScroll').scrollTo({top:0,behavior:'smooth'});
+};
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER CONTENT
+// ═══════════════════════════════════════════════════════════
+function renderContent(){
+  $('appsContainer').innerHTML='';
+  let found=0, delay=0;
+
+  const buildSec=(items, heading, gr)=>{
+    if(!items.length) return;
+    found+=items.length;
+    const sec=document.createElement('div');
+    sec.className='animate-fade-up';
+    sec.style.animationDelay=`${delay}s`;
+    delay+=0.025;
+    const h=heading?`<div class="flex items-center gap-3 mb-3">
+      <div class="w-1 h-5 rounded-full bg-gradient-to-b ${gr}"></div>
+      <h3 class="text-base font-black text-slate-800 dark:text-white">${heading}</h3>
+      <span class="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">${items.length}</span>
+    </div>`:'';
+    const grid=`<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5">
+      ${items.map(i=>card(i)).join('')}
+    </div>`;
+    sec.innerHTML=h+grid;
+    $('appsContainer').appendChild(sec);
+  };
+
+  if(activeCat==='favorites'){
+    const fItems=[];
+    DATA.forEach(c=>c.items.forEach(i=>{ if(favorites.includes(i.n)&&matchItem(i,c)) fItems.push(i); }));
+    buildSec(sortItems(fItems), null, 'from-rose-400 to-rose-600');
+    if(!fItems.length){
+      $('appsContainer').innerHTML=`<div class="flex flex-col items-center justify-center py-24 text-slate-400">
+        <i class="fa-regular fa-heart text-5xl mb-4"></i>
+        <p class="font-bold text-lg">Hali saqlangan ilovalar yo'q</p>
+        <p class="text-sm mt-1">Ilovalarni ❤️ bilan saqlang</p>
+      </div>`;
+      found=1;
+    }
+  } else {
+    DATA.forEach(c=>{
+      if(activeCat!=='all'&&activeCat!==c.id) return;
+      const items=sortItems(c.items.filter(i=>matchItem(i,c)));
+      buildSec(items, (activeCat==='all'||query.trim())?c.title:null, c.gr);
+    });
+  }
+
+  $('resultCount').textContent=found?`${found} ta resurs ko'rsatilmoqda`:'';
+  const noR=$('noResults');
+  if(found===0){ $('appsContainer').classList.add('hidden'); noR.classList.remove('hidden'); noR.classList.add('flex'); }
+  else{ $('appsContainer').classList.remove('hidden'); noR.classList.add('hidden'); noR.classList.remove('flex'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SEARCH + HISTORY
+// ═══════════════════════════════════════════════════════════
+function saveHist(q){
+  q=q.trim(); if(q.length<2) return;
+  srchHist=[q,...srchHist.filter(x=>x!==q)].slice(0,MAX_HIST);
+  localStorage.setItem('lh_hist',JSON.stringify(srchHist));
+}
+window.removeHist=function(q){
+  srchHist=srchHist.filter(x=>x!==q);
+  localStorage.setItem('lh_hist',JSON.stringify(srchHist));
+  updateDrops($('deskSrc').value);
+};
+window.applySearch=function(q){
+  query=q; $('deskSrc').value=$('mobSrc').value=q;
+  $('deskClr').classList.toggle('hidden',!q);
+  $('mobClr').classList.toggle('hidden',!q);
+  hideDrop(); renderContent();
+};
+
+function buildDropHTML(q){
+  const histFiltered=q?srchHist.filter(h=>h.toLowerCase().includes(q.toLowerCase())):srchHist;
+  let sugg=[];
+  if(q.length>=2){
+    DATA.forEach(c=>c.items.forEach(i=>{ if(i.n.toLowerCase().includes(q.toLowerCase())&&sugg.length<6) sugg.push({...i,_c:c}); }));
+  }
+  if(!histFiltered.length&&!sugg.length) return '';
+  let html='';
+  if(sugg.length){
+    html+=`<p class="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5">💡 Taklif</p>`;
+    sugg.forEach(i=>{
+      const logo=getLogoUrl(i.u);
+      html+=`<button onclick="applySearch('${i.n.replace(/'/g,"\\'")}')" class="s-row w-full text-left flex items-center gap-2.5 px-2 py-2 text-sm text-slate-700 dark:text-slate-300">
+        <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+          ${logo?`<img src="${logo}" class="w-5 h-5 object-contain" onerror="this.style.display='none'">`:''}
+          <i class="fa-solid ${i.ico||'fa-globe'} text-violet-400 text-xs ${logo?'hidden':''}"></i>
+        </div>
+        <span class="flex-1 font-semibold truncate">${hl(i.n,q)}</span>
+        <span class="text-[10px] text-slate-400 truncate max-w-[110px] hidden sm:block">${(i.d||'').slice(0,35)}…</span>
+      </button>`;
+    });
+  }
+  if(histFiltered.length){
+    html+=`<p class="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5 mt-1">🕐 Oxirgi qidiruvlar</p>`;
+    histFiltered.forEach(h=>{
+      html+=`<div class="s-row flex items-center gap-2 px-2 py-1.5 group">
+        <button onclick="applySearch('${h.replace(/'/g,"\\'")}') " class="flex-1 text-left flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <i class="fa-solid fa-clock-rotate-left text-slate-300 text-xs w-4 shrink-0"></i>
+          <span class="truncate">${hl(h,q)}</span>
+        </button>
+        <button onclick="removeHist('${h.replace(/'/g,"\\'")}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all text-xs px-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+function updateDrops(q){
+  const h=buildDropHTML(q);
+  $('deskDropIn').innerHTML=h; $('mobDropIn').innerHTML=h;
+  $('deskDrop').classList.toggle('hidden',!h);
+  $('mobDrop').classList.toggle('hidden',!h);
+}
+function hideDrop(){ $('deskDrop').classList.add('hidden'); $('mobDrop').classList.add('hidden'); }
+
+let sTimer;
+function setupSearch(){
+  const handle=e=>{
+    query=e.target.value;
+    $('deskSrc').value=$('mobSrc').value=query;
+    $('deskClr').classList.toggle('hidden',!query);
+    $('mobClr').classList.toggle('hidden',!query);
+    updateDrops(query);
+    clearTimeout(sTimer);
+    sTimer=setTimeout(()=>{ if(query.trim()) saveHist(query); renderContent(); },160);
+  };
+  const clearS=()=>{
+    query=''; $('deskSrc').value=$('mobSrc').value='';
+    $('deskClr').classList.add('hidden'); $('mobClr').classList.add('hidden');
+    hideDrop(); renderContent();
+    (window.innerWidth>768?$('deskSrc'):$('mobSrc')).focus();
+  };
+  $('deskSrc').addEventListener('input',handle);
+  $('mobSrc').addEventListener('input',handle);
+  $('deskClr').addEventListener('click',clearS);
+  $('mobClr').addEventListener('click',clearS);
+  $('deskSrc').addEventListener('focus',()=>updateDrops($('deskSrc').value));
+  $('mobSrc').addEventListener('focus', ()=>updateDrops($('mobSrc').value));
+  [$('deskSrc'),$('mobSrc')].forEach(el=>el.addEventListener('keydown',e=>{
+    if(e.key==='Escape') clearS();
+    if(e.key==='Enter'){ hideDrop(); renderContent(); }
+  }));
+  // Ctrl+K shortcut
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='k'){ e.preventDefault(); $('deskSrc').focus(); $('deskSrc').select(); }
+  });
+  document.addEventListener('click',e=>{
+    if(!$('deskSWrap').contains(e.target)) $('deskDrop').classList.add('hidden');
+    if(!$('mobSWrap').contains(e.target))  $('mobDrop').classList.add('hidden');
+  });
+
+  // Sort
+  const handleSort=e=>{ sortMode=e.target.value; if($('sSort')) $('sSort').value=sortMode; if($('topSort')) $('topSort').value=sortMode; renderNav(); renderContent(); };
+  $('sSort')?.addEventListener('change',handleSort);
+  $('topSort')?.addEventListener('change',handleSort);
+  $('clrFilters')?.addEventListener('click',clearAll);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════════════
+function setupTheme(){
+  const html=document.documentElement;
+  const upd=dark=>{
+    [$('themeIco'),$('themeIcoMob')].forEach(i=>i&&(i.className=dark?'fa-solid fa-sun':'fa-solid fa-moon'));
+    if($('themeTxt')) $('themeTxt').textContent=dark?'Kunduzgi':'Tungi rejim';
+  };
+  upd(html.classList.contains('dark'));
+  [$('themeBtn'),$('themeBtnMob')].forEach(btn=>btn?.addEventListener('click',()=>{
+    const dark=html.classList.toggle('dark');
+    localStorage.lh_theme=dark?'dark':'light';
+    upd(dark);
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SHARE
+// ═══════════════════════════════════════════════════════════
+function setupShare(){
+  const fn=async()=>{
+    const d={title:"LifeHacks UZ — O'zbekiston onlayn resurslar",text:"300+ resurs bitta joyda! O'zbekiston aholisi uchun mukammal platforma",url:location.href};
+    if(navigator.share){try{await navigator.share(d);return;}catch(e){}}
+    try{await navigator.clipboard.writeText(location.href);}
+    catch(e){const t=document.createElement('input');t.value=location.href;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+    showToast('Havola nusxalandi!','fa-link text-violet-400');
+  };
+  [$('shareBtn'),$('shareBtnDesk')].forEach(b=>b?.addEventListener('click',fn));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SCROLL TOP
+// ═══════════════════════════════════════════════════════════
+function setupScroll(){
+  const btn=$('scrollTop'), ms=$('mainScroll');
+  if(!btn) return;
+  ms.addEventListener('scroll',()=>{
+    const show=ms.scrollTop>200;
+    btn.classList.toggle('opacity-0',!show);
+    btn.classList.toggle('translate-y-16',!show);
+  });
+  btn.addEventListener('click',()=>ms.scrollTo({top:0,behavior:'smooth'}));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, ic='fa-circle-check text-emerald-400'){
+  const t=$('toast'), i=$('toastIco'), m=$('toastMsg');
+  m.textContent=msg; i.className=`fa-solid ${ic}`;
+  t.classList.remove('opacity-0','pointer-events-none');
+  setTimeout(()=>t.classList.add('opacity-0','pointer-events-none'),2500);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+function init(){
+  renderNav();
+  renderContent();
+  renderTrending();
+  updateTotalClicks();
+  setupSearch();
+  setupTheme();
+  setupShare();
+  setupScroll();
+}
+init();
+</script>
+</body>
+</html>

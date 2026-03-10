@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="uz" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ═══ SEO META ═══ -->
+<title>LifeHacks UZ — O'zbekiston Eng To'liq Onlayn Resurslar Katalogi</title>
+<meta name="description" content="O'zbekiston aholisi uchun 300+ onlayn resurs: davlat xizmatlari, tibbiyot, ta'lim, huquq, tarix, iqtisodiyot, AI vositalar, mobil ilovalar va ko'proq.">
+<meta name="theme-color" content="#8b5cf6">
+
+<!-- Preload fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Dark mode flicker fix -->
+<script>
+(function(){
+  var d=document.documentElement;
+  if(localStorage.lh_theme==='dark'||(!('lh_theme' in localStorage)&&window.matchMedia('(prefers-color-scheme: dark)').matches)) d.classList.add('dark');
+  else d.classList.remove('dark');
+})();
+</script>
+
+<script>
+tailwind.config={
+  darkMode:'class',
+  theme:{extend:{
+    fontFamily:{sans:['"Plus Jakarta Sans"','sans-serif']},
+    animation:{
+      'fade-up':'fadeUp .28s ease-out forwards',
+      'pop':'pop .18s ease-out forwards',
+    },
+    keyframes:{
+      fadeUp:{'0%':{opacity:'0',transform:'translateY(8px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
+      pop:{'0%':{transform:'scale(.9)'},'60%':{transform:'scale(1.08)'},'100%':{transform:'scale(1)'}},
+    }
+  }}
+}
+</script>
+
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Plus Jakarta Sans",sans-serif}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,.55)}
+.no-sc{-ms-overflow-style:none;scrollbar-width:none}
+.no-sc::-webkit-scrollbar{display:none}
+
+/* safe area */
+.pt-safe{padding-top:max(.5rem,env(safe-area-inset-top))}
+.pb-safe{padding-bottom:max(1rem,env(safe-area-inset-bottom))}
+
+/* glass */
+.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(0,0,0,.07)}
+.dark .glass{background:rgba(8,12,28,.85);border:1px solid rgba(255,255,255,.07)}
+
+/* bg */
+.bg-app{position:fixed;inset:0;z-index:-1;background:#eff1fb;
+  background-image:
+    radial-gradient(at 0% 0%,rgba(139,92,246,.14) 0,transparent 52%),
+    radial-gradient(at 100% 3%,rgba(6,182,212,.11) 0,transparent 52%),
+    radial-gradient(at 55% 100%,rgba(236,72,153,.09) 0,transparent 50%)}
+.dark .bg-app{background:#060a18;
+  background-image:
+    radial-gradient(at 0% 0%,rgba(139,92,246,.22) 0,transparent 52%),
+    radial-gradient(at 100% 3%,rgba(6,182,212,.16) 0,transparent 52%),
+    radial-gradient(at 55% 100%,rgba(236,72,153,.12) 0,transparent 50%)}
+
+/* ── CARD ── */
+.card{
+  transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.card:hover{transform:translateY(-4px) scale(1.018);box-shadow:0 12px 32px -8px rgba(139,92,246,.2)}
+.dark .card:hover{box-shadow:0 12px 32px -8px rgba(139,92,246,.35)}
+
+/* trending badge */
+.trending-tag{
+  position:absolute;top:8px;left:8px;
+  font-size:8px;font-weight:800;
+  padding:1px 6px;border-radius:99px;letter-spacing:.3px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;
+  z-index:4;
+}
+
+/* nav active */
+.nav-active{background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(217,70,239,.09));color:#8b5cf6;font-weight:700}
+.dark .nav-active{background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(217,70,239,.15))}
+.pill-active{background:linear-gradient(135deg,#8b5cf6,#d946ef)!important;color:#fff!important;border-color:transparent!important}
+
+/* chips */
+.chip{transition:all .16s;border:1.5px solid;cursor:pointer;user-select:none}
+.chip.on{background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff;border-color:transparent}
+.chip.off{background:rgba(255,255,255,.7);border-color:rgba(148,163,184,.3);color:#64748b}
+.dark .chip.off{background:rgba(30,41,59,.6);border-color:rgba(100,116,139,.3);color:#94a3b8}
+
+/* search */
+.s-drop{box-shadow:0 20px 44px -8px rgba(0,0,0,.13);max-height:350px;overflow-y:auto}
+.dark .s-drop{box-shadow:0 20px 44px -8px rgba(0,0,0,.55)}
+.s-row{transition:background .13s;border-radius:8px}
+.s-row:hover{background:rgba(139,92,246,.08)}
+.dark .s-row:hover{background:rgba(139,92,246,.15)}
+
+/* highlight */
+mark{background:rgba(139,92,246,.22);color:inherit;border-radius:3px;padding:0 2px}
+.dark mark{background:rgba(139,92,246,.38)}
+
+/* sort select arrow */
+.sort-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .4rem center;background-size:1.1em}
+
+/* fav btn */
+.fav-btn{transition:transform .15s,background .15s}
+.fav-btn:hover{transform:scale(1.15)}
+
+/* animate pop on click */
+.do-pop{animation:pop .18s ease-out}
+</style>
+</head>
+
+<body class="text-slate-800 dark:text-slate-200 antialiased overflow-hidden h-screen flex">
+<div class="bg-app"></div>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="w-[17rem] hidden md:flex flex-col border-r border-slate-200/60 dark:border-slate-800/60 glass z-20 shrink-0 h-screen">
+
+  <div class="p-4 pb-1.5 shrink-0">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-violet-500/35 shrink-0">
+        <i class="fa-solid fa-layer-group text-sm"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[17px] font-black text-slate-900 dark:text-white leading-tight tracking-tight">LifeHacks <span class="text-violet-500">UZ</span></h1>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest" id="sidebarCount">...</p>
+      </div>
+    </div>
+
+    <!-- Search desk -->
+    <div class="relative mb-3" id="deskSWrap">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+      <input id="deskSrc" type="text" autocomplete="off" spellcheck="false"
+        placeholder="Qidirish... (Ctrl+K)"
+        class="w-full text-sm bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-xl pl-8 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-slate-400 transition-all"/>
+      <button id="deskClr" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hidden items-center justify-center hover:bg-violet-100 hover:text-violet-600 transition-all">
+        <i class="fa-solid fa-xmark text-[10px]"></i>
+      </button>
+      <div id="deskDrop" class="hidden absolute top-full mt-1.5 left-0 right-0 glass rounded-xl z-[60] s-drop">
+        <div id="deskDropIn" class="p-2"></div>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="flex flex-wrap gap-1.5 mb-3" id="deskChips"></div>
+
+    <!-- Sort + clear -->
+    <div class="flex items-center gap-2 mb-2.5">
+      <select id="sSort" class="sort-sel flex-1 text-[11px] bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-lg px-2.5 pr-6 py-1.5 text-slate-600 dark:text-slate-400 focus:outline-none cursor-pointer">
+        <option value="def">Standart tartib</option>
+        <option value="popular">🔥 Eng mashhur</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <button id="clrFilters" title="Tozalash" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-red-50 hover:text-red-400 transition-colors flex items-center justify-center opacity-0 pointer-events-none">
+        <i class="fa-solid fa-rotate-left text-xs"></i>
+      </button>
+    </div>
+
+    <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 px-0.5">Kategoriyalar</p>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-px" id="sidebarNav"></div>
+
+  <div class="shrink-0 p-3 border-t border-slate-200/60 dark:border-slate-800/60 space-y-2">
+    
+    <button id="themeBtn" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold text-slate-600 dark:text-slate-300">
+      <i id="themeIco" class="fa-solid fa-moon"></i>
+      <span id="themeTxt">Tungi rejim</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden">
+
+  <header class="md:hidden glass border-b border-slate-200/60 dark:border-slate-800/60 z-40 shrink-0 pt-safe">
+    <div class="flex items-center justify-between px-4 pt-3 pb-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-layer-group text-xs"></i>
+        </div>
+        <span class="font-black text-slate-900 dark:text-white text-[15px]">LifeHacks <span class="text-violet-500">UZ</span></span>
+      </div>
+      <div class="flex gap-2">
+        <button id="themeBtnMob" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <i id="themeIcoMob" class="fa-solid fa-moon text-sm"></i>
+        </button>
+        <button id="shareBtn" class="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400">
+          <i class="fa-solid fa-share-nodes text-sm"></i>
+        </button>
+      </div>
+    </div>
+    <div class="px-4 pb-2 relative" id="mobSWrap">
+      <i class="fa-solid fa-magnifying-glass absolute left-7 top-1/2 -translate-y-1/2 text-slate-400 text-xs z-10 pointer-events-none"></i>
+      <input id="mobSrc" type="text" autocomplete="off" placeholder="Qidirish..."
+        class="w-full text-sm bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 rounded-2xl pl-8 pr-9 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-slate-400"/>
+      <button id="mobClr" class="absolute right-7 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hidden items-center justify-center text-[10px]">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div id="mobDrop" class="hidden absolute top-full mt-1 left-4 right-4 glass rounded-xl z-[60] s-drop">
+        <div id="mobDropIn" class="p-2"></div>
+      </div>
+    </div>
+    <div class="flex gap-1.5 px-4 pb-2 overflow-x-auto no-sc" id="mobChips"></div>
+    <div class="flex gap-1.5 px-4 pb-3 overflow-x-auto no-sc" id="mobNav"></div>
+  </header>
+
+  <main class="flex-1 overflow-y-auto scroll-smooth" id="mainScroll">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 py-5 pb-28 md:pb-14 pb-safe">
+
+    
+      <div class="hidden md:flex items-start justify-between mb-6 gap-4">
+        <div class="min-w-0">
+          <h2 id="pageTitle" class="text-2xl font-black text-slate-900 dark:text-white mb-1 truncate">Barcha Resurslar</h2>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="resultCount" class="text-sm text-slate-400 font-medium"></span>
+            <div id="activeBadges" class="flex gap-1.5 flex-wrap"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <select id="topSort" class="sort-sel text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 pr-7 py-2 text-slate-600 dark:text-slate-400 focus:outline-none cursor-pointer shadow-sm">
+            <option value="def">Standart</option>
+            <option value="popular">🔥 Mashhur</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+          </select>
+          <button id="shareBtnDesk" class="flex items-center gap-2 bg-slate-900 dark:bg-violet-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:opacity-90 transition-opacity shadow-lg">
+            <i class="fa-solid fa-share-nodes"></i> Ulashish
+          </button>
+        </div>
+      </div>
+
+      <div id="appsContainer" class="space-y-8"></div>
+
+      <div id="noResults" class="hidden flex-col items-center justify-center py-28 text-center">
+        <div class="w-20 h-20 mb-5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-300 dark:text-slate-600">
+          <i class="fa-solid fa-magnifying-glass text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">Hech narsa topilmadi</h3>
+        <p class="text-slate-400 text-sm max-w-xs mb-4">Boshqa kalit so'z bilan qidiring yoki filtrlarni o'zgartiring</p>
+        <button onclick="clearAll()" class="text-xs font-bold text-violet-500 hover:text-violet-700 transition-colors border border-violet-300 dark:border-violet-700 px-4 py-2 rounded-xl">
+          <i class="fa-solid fa-rotate-left mr-1.5"></i>Barcha filtrlarni tozalash
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <button id="scrollTop" class="md:hidden fixed bottom-5 right-4 w-11 h-11 rounded-full bg-slate-900/90 dark:bg-violet-600/90 text-white shadow-xl flex items-center justify-center z-50 transition-all duration-300 opacity-0 translate-y-16 backdrop-blur-md">
+    <i class="fa-solid fa-arrow-up text-sm"></i>
+  </button>
+</div>
+
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-4 md:top-auto md:bottom-4 glass bg-slate-900/95 dark:bg-slate-50/95 text-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 z-[300] opacity-0 pointer-events-none transition-all duration-300">
+  <i id="toastIco" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+  <span id="toastMsg" class="font-bold text-sm"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA — 300+ Ilovalar to'plami. Barcha kategoriyalar kiritildi.
+// ═══════════════════════════════════════════════════════════
+const DATA = [
+{id:'uzbekistan',title:"🇺🇿 O'zbekiston (Mahalliy)",icon:"fa-star-and-crescent",gr:"from-blue-600 to-emerald-500",
+items:[
+  {n:"Payme", u:"https://payme.uz/", d:"Ishonchli to'lovlar va o'tkazmalar", t:['uz','bepul','web','mobil']},
+  {n:"Click", u:"https://click.uz/", d:"Tezkor to'lov tizimi va keshbeklar", t:['uz','bepul','web','mobil']},
+  {n:"Uzum Market", u:"https://uzum.uz/", d:"1 kunda bepul yetkazib beriladigan market", t:['uz','bepul','web','mobil']},
+  {n:"Mutolaa", u:"https://mutolaa.uz/", d:"Kitoblar va audiokitoblar platformasi", t:['uz','bepul','web','mobil']},
+  {n:"Ustoz AI", u:"https://ustoz.ai/", d:"O'zbek tilidagi ta'lim va yordamchi AI", t:['uz','bepul','web']},
+  {n:"Ibrat academy", u:"https://ibrat.uz/", d:"Xorijiy tillarni bepul o'rganish loyihasi", t:['uz','bepul','web','mobil']},
+  {n:"Bek va lola", u:"https://bekvalola.uz/", d:"Bolalar kiyimlari va o'yinchoqlar do'koni", t:['uz','bepul','web','mobil']},
+  {n:"My.gov.uz", u:"https://my.gov.uz/", d:"Yagona elektron davlat xizmatlari", t:['uz','bepul','web','mobil']},
+  {n:"MyTaxi", u:"https://mytaxi.uz/", d:"Milliy taksi va yetkazib berish xizmati", t:['uz','bepul','mobil']},
+  {n:"eMaktab", u:"https://emaktab.uz/", d:"Elektron kundalik va raqamli ta'lim", t:['uz','bepul','web','mobil']},
+  {n:"Soliq.uz", u:"https://soliq.uz/", d:"Soliq xizmatlari va keshbeklar tizimi", t:['uz','bepul','web','mobil']},
+  {n:"OLX.uz", u:"https://www.olx.uz/", d:"Eng yirik bepul e'lonlar doskasi", t:['uz','bepul','web','mobil']},
+  {n:"Humans.uz", u:"https://humans.uz/", d:"Milliy mobil operator va bank xizmatlari", t:['uz','bepul','web','mobil']},
+  {n:"Macbro", u:"https://macbro.uz/", d:"Apple texnika va gadjetlar do'koni", t:['uz','bepul','web']},
+  {n:"Asaxiy", u:"https://asaxiy.uz/", d:"Internet do'kon va jahon kitoblari", t:['uz','bepul','web']},
+  {n:"Texnomart", u:"https://texnomart.uz/", d:"Maishiy texnika va muddatli to'lov do'koni", t:['uz','bepul','web']},
+  {n:"Express24", u:"https://express24.uz/", d:"Tezkor ovqat yetkazib berish xizmati", t:['uz','bepul','web','mobil']},
+  {n:"Yandex Go", u:"https://go.yandex/", d:"Taksi, kurier xizmatlari tarmog'i", t:['uz','bepul','mobil']},
+  {n:"Uzum Bank", u:"https://uzumbank.uz/", d:"Raqamli bank va kredit xizmatlari", t:['uz','bepul','mobil']},
+  {n:"Kun.uz", u:"https://kun.uz/", d:"O'zbekistonning eng yirik yangiliklar portali", t:['uz','bepul','web','mobil']},
+  {n:"Daryo.uz", u:"https://daryo.uz/", d:"Milliy media va tezkor yangiliklar", t:['uz','bepul','web','mobil']},
+  {n:"Gazeta.uz", u:"https://www.gazeta.uz/", d:"Ijtimoiy-iqtisodiy ob'ektiv yangiliklar", t:['uz','bepul','web']},
+  {n:"Qalampir.uz", u:"https://qalampir.uz/", d:"Siyosiy va jamiyat yangiliklari", t:['uz','bepul','web']},
+  {n:"Zamin.uz", u:"https://zamin.uz/", d:"Milliy axborot agentligi xabarlari", t:['uz','bepul','web']},
+  {n:"Afisha.uz", u:"https://afisha.uz/", d:"Toshkent tadbirlari va kino afishasi", t:['uz','bepul','web']},
+  {n:"Ticketon.uz", u:"https://ticketon.uz/", d:"Konsert, teatr va sport chiptalari", t:['uz','bepul','web']},
+  {n:"iTicket.uz", u:"https://iticket.uz/", d:"Elektron chiptalar xarid qilish portali", t:['uz','bepul','web']},
+  {n:"Makro", u:"https://makromarket.uz/", d:"Oziq-ovqat va supermarketlar tarmog'i", t:['uz','bepul','web']},
+  {n:"Korzinka", u:"https://korzinka.uz/", d:"Supermarketlar va yetkazib berish", t:['uz','bepul','web']},
+  {n:"ZiyoNET", u:"https://ziyonet.uz/", d:"Ta'limga oid milliy elektron resurslar", t:['uz','bepul','web']},
+  {n:"Xarid.uz", u:"https://xarid.uzex.uz/", d:"Davlat xaridlari elektron portali", t:['uz','bepul','web']},
+  {n:"E-qaror", u:"https://e-qaror.gov.uz/", d:"Hokimlik qarorlari elektron portali", t:['uz','bepul','web']},
+  {n:"Mening Fikrim", u:"https://meningfikrim.uz/", d:"Jamoaviy murojaatlar portali", t:['uz','bepul','web']},
+  {n:"Lex.uz", u:"https://lex.uz/", d:"O'zbekiston Respublikasi qonun hujjatlari", t:['uz','bepul','web']},
+  {n:"Dtm.uz", u:"https://uzbmb.uz/", d:"Bilim va malakalarni baholash agentligi", t:['uz','bepul','web']}
+]},
+
+{id:'ai_chat',title:"🤖 AI Chat va Qidiruv",icon:"fa-robot",gr:"from-indigo-500 to-blue-500",
+items:[
+  {n:"ChatGPT", u:"https://chatgpt.com/", d:"Eng mashhur va aqlli AI yordamchi", t:['dunyo','bepul','web','mobil']},
+  {n:"Gemini", u:"https://gemini.google.com/", d:"Google'ning so'nggi kuchli multimodal AI", t:['dunyo','bepul','web','mobil']},
+  {n:"Copilot", u:"https://copilot.microsoft.com/", d:"Microsoft AI yordamchisi (GPT-4 asosida)", t:['dunyo','bepul','web','mobil']},
+  {n:"Claude", u:"https://claude.ai/", d:"Katta matnlar va kodlash uchun ajoyib AI", t:['dunyo','bepul','web','mobil']},
+  {n:"Grok", u:"https://grok.com/", d:"xAI tomonidan yaratilgan aqlli yordamchi", t:['dunyo','bepul','web']},
+  {n:"Perplexity", u:"https://www.perplexity.ai/", d:"Internetdan tezkor AI qidiruv tizimi", t:['dunyo','bepul','web','mobil']},
+  {n:"Google AI Studio", u:"https://aistudio.google.com/", d:"Gemini va AI modellarini sinash prototipi", t:['dunyo','bepul','web']},
+  {n:"Google flow", u:"https://cloud.google.com/dialogflow", d:"Aqlli suhbat botlari yaratish platformasi", t:['dunyo','bepul','web']},
+  {n:"Poe", u:"https://poe.com/", d:"Barcha turdagi AI modellar bitta joyda", t:['dunyo','bepul','web','mobil']},
+  {n:"Mistral", u:"https://chat.mistral.ai/", d:"Evropaning eng kuchli ochiq AI modeli", t:['dunyo','bepul','web']},
+  {n:"DeepSeek", u:"https://chat.deepseek.com/", d:"Kuchli, tezkor va bepul kodlovchi AI modeli", t:['dunyo','bepul','web']},
+  {n:"You.com", u:"https://you.com/", d:"AI bilan birlashgan xavfsiz qidiruv tizimi", t:['dunyo','bepul','web']},
+  {n:"Phind", u:"https://www.phind.com/", d:"Dasturchilar uchun maxsus AI qidiruv", t:['dunyo','bepul','web']},
+  {n:"Character.AI", u:"https://character.ai/", d:"Minglab AI personajlar bilan jonli suhbat", t:['dunyo','bepul','web','mobil']},
+  {n:"HuggingChat", u:"https://huggingface.co/chat/", d:"Ochiq manbali AI modellar bilan chat", t:['dunyo','bepul','web']},
+  {n:"Pi.ai", u:"https://pi.ai/", d:"Sizning shaxsiy hissiyotli AI hamrohingiz", t:['dunyo','bepul','web']},
+  {n:"ChatSonic", u:"https://writesonic.com/chat", d:"Kontent yozish uchun optimallashtirilgan AI", t:['dunyo','bepul','web']},
+  {n:"Ora.ai", u:"https://ora.ai/", d:"O'z AI botingizni yaratish platformasi", t:['dunyo','bepul','web']},
+  {n:"Replika", u:"https://replika.com/", d:"Virtual AI do'st va suhbatdosh", t:['dunyo','bepul','mobil']},
+  {n:"Llama 3", u:"https://huggingface.co/meta-llama", d:"Meta'ning ochiq kodli matn modeli", t:['dunyo','bepul','web']}
+]},
+
+{id:'ai_image',title:"🎨 AI Rasm va Dizayn",icon:"fa-image",gr:"from-pink-500 to-rose-500",
+items:[
+  {n:"Midjourney", u:"https://www.midjourney.com/", d:"Dunyodagi eng sifatli rasm va san'at AI", t:['dunyo','pullik','web']},
+  {n:"Designer", u:"https://designer.microsoft.com/", d:"Microsoft dizayn va vizual rasm generatori", t:['dunyo','bepul','web']},
+  {n:"Freepik", u:"https://www.freepik.com/", d:"Dizaynerlar uchun tayyor rasm va AI generatori", t:['dunyo','bepul','web']},
+  {n:"DALL-E 3", u:"https://openai.com/dall-e-3", d:"OpenAI rassom AI modeli — tafsilotli chizish", t:['dunyo','pullik','web']},
+  {n:"Leonardo AI", u:"https://leonardo.ai/", d:"Bepul va kuchli professional rasm generatori", t:['dunyo','bepul','web']},
+  {n:"Ideogram", u:"https://ideogram.ai/", d:"Rasm ichida aniq matn yozuvchi yagona AI", t:['dunyo','bepul','web']},
+  {n:"Civitai", u:"https://civitai.com/", d:"AI modellar va ochiq tayyor rasmlar bazasi", t:['dunyo','bepul','web']},
+  {n:"Adobe Firefly", u:"https://firefly.adobe.com/", d:"Adobe tomonidan yaratilgan kuchli AI chizuvchi", t:['dunyo','bepul','web']},
+  {n:"Flux AI", u:"https://flux.ai/", d:"Yangi avlod va ochiq rasm yaratish AI modeli", t:['dunyo','bepul','web']},
+  {n:"Canva AI", u:"https://www.canva.com/ai-image-generator/", d:"Canva ichida integratsiyalashgan AI rasm chizish", t:['dunyo','bepul','web']},
+  {n:"Playground AI", u:"https://playgroundai.com/", d:"Bepul onlayn rasm yaratish va tahrirlash", t:['dunyo','bepul','web']},
+  {n:"Lexica", u:"https://lexica.art/", d:"Stable Diffusion asosidagi rasmlar qidiruvi", t:['dunyo','bepul','web']},
+  {n:"Artbreeder", u:"https://www.artbreeder.com/", d:"Rasmlarni genetik usulda birlashtirish va o'zgartirish", t:['dunyo','bepul','web']},
+  {n:"SeaArt", u:"https://seaart.ai/", d:"Keng qamrovli AI art yaratish vositasi", t:['dunyo','bepul','web']},
+  {n:"Krea", u:"https://www.krea.ai/", d:"Real vaqtda AI rasm va naqshlar generatsiyasi", t:['dunyo','bepul','web']},
+  {n:"NightCafe", u:"https://creator.nightcafe.studio/", d:"Oson interfeysli AI san'at generatori", t:['dunyo','bepul','web']},
+  {n:"Tensor.art", u:"https://tensor.art/", d:"Stable Diffusion modellarini brauzerda ishlating", t:['dunyo','bepul','web']},
+  {n:"PromeAI", u:"https://promeai.com/", d:"Eskizlarni haqiqiy rasmlarga aylantiruvchi AI", t:['dunyo','bepul','web']},
+  {n:"Recraft", u:"https://www.recraft.ai/", d:"Vektorli va 3D rasmlar generatsiyasi", t:['dunyo','bepul','web']}
+]},
+
+{id:'ai_media',title:"🎬 AI Video va Audio",icon:"fa-film",gr:"from-fuchsia-500 to-purple-500",
+items:[
+  {n:"Runway", u:"https://runwayml.com/", d:"Kino darajasidagi AI video generatsiya (Gen-3)", t:['dunyo','bepul','web']},
+  {n:"Hedra video", u:"https://www.hedra.com/", d:"Yuz va xarakterlar animatsiyasi yaratuvchi AI", t:['dunyo','bepul','web']},
+  {n:"Voice AI", u:"https://voice.ai/", d:"Ovozni o'zgartirish va real vaqtda klonlash", t:['dunyo','bepul','web']},
+  {n:"Ovoz AI", u:"https://ovoz.ai/", d:"O'zbekcha matnni tabiiy ovozga o'giruvchi AI", t:['uz','bepul','web']},
+  {n:"Luma Dream Machine", u:"https://lumalabs.ai/dream-machine", d:"Tezkor, sifatli va aniq video animatsiya yaratish", t:['dunyo','bepul','web']},
+  {n:"HeyGen", u:"https://www.heygen.com/", d:"Matndan AI avatarli professional videolar", t:['dunyo','bepul','web']},
+  {n:"Suno", u:"https://suno.com/", d:"Har qanday matndan professional musiqa kuyi", t:['dunyo','bepul','web']},
+  {n:"Udio", u:"https://www.udio.com/", d:"Eng yuqori audio sifatli AI musiqa generatori", t:['dunyo','bepul','web']},
+  {n:"ElevenLabs", u:"https://elevenlabs.io/", d:"Jahonning eng zo'r ovoz klonlash va sintez AI'i", t:['dunyo','bepul','web']},
+  {n:"Kling AI", u:"https://klingai.com/", d:"Haqiqiydek ko'rinuvchi AI video yaratuvchisi", t:['dunyo','bepul','web']},
+  {n:"Pika Labs", u:"https://pika.art/", d:"Rasm va matndan tezkor 3D/2D video yaratish", t:['dunyo','bepul','web']},
+  {n:"Synthesia", u:"https://www.synthesia.io/", d:"Sun'iy avatarlar ishtirokida prezentatsiyalar", t:['dunyo','pullik','web']},
+  {n:"Murf.ai", u:"https://murf.ai/", d:"Sifatli AI ovoz va dublyaj yaratish", t:['dunyo','bepul','web']},
+  {n:"Invideo", u:"https://invideo.io/", d:"Skript yozing va AI unga mos video yig'ib beradi", t:['dunyo','bepul','web']},
+  {n:"D-ID", u:"https://www.d-id.com/", d:"Rasmlarni jonlantirib so'zlatuvchi vosita", t:['dunyo','bepul','web']},
+  {n:"Fliki", u:"https://fliki.ai/", d:"Blog postlarini videoga va audioga aylantirish", t:['dunyo','bepul','web']},
+  {n:"Descript", u:"https://www.descript.com/", d:"Matnni tahrirlash orqali audio/videoni qirqish", t:['dunyo','bepul','web']},
+  {n:"Veed.io", u:"https://www.veed.io/", d:"Oson onlayn video muharriri va subtitr AI", t:['dunyo','bepul','web']},
+  {n:"Vocal Remover", u:"https://vocalremover.org/", d:"Qo'shiqdan ovozni va musiqani ajratish", t:['dunyo','bepul','web']}
+]},
+
+{id:'developer',title:"💻 Dasturlash va IT",icon:"fa-code",gr:"from-cyan-500 to-blue-600",
+items:[
+  {n:"Lovable | Sayt va MVP yaratish", u:"https://lovable.dev/", d:"AI yordamida tezkor startup kodini yozish", t:['dunyo','bepul','web']},
+  {n:"Cursor", u:"https://cursor.sh/", d:"AI bilan to'liq jihozlangan dasturchilar IDE'si", t:['dunyo','bepul','web']},
+  {n:"GitHub Copilot", u:"https://github.com/features/copilot", d:"Dasturchilarning uzluksiz yordamchi AI'si", t:['dunyo','pullik','web']},
+  {n:"v0 by Vercel", u:"https://v0.dev/", d:"Matndan React va Tailwind asosidagi UI yaratish", t:['dunyo','bepul','web']},
+  {n:"Bolt.new", u:"https://bolt.new/", d:"Brauzerning o'zida to'liq web-dastur yozish", t:['dunyo','bepul','web']},
+  {n:"Windsurf", u:"https://codeium.com/windsurf", d:"Agentik AI bilan jihozlangan yangi avlod IDE", t:['dunyo','bepul','web']},
+  {n:"GitHub", u:"https://github.com/", d:"Dunyodagi eng yirik ochiq kodlar omborxonasi", t:['dunyo','bepul','web']},
+  {n:"Firebase", u:"https://firebase.google.com/", d:"Google'ning universal backend platformasi", t:['dunyo','bepul','web']},
+  {n:"Supabase", u:"https://supabase.com/", d:"Ochiq manba (Open source) Firebase muqobili", t:['dunyo','bepul','web']},
+  {n:"Cloudflare", u:"https://www.cloudflare.com/", d:"Saytlar xavfsizligi, CDN va serverless tizimlar", t:['dunyo','bepul','web']},
+  {n:"Vercel", u:"https://vercel.com/", d:"Frontend loyihalarni 1-klikda onlayn qilish", t:['dunyo','bepul','web']},
+  {n:"Stack Overflow", u:"https://stackoverflow.com/", d:"Dasturchilar uchun global savol-javob jamoasi", t:['dunyo','bepul','web']},
+  {n:"Tailwind CSS", u:"https://tailwindcss.com/", d:"Zamonaviy dizayn uchun eng zo'r CSS freymvork", t:['dunyo','bepul','web']},
+  {n:"Replit", u:"https://replit.com/", d:"Dasturlarni telefondan yoki brauzerdan yozish", t:['dunyo','bepul','web','mobil']},
+  {n:"Codeium", u:"https://codeium.com/", d:"Copilot'ning mutlaqo bepul va tez muqobili", t:['dunyo','bepul','web']},
+  {n:"Docker", u:"https://www.docker.com/", d:"Dasturlarni konteynerlash va server sozlamalari", t:['dunyo','bepul','web']},
+  {n:"GitLab", u:"https://about.gitlab.com/", d:"CI/CD bilan birga keluvchi kod repositoriyasi", t:['dunyo','bepul','web']},
+  {n:"Bitbucket", u:"https://bitbucket.org/", d:"Jamoalar uchun Jira bilan integratsiyalangan repo", t:['dunyo','bepul','web']},
+  {n:"Render", u:"https://render.com/", d:"Dasturlarni oson host qilish (Backend/DB)", t:['dunyo','bepul','web']},
+  {n:"Netlify", u:"https://www.netlify.com/", d:"Veb saytlarni deploy qilish va hosting", t:['dunyo','bepul','web']},
+  {n:"Railway", u:"https://railway.app/", d:"Tezkor infratuzilma va deploy", t:['dunyo','bepul','web']},
+  {n:"Heroku", u:"https://www.heroku.com/", d:"Klassik cloud platformasi va PaaS xizmati", t:['dunyo','pullik','web']},
+  {n:"Postman", u:"https://www.postman.com/", d:"API test qilish va hujjatlashtirish vositasi", t:['dunyo','bepul','web']},
+  {n:"CodePen", u:"https://codepen.io/", d:"Frontend kodlarni sinash va ulashish", t:['dunyo','bepul','web']}
+]},
+
+{id:'business',title:"💼 Biznes va SMM",icon:"fa-chart-line",gr:"from-orange-500 to-red-500",
+items:[
+  {n:"SMM AI", u:"https://predis.ai/", d:"SMM postlar, Reels va kontent plan uchun AI", t:['dunyo','bepul','web']},
+  {n:"Notion", u:"https://www.notion.so/", d:"Aqlli qaydlar, ish jarayoni va ma'lumotlar bazasi", t:['dunyo','bepul','web','mobil']},
+  {n:"Trello", u:"https://trello.com/", d:"Jamoa bo'lib ishlash uchun Kanban doskalari", t:['dunyo','bepul','web','mobil']},
+  {n:"Slack", u:"https://slack.com/", d:"Kompaniyalar va guruhlar muloqot markazi", t:['dunyo','bepul','web','mobil']},
+  {n:"Canva", u:"https://www.canva.com/", d:"Hamma uchun oson dizayn va prezetatsiyalar", t:['dunyo','bepul','web','mobil']},
+  {n:"Gamma", u:"https://gamma.app/", d:"AI yordamida 1 daqiqada ajoyib taqdimotlar", t:['dunyo','bepul','web']},
+  {n:"Asana", u:"https://asana.com/", d:"Murakkab loyihalar va topshiriqlarni boshqarish", t:['dunyo','bepul','web','mobil']},
+  {n:"Zoom", u:"https://zoom.us/", d:"Onlayn uchrashuv, konferensiya va vebinarlar", t:['dunyo','bepul','web','mobil']},
+  {n:"Google Meet", u:"https://meet.google.com/", d:"Xavfsiz, sifatli va bepul video qo'ng'iroqlar", t:['dunyo','bepul','web','mobil']},
+  {n:"Microsoft Teams", u:"https://www.microsoft.com/en-us/microsoft-teams/group-chat-software", d:"Korporativ hamkorlik va muloqot", t:['dunyo','bepul','web','mobil']},
+  {n:"Jira", u:"https://www.atlassian.com/software/jira", d:"Dasturchilar va biznes uchun task menejment", t:['dunyo','pullik','web']},
+  {n:"Monday.com", u:"https://monday.com/", d:"Ishni vizual boshqarish operatsion tizimi", t:['dunyo','bepul','web']},
+  {n:"ClickUp", u:"https://clickup.com/", d:"Barcha ish jarayonlarini bitta joyga jamlash", t:['dunyo','bepul','web']},
+  {n:"HubSpot", u:"https://www.hubspot.com/", d:"CRM, marketing va mijozlarga xizmat", t:['dunyo','bepul','web']},
+  {n:"Buffer", u:"https://buffer.com/", d:"Ijtimoiy tarmoqlarga postlarni rejalashtirish", t:['dunyo','bepul','web']},
+  {n:"Hootsuite", u:"https://www.hootsuite.com/", d:"SMM va ijtimoiy tarmoqlarni boshqarish", t:['dunyo','pullik','web']},
+  {n:"Mailchimp", u:"https://mailchimp.com/", d:"Email marketing va avtomatizatsiya", t:['dunyo','bepul','web']},
+  {n:"Miro", u:"https://miro.com/", d:"Onlayn hamkorlikda ishlanadigan vizual doska", t:['dunyo','bepul','web']}
+]},
+
+{id:'marketing',title:"🚀 Marketing va SEO",icon:"fa-bullhorn",gr:"from-rose-500 to-orange-500",
+items:[
+  {n:"Google Analytics", u:"https://analytics.google.com/", d:"Veb-sayt tashrif buyuruvchilarini tahlil qilish", t:['dunyo','bepul','web']},
+  {n:"Google Search Console", u:"https://search.google.com/search-console", d:"Saytning qidiruvdagi holatini tekshirish", t:['dunyo','bepul','web']},
+  {n:"Ahrefs", u:"https://ahrefs.com/", d:"SEO va raqobatchilarni kuchli tahlil qilish", t:['dunyo','pullik','web']},
+  {n:"SEMrush", u:"https://www.semrush.com/", d:"Kompleks SEO, kontent va SMM vositasi", t:['dunyo','pullik','web']},
+  {n:"Moz", u:"https://moz.com/", d:"SEO dasturlari va domen avtoriteti tekshiruvi", t:['dunyo','pullik','web']},
+  {n:"Similarweb", u:"https://www.similarweb.com/", d:"Har qanday veb-sayt trafigi va raqobatchilar", t:['dunyo','bepul','web']},
+  {n:"Hotjar", u:"https://www.hotjar.com/", d:"Saytdagi foydalanuvchilar xatti-harakatini yozish", t:['dunyo','bepul','web']},
+  {n:"Optimizely", u:"https://www.optimizely.com/", d:"A/B test va konversiyani oshirish", t:['dunyo','pullik','web']},
+  {n:"Typeform", u:"https://www.typeform.com/", d:"Interaktiv va chiroyli so'rovnomalar yaratish", t:['dunyo','bepul','web']},
+  {n:"Google Trends", u:"https://trends.google.com/", d:"Dunyoda nima qidirilayotganini tahlil qilish", t:['dunyo','bepul','web']}
+]},
+
+{id:'design',title:"🖌️ Dizayn va Kreativ",icon:"fa-palette",gr:"from-rose-500 to-pink-500",
+items:[
+  {n:"Behance", u:"https://www.behance.net/", d:"Eng yuqori darajadagi dizaynerlar portfoliosi", t:['dunyo','bepul','web','mobil']},
+  {n:"Pinterest", u:"https://www.pinterest.com/", d:"Har qanday loyiha uchun vizual g'oyalar", t:['dunyo','bepul','web','mobil']},
+  {n:"Figma", u:"https://www.figma.com/", d:"Dunyodagi #1 interfeys va UX/UI vositasi", t:['dunyo','bepul','web']},
+  {n:"Framer", u:"https://www.framer.com/", d:"Interaktiv animatsiyali veb-sayt generatori", t:['dunyo','bepul','web']},
+  {n:"Webflow", u:"https://webflow.com/", d:"Vizual kodsiz to'liq darajadagi professional saytlar", t:['dunyo','bepul','web']},
+  {n:"Coolors", u:"https://coolors.co/", d:"Chiroyli va mukammal rang palitralarini tanlash", t:['dunyo','bepul','web']},
+  {n:"Unsplash", u:"https://unsplash.com/", d:"Kreativ va 100% bepul yuqori sifatli fotolar", t:['dunyo','bepul','web']},
+  {n:"Pexels", u:"https://www.pexels.com/", d:"Mualliflik huquqisiz tekin video va fotobaza", t:['dunyo','bepul','web']},
+  {n:"Flaticon", u:"https://www.flaticon.com/", d:"Dizaynlar uchun millionlab tekin ikonka to'plami", t:['dunyo','bepul','web']},
+  {n:"Dribbble", u:"https://dribbble.com/", d:"Kreativ sanoat xodimlari va dizayn ilhomi", t:['dunyo','bepul','web']},
+  {n:"Adobe Color", u:"https://color.adobe.com/", d:"Ranglar g'ildiragi va kombinatsiyalar", t:['dunyo','bepul','web']},
+  {n:"LottieFiles", u:"https://lottiefiles.com/", d:"Eng yengil va sifatli animatsiyalar bazasi", t:['dunyo','bepul','web']},
+  {n:"Spline", u:"https://spline.design/", d:"Brauzerda 3D dizayn va animatsiya yaratish", t:['dunyo','bepul','web']},
+  {n:"Sketch", u:"https://www.sketch.com/", d:"Mac uchun klassik UI/UX dizayn dasturi", t:['dunyo','pullik','web']},
+  {n:"InVision", u:"https://www.invisionapp.com/", d:"Dizayn prototiplari va jamoaviy ish", t:['dunyo','bepul','web']}
+]},
+
+{id:'mobile_apps',title:"📱 Top Mobil Ilovalar",icon:"fa-mobile-screen-button",gr:"from-yellow-500 to-amber-500",
+items:[
+  {n:"Telegram", u:"https://telegram.org/", d:"Eng tezkor va xavfsiz messenjer", t:['dunyo','bepul','mobil']},
+  {n:"WhatsApp", u:"https://www.whatsapp.com/", d:"Ommabop aloqa vositasi", t:['dunyo','bepul','mobil']},
+  {n:"Instagram", u:"https://www.instagram.com/", d:"Rasm va qisqa videolar olami", t:['dunyo','bepul','mobil']},
+  {n:"YouTube", u:"https://www.youtube.com/", d:"Dunyoning eng katta video platformasi", t:['dunyo','bepul','mobil']},
+  {n:"Spotify", u:"https://open.spotify.com/", d:"Musiqa va podkastlar tarmogi", t:['dunyo','bepul','mobil']},
+  {n:"TikTok", u:"https://www.tiktok.com/", d:"Qisqa videolar va kreativ kontent", t:['dunyo','bepul','mobil']},
+  {n:"CapCut", u:"https://www.capcut.com/", d:"Mobil video montaj qilish", t:['dunyo','bepul','mobil']},
+  {n:"Duolingo", u:"https://www.duolingo.com/", d:"O'yin shaklida tillar o'rganish", t:['dunyo','bepul','mobil']},
+  {n:"Shazam", u:"https://www.shazam.com/", d:"Qo'shiqlarni tezkor aniqlash", t:['dunyo','bepul','mobil']},
+  {n:"Google Maps", u:"https://maps.google.com/", d:"Dunyo bo'ylab aniq navigatsiya", t:['dunyo','bepul','mobil']},
+  {n:"Waze", u:"https://www.waze.com/", d:"Tirbandliklardan qochish navigatsiyasi", t:['dunyo','bepul','mobil']},
+  {n:"InShot", u:"https://inshot.com/", d:"Oson video va rasm tahrirlagich", t:['dunyo','bepul','mobil']},
+  {n:"VN Video Editor", u:"https://www.vlognow.me/", d:"Professional va tekin mobil video muharrir", t:['dunyo','bepul','mobil']},
+  {n:"Snapseed", u:"https://snapseed.online/", d:"Rasmga ishlov berish uchun Google dasturi", t:['dunyo','bepul','mobil']},
+  {n:"Lightroom", u:"https://lightroom.adobe.com/", d:"Professional foto ranglarini sozlash", t:['dunyo','bepul','mobil']},
+  {n:"Picsart", u:"https://picsart.com/", d:"Rasm va videolar uchun kreativ effektlar", t:['dunyo','bepul','mobil']}
+]},
+
+{id:'productivity',title:"🧠 Ish va O'qish",icon:"fa-brain",gr:"from-orange-500 to-amber-500",
+items:[
+  {n:"ChatPDF", u:"https://www.chatpdf.com/", d:"PDF kitoblar bilan suhbatlashish", t:['dunyo','bepul','web']},
+  {n:"QuillBot", u:"https://quillbot.com/", d:"Matnni qayta yozish va tuzatish", t:['dunyo','bepul','web']},
+  {n:"Coursera", u:"https://www.coursera.org/", d:"Dunyo universitetlaridan kurslar", t:['dunyo','bepul','web']},
+  {n:"Udemy", u:"https://www.udemy.com/", d:"Arzon va sifatli online kurslar", t:['dunyo','pullik','web']},
+  {n:"Khan Academy", u:"https://www.khanacademy.org/", d:"Bepul maktab va oliy ta'lim", t:['dunyo','bepul','web']},
+  {n:"Grammarly", u:"https://www.grammarly.com/", d:"Ingliz tili grammatika va uslub tahriri", t:['dunyo','bepul','web']},
+  {n:"Obsidian", u:"https://obsidian.md/", d:"Fikrlar va maxfiy qaydlar tarmogi", t:['dunyo','bepul','web']},
+  {n:"Todoist", u:"https://todoist.com/", d:"Vazifalarni mukammal rejalashtirish", t:['dunyo','bepul','web','mobil']},
+  {n:"Evernote", u:"https://evernote.com/", d:"Qaydlar va hujjatlarni saqlash", t:['dunyo','bepul','web','mobil']},
+  {n:"TickTick", u:"https://ticktick.com/", d:"Vaqtni boshqarish va vazifalar", t:['dunyo','bepul','web','mobil']},
+  {n:"Microsoft To Do", u:"https://todo.microsoft.com/", d:"Oddiy va qulay kunlik vazifalar ro'yxati", t:['dunyo','bepul','web','mobil']},
+  {n:"Any.do", u:"https://www.any.do/", d:"Kalendar bilan birlashtirilgan vazifalar", t:['dunyo','bepul','web','mobil']},
+  {n:"Bear", u:"https://bear.app/", d:"Apple qurilmalari uchun chiroyli qaydlar", t:['dunyo','pullik','mobil']},
+  {n:"Roam Research", u:"https://roamresearch.com/", d:"Fikrlarni o'zaro bog'lovchi yozuv vositasi", t:['dunyo','pullik','web']}
+]},
+
+{id:'languages',title:"🌍 Tillarni o'rganish",icon:"fa-language",gr:"from-teal-500 to-emerald-500",
+items:[
+  {n:"Memrise", u:"https://www.memrise.com/", d:"Xotira qoidalari yordamida til o'rganish", t:['dunyo','bepul','web','mobil']},
+  {n:"Babbel", u:"https://www.babbel.com/", d:"Amaliyotga yo'naltirilgan xorijiy tillar", t:['dunyo','pullik','web','mobil']},
+  {n:"Busuu", u:"https://www.busuu.com/", d:"Haqiqiy foydalanuvchilar bilan til amaliyoti", t:['dunyo','pullik','web','mobil']},
+  {n:"Tandem", u:"https://www.tandem.net/", d:"Chet elliklar bilan gaplashib til o'rganish", t:['dunyo','bepul','web','mobil']},
+  {n:"HelloTalk", u:"https://www.hellotalk.com/", d:"Dunyo bo'ylab til almashinuv hamjamiyati", t:['dunyo','bepul','mobil']},
+  {n:"Elsa Speak", u:"https://elsaspeak.com/", d:"AI yordamida inglizcha talaffuzni to'g'rilash", t:['dunyo','bepul','mobil']},
+  {n:"Anki", u:"https://apps.ankiweb.net/", d:"Fleshkartalar yordamida istalgan ma'lumotni yodlash", t:['dunyo','bepul','web','mobil']}
+]},
+
+{id:'entertainment',title:"🎮 Ko'ngilochar",icon:"fa-gamepad",gr:"from-purple-500 to-pink-500",
+items:[
+  {n:"Netflix", u:"https://www.netflix.com/", d:"Filmlar, seriallar va hujjatli filmlar", t:['dunyo','pullik','web','mobil']},
+  {n:"ReVanced", u:"https://revanced.app/", d:"Reklamasiz premium YouTube (Android)", t:['dunyo','bepul','mobil']},
+  {n:"MyShows", u:"https://myshows.me/", d:"Seriallarni kuzatib borish va reytinglar", t:['dunyo','bepul','web','mobil']},
+  {n:"Letterboxd", u:"https://letterboxd.com/", d:"Filmlar kundaligi va do'stlar tavsiyalari", t:['dunyo','bepul','web','mobil']},
+  {n:"Steam", u:"https://store.steampowered.com/", d:"PC o'yinlarning eng katta platformasi", t:['dunyo','bepul','web']},
+  {n:"Musicolet", u:"https://krosbits.in/musicolet/", d:"Oflayn musiqa pleyeri (Android)", t:['dunyo','bepul','mobil']},
+  {n:"Twitch", u:"https://www.twitch.tv/", d:"O'yinlar va e-sport jonli yayinlari", t:['dunyo','bepul','web','mobil']},
+  {n:"Crunchyroll", u:"https://www.crunchyroll.com/", d:"Eng yirik anime va manga platformasi", t:['dunyo','bepul','web','mobil']},
+  {n:"IMDb", u:"https://www.imdb.com/", d:"Jahon filmlar va aktyorlar ma'lumotlar bazasi", t:['dunyo','bepul','web']},
+  {n:"Kinopoisk", u:"https://www.kinopoisk.ru/", d:"MDH davlatlari uchun film va seriallar ensiklopediyasi", t:['dunyo','pullik','web','mobil']},
+  {n:"SoundCloud", u:"https://soundcloud.com/", d:"Mustaqil ijodkorlar va dj lar musiqalari", t:['dunyo','bepul','web','mobil']},
+  {n:"Apple Music", u:"https://music.apple.com/", d:"Yuqori sifatli audio va musiqa ekotizimi", t:['dunyo','pullik','web','mobil']}
+]},
+
+{id:'crypto_finance',title:"💰 Kripto va Moliya",icon:"fa-bitcoin-sign",gr:"from-green-500 to-emerald-600",
+items:[
+  {n:"Binance", u:"https://www.binance.com/", d:"Dunyodagi eng yirik kriptovalyuta birjasi", t:['dunyo','bepul','web','mobil']},
+  {n:"CoinMarketCap", u:"https://coinmarketcap.com/", d:"Barcha kriptovalyutalar narxi va statistikasi", t:['dunyo','bepul','web','mobil']},
+  {n:"TradingView", u:"https://www.tradingview.com/", d:"Moliya bozorlari va treyding grafikalari", t:['dunyo','bepul','web','mobil']},
+  {n:"Bybit", u:"https://www.bybit.com/", d:"Tezkor va ishonchli kripto birja", t:['dunyo','bepul','web','mobil']},
+  {n:"CoinGecko", u:"https://www.coingecko.com/", d:"Kripto bozor tahlili va portfel trekeri", t:['dunyo','bepul','web','mobil']},
+  {n:"Trust Wallet", u:"https://trustwallet.com/", d:"Markazlashmagan xavfsiz kripto hamyon", t:['dunyo','bepul','mobil']},
+  {n:"MetaMask", u:"https://metamask.io/", d:"Web3 va kripto ilovalar uchun hamyon", t:['dunyo','bepul','web','mobil']},
+  {n:"Investing.com", u:"https://www.investing.com/", d:"Aksiyalar, iqtisodiy taqvim va tahlillar", t:['dunyo','bepul','web','mobil']}
+]},
+
+{id:'tools',title:"🔧 Kundalik Vositalar",icon:"fa-toolbox",gr:"from-sky-500 to-indigo-500",
+items:[
+  {n:"DeepL", u:"https://www.deepl.com/", d:"Dunyodagi eng aniq AI tarjimon", t:['dunyo','bepul','web','mobil']},
+  {n:"Star Walk 2", u:"https://starwalk.space/", d:"Tungi osmon va yulduzlar xaritasi", t:['dunyo','bepul','mobil']},
+  {n:"Radio Garden", u:"http://radio.garden/", d:"Butunjahon jonli radiolarni xaritadan tinglash", t:['dunyo','bepul','web','mobil']},
+  {n:"Wolfram Alpha", u:"https://www.wolframalpha.com/", d:"Murakkab matematik va ilmiy hisob-kitoblar", t:['dunyo','bepul','web']},
+  {n:"PDF24", u:"https://www.pdf24.org/", d:"PDF bilan ishlash vositalari (100% bepul)", t:['dunyo','bepul','web']},
+  {n:"WeTransfer", u:"https://wetransfer.com/", d:"Katta hajmdagi fayllarni yuborish (2GB gacha)", t:['dunyo','bepul','web']},
+  {n:"IlovePDF", u:"https://www.ilovepdf.com/", d:"PDF ni Word'ga o'girish va tahrirlash", t:['dunyo','bepul','web']},
+  {n:"Smallpdf", u:"https://smallpdf.com/", d:"Oson PDF konvertor va kompressor", t:['dunyo','bepul','web']},
+  {n:"123apps", u:"https://123apps.com/", d:"Video, audio va PDF lar uchun tezkor brauzer vositalari", t:['dunyo','bepul','web']},
+  {n:"Remove.bg", u:"https://www.remove.bg/", d:"Rasmdagi orqa fonni 1 soniyada olib tashlash", t:['dunyo','bepul','web']},
+  {n:"TinyPNG", u:"https://tinypng.com/", d:"Sifatni yo'qotmasdan rasmlarni siqish", t:['dunyo','bepul','web']},
+  {n:"VirusTotal", u:"https://www.virustotal.com/", d:"Fayl va linklarni barcha antiviruslar orqali tekshirish", t:['dunyo','bepul','web']}
+]},
+
+{id:'security',title:"🔒 Xavfsizlik va VPN",icon:"fa-shield-halved",gr:"from-slate-600 to-slate-900",
+items:[
+  {n:"Bitwarden", u:"https://bitwarden.com/", d:"Ochiq manbali va xavfsiz parollar menejeri", t:['dunyo','bepul','web','mobil']},
+  {n:"1Password", u:"https://1password.com/", d:"Kompaniyalar uchun premium parollar menejeri", t:['dunyo','pullik','web']},
+  {n:"ProtonVPN", u:"https://protonvpn.com/", d:"Shveytsariya maxfiylik standartiga ega VPN", t:['dunyo','bepul','web','mobil']},
+  {n:"Mullvad VPN", u:"https://mullvad.net/", d:"Eng maxfiy VPN (shaxsiy hisob ochish kerak emas)", t:['dunyo','pullik','web','mobil']},
+  {n:"Proton Mail", u:"https://proton.me/mail", d:"Oxirigacha shifrlangan xavfsiz email xizmati", t:['dunyo','bepul','web','mobil']},
+  {n:"AdGuard", u:"https://adguard.com/", d:"Barcha dasturlardagi reklama va zararli saytlarni bloklash", t:['dunyo','bepul','web','mobil']},
+  {n:"Authy", u:"https://authy.com/", d:"2FA ikki faktorli autentifikatsiya dasturi", t:['dunyo','bepul','mobil']},
+  {n:"Google Authenticator", u:"https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2", d:"Xavfsiz hisoblar uchun kirish kodlari", t:['dunyo','bepul','mobil']},
+  {n:"LastPass", u:"https://www.lastpass.com/", d:"Mashhur parollar menejeri va saqlovchi", t:['dunyo','bepul','web','mobil']},
+  {n:"NordVPN", u:"https://nordvpn.com/", d:"Tezkor va xavfsiz pullik VPN tarmog'i", t:['dunyo','pullik','web','mobil']}
+]}
+]; // END DATA
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let activeCat  = 'all';
+let query      = '';
+let filters    = [];
+let sortMode   = 'def';
+let favorites  = JSON.parse(localStorage.getItem('lh_favs')  || '[]');
+let srchHist   = JSON.parse(localStorage.getItem('lh_hist')  || '[]');
+let clicks     = JSON.parse(localStorage.getItem('lh_clicks')|| '{}');
+
+const MAX_HIST = 5;
+const FILTERS  = [
+  {id:'bepul', label:'✅ Bepul'}, {id:'pullik',label:'💎 Pullik'},
+  {id:'mobil', label:'📱 Mobil'}, {id:'web',   label:'🌐 Web'},
+  {id:'uz',    label:'🇺🇿 O\'zbek'}, {id:'dunyo', label:'🌍 Jahon'}
+];
+
+const $=id=>document.getElementById(id);
+
+// ═══════════════════════════════════════════════════════════
+//  LOGO & ICON LOGIC (FONSZ, TOZA AVATARLAR)
+// ═══════════════════════════════════════════════════════════
+function getDomain(url){ try{return new URL(url).hostname.replace('www.','');}catch(e){return '';} }
+
+// Bosh harfga qarab doim bir xil rang beruvchi funksiya
+function getFallbackColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    const colors = ['ef4444','f97316','f59e0b','10b981','14b8a6','06b6d4','3b82f6','6366f1','8b5cf6','d946ef','f43f5e'];
+    return colors[Math.abs(hash) % colors.length];
+}
+
+// Bitta toza logotip qaytaradi
+function iconHTML(item, cls="w-10 h-10 object-contain drop-shadow-sm") {
+  const domain = getDomain(item.u);
+  // Google API dan toza png icon tortish
+  const logoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : '';
+  // Agar xatolik bersa (onerror), rangi mos o'zimizning avatar chiqadi
+  const color = getFallbackColor(item.n);
+  const fallbackImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.n.charAt(0))}&background=${color}&color=fff&rounded=true&bold=true&font-size=0.6`;
+  
+  return `<img src="${logoUrl}" alt="${item.n}" loading="lazy" class="${cls} transition-transform group-hover:scale-110" onerror="this.onerror=null; this.src='${fallbackImg}';">`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CLICK TRACKING
+// ═══════════════════════════════════════════════════════════
+function getClicks(name){return clicks[name]||0;}
+function addClick(name){
+  clicks[name]=(clicks[name]||0)+1;
+  localStorage.setItem('lh_clicks',JSON.stringify(clicks));
+  updateTotalClicks();
+}
+function updateTotalClicks(){
+  const tot=Object.values(clicks).reduce((a,b)=>a+b,0);
+  if($('totalClicks')) $('totalClicks').textContent=tot.toLocaleString();
+}
+window.resetClicks=function(){
+  clicks={};localStorage.setItem('lh_clicks',JSON.stringify(clicks));
+  updateTotalClicks(); renderContent(); renderTrending();
+  showToast('Klik statistikasi tozalandi','fa-trash-can text-red-400');
+};
+
+// ═══════════════════════════════════════════════════════════
+//  TRENDING SECTION
+// ═══════════════════════════════════════════════════════════
+function renderTrending(){
+  const all=[];
+  DATA.forEach(c=>c.items.forEach(i=>{ if(getClicks(i.n)>0) all.push({...i,_cat:c}); }));
+  all.sort((a,b)=>getClicks(b.n)-getClicks(a.n));
+  const top=all.slice(0,10);
+  const sec=$('trendingSection'), grid=$('trendingGrid');
+  if(!top.length){sec.classList.add('hidden');return;}
+  sec.classList.remove('hidden');
+  grid.innerHTML=top.map(item=>`
+    <a href="${item.u}" target="_blank" rel="noopener noreferrer"
+       onclick="addClick('${item.n.replace(/'/g,"\\'")}');event.stopPropagation()"
+       class="flex-shrink-0 glass rounded-xl p-2.5 flex items-center gap-3 min-w-[160px] hover:shadow-md transition-all group">
+      <div class="shrink-0 flex items-center justify-center">${iconHTML(item, 'w-8 h-8 rounded-lg shadow-sm object-contain')}</div>
+      <div class="min-w-0">
+        <p class="text-[13px] font-bold text-slate-900 dark:text-white truncate group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">${item.n}</p>
+        <p class="text-[9px] font-bold text-orange-500 flex items-center gap-1">
+            <i class="fa-regular fa-eye"></i> ${getClicks(item.n)} ko'rish
+        </p>
+      </div>
+    </a>`).join('');
+}
+
+function hl(s,q){
+  if(!q||!s) return s||'';
+  const rx=new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return s.replace(rx,'<mark>$1</mark>');
+}
+
+function matchItem(item, cat){
+  const q2=query.toLowerCase().trim();
+  const textOk=!q2||item.n.toLowerCase().includes(q2)||(item.d||'').toLowerCase().includes(q2)||cat.title.toLowerCase().includes(q2);
+  const tagOk=!filters.length||filters.every(f=>item.t&&item.t.includes(f));
+  return textOk&&tagOk;
+}
+function sortItems(arr){
+  if(sortMode==='az') return [...arr].sort((a,b)=>a.n.localeCompare(b.n));
+  if(sortMode==='za') return [...arr].sort((a,b)=>b.n.localeCompare(a.n));
+  if(sortMode==='popular') return [...arr].sort((a,b)=>getClicks(b.n)-getClicks(a.n));
+  return arr;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CARD HTML (Mukammal tozalangan UI va ko'z ikonkasi burchakda)
+// ═══════════════════════════════════════════════════════════
+function card(item){
+  const isFav   = favorites.includes(item.n);
+  const isBepul = item.t?.includes('bepul');
+  const isMob   = item.t?.includes('mobil');
+  const q2      = query.trim();
+  const c       = getClicks(item.n);
+  const isHot   = c>=5;
+
+  return `
+  <a href="${item.u}" target="_blank" rel="noopener noreferrer"
+     onclick="addClick('${item.n.replace(/'/g,"\\'")}');setTimeout(()=>rerenderClickFor('${item.n.replace(/'/g,"\\'")}'),50)"
+     class="card glass rounded-2xl p-4 flex flex-col h-full group relative">
+    ${isHot?'<span class="trending-tag">🔥 TREND</span>':''}
+    
+    <!-- View Counter (Eye) burchakda -->
+    <div class="absolute top-3 right-3 flex items-center gap-1.5 text-[10.5px] font-semibold transition-opacity z-20 px-2 py-0.5 rounded-full backdrop-blur-md bg-slate-500/10 dark:bg-slate-400/10 ${c ? 'text-slate-500 dark:text-slate-400 opacity-80' : 'text-slate-400 opacity-0 group-hover:opacity-60'}" id="cb-${item.n.replace(/[^a-zA-Z0-9]/g,'_')}">
+        <i class="fa-regular fa-eye"></i> <span>${c||0}</span>
+    </div>
+
+    <div class="flex items-center gap-3.5 mb-3 relative z-10 pr-14">
+      
+      <!-- LOGO JOYLASHUVI (Fonsiz, toza) -->
+      <div class="shrink-0 flex items-center justify-center">
+        ${iconHTML(item, 'w-10 h-10 object-contain drop-shadow-sm')}
+      </div>
+      
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-[15px] text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors line-clamp-1">${hl(item.n,q2)}</div>
+        <div class="flex flex-wrap gap-1 mt-1.5 items-center">
+          <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${isBepul?'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400':'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400'}">${isBepul?'Bepul':'Pullik'}</span>
+          ${isMob?`<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">📱 Mobil</span>`:''}
+        </div>
+      </div>
+    </div>
+    
+    <!-- DESCRIPTION -->
+    <p class="text-[12px] font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed relative z-10 mb-6">${hl(item.d||'',q2)}</p>
+
+    <!-- Like Button (O'ng past burchakda) -->
+    <button onclick="event.preventDefault();event.stopPropagation();toggleFav('${item.n.replace(/'/g,"\\'")}',this)" 
+        class="fav-btn absolute bottom-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs z-20 ${isFav?'bg-rose-100 text-rose-500 dark:bg-rose-500/20':'bg-slate-100 dark:bg-slate-700/50 text-slate-400 hover:text-rose-500'}">
+        <i class="fa-${isFav?'solid':'regular'} fa-heart"></i>
+    </button>
+  </a>`;
+}
+
+window.rerenderClickFor = function(name){
+  const id='cb-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+  const el=document.getElementById(id);
+  if(!el) return;
+  const c=getClicks(name);
+  el.innerHTML = `<i class="fa-regular fa-eye"></i> <span>${c}</span>`;
+  el.className = `absolute top-3 right-3 flex items-center gap-1.5 text-[10.5px] font-semibold transition-opacity z-20 px-2 py-0.5 rounded-full backdrop-blur-md bg-slate-500/10 dark:bg-slate-400/10 text-slate-500 dark:text-slate-400 opacity-80 do-pop`;
+  setTimeout(()=>el.classList.remove('do-pop'),200);
+  renderTrending();
+};
+
+window.toggleFav = function(name, btn){
+  favorites = favorites.includes(name)
+    ? favorites.filter(n=>n!==name)
+    : [...favorites, name];
+  localStorage.setItem('lh_favs', JSON.stringify(favorites));
+  const on = favorites.includes(name);
+  if(on) showToast("Saqlanganlarga qo'shildi!", 'fa-heart text-rose-400');
+  btn.className = `fav-btn absolute bottom-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs z-20 ${on?'bg-rose-100 text-rose-500 dark:bg-rose-500/20':'bg-slate-100 dark:bg-slate-700/50 text-slate-400 hover:text-rose-500'}`;
+  btn.innerHTML = `<i class="fa-${on?'solid':'regular'} fa-heart"></i>`;
+  if(activeCat==='favorites') renderContent();
+  renderNav();
+};
+
+function renderNav(){
+  const total=DATA.reduce((a,c)=>a+c.items.length,0);
+  $('sidebarCount').textContent=`${total} ta resurs`;
+
+  let s=`
+    <button onclick="setCat('all')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm group ${activeCat==='all'?'nav-active':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5"><i class="fa-solid fa-border-all w-4 text-center text-xs opacity-60"></i><span>Barchasi</span></div>
+      <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/80 text-slate-500">${total}</span>
+    </button>
+    <button onclick="setCat('favorites')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm group ${activeCat==='favorites'?'bg-rose-50 dark:bg-rose-500/15 text-rose-600 font-bold':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5"><i class="fa-solid fa-heart w-4 text-center text-xs text-rose-400"></i><span>Saqlanganlar</span></div>
+      ${favorites.length?`<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/25 text-rose-500">${favorites.length}</span>`:''}
+    </button>`;
+
+  DATA.forEach(c=>{
+    const cnt=c.items.filter(i=>matchItem(i,c)).length;
+    s+=`<button onclick="setCat('${c.id}')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-sm group ${activeCat===c.id?'nav-active':'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'}">
+      <div class="flex items-center gap-2.5 min-w-0 overflow-hidden">
+        <i class="fa-solid ${c.icon} w-4 text-center text-xs opacity-55 group-hover:opacity-100 transition-opacity shrink-0"></i>
+        <span class="truncate text-left">${c.title}</span>
+      </div>
+      <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-400 shrink-0">${cnt}</span>
+    </button>`;
+  });
+  $('sidebarNav').innerHTML=s;
+
+  let m=`
+    <button onclick="setCat('all')" class="flex-shrink-0 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all ${activeCat==='all'?'pill-active':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">Barchasi</button>
+    <button onclick="setCat('favorites')" class="flex-shrink-0 flex items-center gap-2 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all ${activeCat==='favorites'?'bg-rose-500 text-white border-transparent shadow-lg shadow-rose-500/30':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">
+      <i class="fa-solid fa-heart"></i> ${favorites.length||''}
+    </button>`;
+  DATA.forEach(c=>{
+    m+=`<button onclick="setCat('${c.id}')" class="flex-shrink-0 text-[11px] font-bold px-4 py-1.5 rounded-full border transition-all whitespace-nowrap ${activeCat===c.id?'pill-active':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">${c.title}</button>`;
+  });
+  $('mobNav').innerHTML=m;
+  renderChips(); renderActiveBadges();
+}
+
+function renderChips(){
+  const h=FILTERS.map(f=>`
+    <button onclick="toggleFilter('${f.id}')" class="chip ${filters.includes(f.id)?'on':'off'} text-[11px] font-bold px-2.5 py-1 rounded-full">
+      ${f.label}
+    </button>`).join('');
+  $('deskChips').innerHTML=h; $('mobChips').innerHTML=h;
+  const hasFilter=filters.length>0||sortMode!=='def';
+  $('clrFilters').style.opacity=hasFilter?'1':'0';
+  $('clrFilters').style.pointerEvents=hasFilter?'auto':'none';
+}
+
+function renderActiveBadges(){
+  const b=filters.map(f=>{
+    const fo=FILTERS.find(x=>x.id===f);
+    return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">
+      ${fo?.label||f} <button onclick="toggleFilter('${f}')" class="hover:text-red-500 ml-0.5 leading-none">×</button>
+    </span>`;
+  }).join('');
+  $('activeBadges').innerHTML=b;
+}
+
+window.toggleFilter=function(id){
+  filters=filters.includes(id)?filters.filter(x=>x!==id):[...filters,id];
+  renderNav(); renderContent();
+};
+window.clearAll=function(){
+  filters=[];sortMode='def';
+  if($('sSort')) $('sSort').value='def';
+  if($('topSort')) $('topSort').value='def';
+  renderNav(); renderContent();
+};
+
+window.setCat=function(id){
+  activeCat=id; query='';
+  $('deskSrc').value=$('mobSrc').value='';
+  $('deskClr').classList.add('hidden');$('mobClr').classList.add('hidden');
+  hideDrop();
+  if(id==='all') $('pageTitle').textContent='Barcha Resurslar';
+  else if(id==='favorites') $('pageTitle').textContent='Saqlanganlar';
+  else $('pageTitle').textContent=DATA.find(c=>c.id===id)?.title||'';
+  renderNav(); renderContent();
+  $('mainScroll').scrollTo({top:0,behavior:'smooth'});
+};
+
+function renderContent(){
+  $('appsContainer').innerHTML='';
+  let found=0, delay=0;
+  const buildSec=(items, heading, gr)=>{
+    if(!items.length) return;
+    found+=items.length;
+    const sec=document.createElement('div');
+    sec.className='animate-fade-up';
+    sec.style.animationDelay=`${delay}s`;
+    delay+=0.025;
+    const h=heading?`<div class="flex items-center gap-3 mb-4">
+      <div class="w-1 h-5 rounded-full bg-gradient-to-b ${gr}"></div>
+      <h3 class="text-base font-black text-slate-800 dark:text-white">${heading}</h3>
+      <span class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md">${items.length} ta</span>
+    </div>`:'';
+    const grid=`<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+      ${items.map(i=>card(i)).join('')}
+    </div>`;
+    sec.innerHTML=h+grid;
+    $('appsContainer').appendChild(sec);
+  };
+
+  if(activeCat==='favorites'){
+    const fItems=[];
+    DATA.forEach(c=>c.items.forEach(i=>{ if(favorites.includes(i.n)&&matchItem(i,c)) fItems.push(i); }));
+    buildSec(sortItems(fItems), null, 'from-rose-400 to-rose-600');
+    if(!fItems.length){
+      $('appsContainer').innerHTML=`<div class="flex flex-col items-center justify-center py-24 text-slate-400">
+        <i class="fa-regular fa-heart text-5xl mb-4"></i>
+        <p class="font-bold text-lg">Hali saqlangan ilovalar yo'q</p>
+        <p class="text-sm mt-1">Ilovalarni ❤️ bilan saqlang</p>
+      </div>`;
+      found=1;
+    }
+  } else {
+    DATA.forEach(c=>{
+      if(activeCat!=='all'&&activeCat!==c.id) return;
+      const items=sortItems(c.items.filter(i=>matchItem(i,c)));
+      buildSec(items, (activeCat==='all'||query.trim())?c.title:null, c.gr);
+    });
+  }
+
+  $('resultCount').textContent=found?`${found} ta resurs`:'';
+  const noR=$('noResults');
+  if(found===0){ $('appsContainer').classList.add('hidden'); noR.classList.remove('hidden'); noR.classList.add('flex'); }
+  else{ $('appsContainer').classList.remove('hidden'); noR.classList.add('hidden'); noR.classList.remove('flex'); }
+}
+
+function saveHist(q){
+  q=q.trim(); if(q.length<2) return;
+  srchHist=[q,...srchHist.filter(x=>x!==q)].slice(0,MAX_HIST);
+  localStorage.setItem('lh_hist',JSON.stringify(srchHist));
+}
+window.removeHist=function(q){
+  srchHist=srchHist.filter(x=>x!==q);
+  localStorage.setItem('lh_hist',JSON.stringify(srchHist));
+  updateDrops($('deskSrc').value);
+};
+window.applySearch=function(q){
+  query=q; $('deskSrc').value=$('mobSrc').value=q;
+  $('deskClr').classList.toggle('hidden',!q);
+  $('mobClr').classList.toggle('hidden',!q);
+  hideDrop(); renderContent();
+};
+
+function buildDropHTML(q){
+  const histFiltered=q?srchHist.filter(h=>h.toLowerCase().includes(q.toLowerCase())):srchHist;
+  let sugg=[];
+  if(q.length>=2){
+    DATA.forEach(c=>c.items.forEach(i=>{ if(i.n.toLowerCase().includes(q.toLowerCase())&&sugg.length<6) sugg.push({...i,_c:c}); }));
+  }
+  if(!histFiltered.length&&!sugg.length) return '';
+  let html='';
+  if(sugg.length){
+    html+=`<p class="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5">💡 Taklif</p>`;
+    sugg.forEach(i=>{
+      html+=`<button onclick="applySearch('${i.n.replace(/'/g,"\\'")}')" class="s-row w-full text-left flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
+        
+        <!-- SEARCH DROP ICIN LOGO (Toza!) -->
+        <div class="shrink-0 flex items-center justify-center">
+            ${iconHTML(i, 'w-5 h-5 object-contain drop-shadow-sm')}
+        </div>
+        
+        <span class="flex-1 font-bold truncate">${hl(i.n,q)}</span>
+        <span class="text-[10px] text-slate-400 truncate max-w-[120px] hidden sm:block">${(i.d||'').slice(0,40)}…</span>
+      </button>`;
+    });
+  }
+  if(histFiltered.length){
+    html+=`<p class="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5 mt-1">🕐 Oxirgi qidiruvlar</p>`;
+    histFiltered.forEach(h=>{
+      html+=`<div class="s-row flex items-center gap-2 px-2 py-1.5 group">
+        <button onclick="applySearch('${h.replace(/'/g,"\\'")}') " class="flex-1 text-left flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
+          <i class="fa-solid fa-clock-rotate-left text-slate-300 text-xs w-4 shrink-0"></i>
+          <span class="truncate">${hl(h,q)}</span>
+        </button>
+        <button onclick="removeHist('${h.replace(/'/g,"\\'")}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all text-xs px-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+function updateDrops(q){
+  const h=buildDropHTML(q);
+  $('deskDropIn').innerHTML=h; $('mobDropIn').innerHTML=h;
+  $('deskDrop').classList.toggle('hidden',!h);
+  $('mobDrop').classList.toggle('hidden',!h);
+}
+function hideDrop(){ $('deskDrop').classList.add('hidden'); $('mobDrop').classList.add('hidden'); }
+
+let sTimer;
+function setupSearch(){
+  const handle=e=>{
+    query=e.target.value;
+    $('deskSrc').value=$('mobSrc').value=query;
+    $('deskClr').classList.toggle('hidden',!query);
+    $('mobClr').classList.toggle('hidden',!query);
+    updateDrops(query);
+    clearTimeout(sTimer);
+    sTimer=setTimeout(()=>{ if(query.trim()) saveHist(query); renderContent(); },160);
+  };
+  const clearS=()=>{
+    query=''; $('deskSrc').value=$('mobSrc').value='';
+    $('deskClr').classList.add('hidden'); $('mobClr').classList.add('hidden');
+    hideDrop(); renderContent();
+    (window.innerWidth>768?$('deskSrc'):$('mobSrc')).focus();
+  };
+  $('deskSrc').addEventListener('input',handle);
+  $('mobSrc').addEventListener('input',handle);
+  $('deskClr').addEventListener('click',clearS);
+  $('mobClr').addEventListener('click',clearS);
+  $('deskSrc').addEventListener('focus',()=>updateDrops($('deskSrc').value));
+  $('mobSrc').addEventListener('focus', ()=>updateDrops($('mobSrc').value));
+  [$('deskSrc'),$('mobSrc')].forEach(el=>el.addEventListener('keydown',e=>{
+    if(e.key==='Escape') clearS();
+    if(e.key==='Enter'){ hideDrop(); renderContent(); }
+  }));
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='k'){ e.preventDefault(); $('deskSrc').focus(); $('deskSrc').select(); }
+  });
+  document.addEventListener('click',e=>{
+    if(!$('deskSWrap').contains(e.target)) $('deskDrop').classList.add('hidden');
+    if(!$('mobSWrap').contains(e.target))  $('mobDrop').classList.add('hidden');
+  });
+
+  const handleSort=e=>{ sortMode=e.target.value; if($('sSort')) $('sSort').value=sortMode; if($('topSort')) $('topSort').value=sortMode; renderNav(); renderContent(); };
+  $('sSort')?.addEventListener('change',handleSort);
+  $('topSort')?.addEventListener('change',handleSort);
+  $('clrFilters')?.addEventListener('click',clearAll);
+}
+
+function setupTheme(){
+  const html=document.documentElement;
+  const upd=dark=>{
+    [$('themeIco'),$('themeIcoMob')].forEach(i=>i&&(i.className=dark?'fa-solid fa-sun':'fa-solid fa-moon'));
+    if($('themeTxt')) $('themeTxt').textContent=dark?'Kunduzgi':'Tungi rejim';
+  };
+  upd(html.classList.contains('dark'));
+  [$('themeBtn'),$('themeBtnMob')].forEach(btn=>btn?.addEventListener('click',()=>{
+    const dark=html.classList.toggle('dark');
+    localStorage.lh_theme=dark?'dark':'light';
+    upd(dark);
+  }));
+}
+
+function setupShare(){
+  const fn=async()=>{
+    const d={title:"LifeHacks UZ — O'zbekiston onlayn resurslar",text:"300+ resurs bitta joyda! O'zbekiston aholisi uchun mukammal platforma",url:location.href};
+    if(navigator.share){try{await navigator.share(d);return;}catch(e){}}
+    try{await navigator.clipboard.writeText(location.href);}
+    catch(e){const t=document.createElement('input');t.value=location.href;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+    showToast('Havola nusxalandi!','fa-link text-violet-400');
+  };
+  [$('shareBtn'),$('shareBtnDesk')].forEach(b=>b?.addEventListener('click',fn));
+}
+
+function setupScroll(){
+  const btn=$('scrollTop'), ms=$('mainScroll');
+  if(!btn) return;
+  ms.addEventListener('scroll',()=>{
+    const show=ms.scrollTop>200;
+    btn.classList.toggle('opacity-0',!show);
+    btn.classList.toggle('translate-y-16',!show);
+  });
+  btn.addEventListener('click',()=>ms.scrollTo({top:0,behavior:'smooth'}));
+}
+
+function showToast(msg, ic='fa-circle-check text-emerald-400'){
+  const t=$('toast'), i=$('toastIco'), m=$('toastMsg');
+  m.textContent=msg; i.className=`fa-solid ${ic}`;
+  t.classList.remove('opacity-0','pointer-events-none');
+  setTimeout(()=>t.classList.add('opacity-0','pointer-events-none'),2500);
+}
+
+function init(){
+  renderNav();
+  renderContent();
+  renderTrending();
+  updateTotalClicks();
+  setupSearch();
+  setupTheme();
+  setupShare();
+  setupScroll();
+}
+init();
+</script>
+</body>
+</html>
