@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ═══ SEO META ═══ --> 
+<!-- ═══ SEO META ═══ -->
 <title>LifeHacks UZ — O'zbekiston Eng To'liq Onlayn Resurslar Katalogi 2025</title>
 <meta name="description" content="O'zbekiston aholisi uchun 300+ onlayn resurs: davlat xizmatlari, tibbiyot, ta'lim, huquq, tarix, iqtisodiyot, AI vositalar, mobil ilovalar va ko'proq. Barchasini bir joydan toping!">
 <meta name="keywords" content="o'zbekiston onlayn resurslar, uz ilovalar, my.gov.uz, dmed.uz, hemis.uz, lex.uz, payme, click, uzum, uzbekistan apps, o'zbek platformalar, davlat xizmatlari, tibbiyot portali, ta'lim portali, lifehacks uz">
@@ -242,7 +242,13 @@ mark{background:rgba(139,92,246,.22);color:inherit;border-radius:3px;padding:0 2
   <main class="flex-1 overflow-y-auto scroll-smooth" id="mainScroll">
     <div class="max-w-screen-2xl mx-auto px-4 md:px-6 py-5 pb-28 md:pb-14 pb-safe">
 
-    
+      <!-- Trending Section -->
+      <div id="trendingSection" class="hidden mb-8">
+        <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-fire text-orange-500"></i> Ommabop resurslar
+        </h3>
+        <div class="flex overflow-x-auto gap-3 pb-2 no-sc" id="trendingGrid"></div>
+      </div>
 
       <!-- Desktop top bar -->
       <div class="hidden md:flex items-start justify-between mb-6 gap-4">
@@ -1099,7 +1105,7 @@ function buildDropHTML(q){
     });
   }
   return html;
-} 
+}
 
 function updateDrops(q){
   const h=buildDropHTML(q);
