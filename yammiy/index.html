@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yammiy - Eng mazali shirinliklar uyingizda</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; /* Gorizontal scrollni yopish */
+        }
+
+        /* Yammiy brend ranglari */
+        .text-yammiy { color: #5E17EB; }
+        .bg-yammiy { background-color: #5E17EB; }
+        
+        /* Navigatsiya aktiv holati */
+        .nav-link.active {
+            color: #5E17EB;
+            border-bottom: 2px solid #5E17EB;
+            font-weight: 800;
+        }
+
+        /* Telefon maketi */
+        .phone-mockup {
+            box-shadow: 0 25px 50px -12px rgba(94, 23, 235, 0.3);
+            border: 8px solid #1f2937;
+            border-radius: 2.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 35%;
+            height: 20px;
+            background-color: #1f2937;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 10;
+        }
+
+        /* Animatsiyalar */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 5s ease-in-out infinite; }
+
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        /* Bildirishnomalar animatsiyasi */
+        @keyframes popup {
+            0% { opacity: 0; transform: scale(0.8) translateX(-20px); }
+            15% { opacity: 1; transform: scale(1) translateX(0); }
+            85% { opacity: 1; transform: scale(1) translateX(0); }
+            100% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+        }
+        
+        .notify-badge {
+            animation: popup 4s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+        
+        .notify-badge-2 {
+            animation: popup 4s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            animation-delay: 2s; /* Ikkinchisi kechikib chiqadi */
+        }
+
+        /* Seksiya o'zgarish animatsiyasi */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar yashirish (mobil menyu uchun) */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full bg-gradient-to-br from-purple-50 via-white to-fuchsia-50 relative selection:bg-purple-200 selection:text-purple-900 flex flex-col">
+
+    <!-- Orqa fondagi harakatlanuvchi ranglar -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute top-[20%] right-[-5%] w-96 h-96 bg-fuchsia-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Asosiy Konteyner -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col">
+        
+        <!-- Header / Navigatsiya -->
+        <header class="flex flex-col md:flex-row justify-between items-center py-4 md:py-6 gap-4 md:gap-0">
+            <!-- Logo (Haqiqiy rasm orqali) -->
+            <div class="flex items-center gap-3 cursor-pointer w-full md:w-auto justify-center md:justify-start">
+                <!-- Logotip fayli nomi -->
+                <img src="Logo.webp" alt="Yammiy Logo" class="w-12 h-12 rounded-xl shadow-md transform transition hover:scale-105 object-cover">
+                <span class="text-3xl font-black text-gray-900 tracking-tight lowercase">yammiy</span>
+            </div>
+            
+            <!-- Linklar -->
+            <nav class="flex gap-4 sm:gap-8 items-center overflow-x-auto w-full md:w-auto justify-start sm:justify-start pb-2 md:pb-0 scrollbar-hide text-sm sm:text-base px-2">
+                <button onclick="switchTab('mijozlar')" id="tab-mijozlar" class="nav-link active text-gray-500 font-semibold hover:text-purple-600 transition pb-1 whitespace-nowrap">Mijozlar uchun</button>
+                <button onclick="switchTab('qandolatchilar')" id="tab-qandolatchilar" class="nav-link text-gray-500 font-semibold hover:text-purple-600 transition pb-1 whitespace-nowrap">Qandolatchilar uchun</button>
+                <button onclick="switchTab('aloqa')" id="tab-aloqa" class="nav-link text-gray-500 font-semibold hover:text-purple-600 transition pb-1 whitespace-nowrap">Aloqa</button>
+            </nav>
+        </header>
+
+        <!-- Dinamik Qism -->
+        <main class="flex-1 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-20 pb-8 mt-4 lg:mt-0 relative">
+            
+            <!-- CHAP TOMON: O'zgaruvchan matnlar -->
+            <div class="flex-1 text-center lg:text-left z-10 w-full" id="content-container">
+                
+                <!-- 1. MIJOZLAR UCHUN (Asosiy) -->
+                <div id="section-mijozlar" class="fade-in block">
+                    <div class="inline-block px-4 py-2 rounded-full bg-purple-50 text-purple-700 font-bold text-sm mb-5 border border-purple-100 shadow-sm">
+                        🍰 Eng mazali tanlov
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-[1.1] mb-5">
+                        Sevimli shirinliklaringiz <br class="hidden lg:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5E17EB] to-purple-400">bir zumda uyingizda!</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                        Yammiy orqali shahringizdagi eng yaxshi qandolatxonalar va restoranlardan tort, pitssa va shirinliklarni tezkor yetkazib berish xizmati bilan buyurtma qiling.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                        <a href="https://play.google.com/store/apps/details?id=uz.yammiy.app" target="_blank" class="flex items-center gap-3 bg-[#1f2937] text-white px-6 py-3.5 rounded-2xl hover:bg-black transition transform hover:-translate-y-1 shadow-xl shadow-gray-300 w-full sm:w-auto">
+                            <i class="fab fa-google-play text-2xl"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold leading-none mb-1">Google Play'dan</div>
+                                <div class="text-lg font-black leading-none">Yuklab olish</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="mt-8 flex items-center justify-center lg:justify-start gap-3 text-sm font-bold text-gray-600">
+                        <div class="flex text-yellow-400 text-lg">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p><span class="text-gray-900 font-black">5.0</span> baho va <span class="text-gray-900 font-black">1000+</span> yuklab olishlar</p>
+                    </div>
+                </div>
+
+                <!-- 2. QANDOLATCHILAR UCHUN -->
+                <div id="section-qandolatchilar" class="fade-in hidden">
+                    <div class="inline-block px-4 py-2 rounded-full bg-yellow-50 text-yellow-700 font-bold text-sm mb-5 border border-yellow-100 shadow-sm">
+                        🚀 Daromadli biznes
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-[1.1] mb-5">
+                        Shirinliklar biznesingizni <br class="hidden lg:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">yangi bosqichga olib chiqing!</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                        Yammiy orqali o'z mahsulotlaringizni minglab xaridorlarga soting. Qulay boshqaruv paneli, tayyor yetkazib berish tizimi va faol mijozlar bazasi sizni kutmoqda.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                        <a href="#" class="flex items-center justify-center gap-3 bg-yammiy text-white px-8 py-4 rounded-2xl hover:bg-purple-700 transition transform hover:-translate-y-1 shadow-xl shadow-purple-200 w-full sm:w-auto font-black text-lg">
+                            Hamkor bo'lish <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="mt-8 flex items-center justify-center lg:justify-start gap-4">
+                        <div class="flex -space-x-3">
+                            <img class="w-10 h-10 rounded-full border-2 border-white" src="aroma.jpg" alt="Qandolatchi">
+                            <img class="w-10 h-10 rounded-full border-2 border-white" src="afsona.jpg" alt="Qandolatchi">
+                            <div class="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-gray-600 text-xs font-black">+50</div>
+                        </div>
+                        <p class="text-sm font-bold text-gray-600">O'nlab eng yaxshi joylar biz bilan</p>
+                    </div>
+                </div>
+
+                <!-- 3. ALOQA -->
+                <div id="section-aloqa" class="fade-in hidden">
+                    <div class="inline-block px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-bold text-sm mb-5 border border-blue-100 shadow-sm">
+                        📞 Biz bilan aloqa
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-[1.1] mb-5">
+                        Savollaringiz bormi? <br class="hidden lg:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Biz har doim aloqadamiz!</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                        Ilovadan foydalanish, hamkorlik qilish yoki boshqa takliflar bo'yicha biz bilan quyidagi tarmoqlar orqali bog'laning.
+                    </p>
+                    
+                    <div class="flex flex-col gap-4 max-w-md mx-auto lg:mx-0">
+                        <a href="#" class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl"><i class="fab fa-telegram-plane"></i></div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold text-gray-400 uppercase">Telegram</p>
+                                <p class="text-lg font-black text-gray-900">@yammiy_support</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-xl"><i class="fas fa-phone-alt"></i></div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold text-gray-400 uppercase">Telefon raqam</p>
+                                <p class="text-lg font-black text-gray-900">+998(91)-225 61-69</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- O'NG TOMON: Telefon Maketi va Real Ilova Rasmi -->
+            <div class="flex-1 w-full max-w-md lg:max-w-full flex justify-center items-center relative z-10 mt-8 lg:mt-0">
+                <div class="relative animate-float">
+                    
+                    <!-- Orqa fondagi porlash -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-purple-400 to-yellow-300 rounded-full blur-3xl opacity-20 transform scale-110"></div>
+                    
+                    <!-- Animatsion Bildirishnomalar (Popuplar) -->
+                    <!-- 1-chi Popup (Buyurtma qabul qilindi) -->
+                    <div class="notify-badge absolute -left-2 sm:-left-8 lg:-left-16 top-10 sm:top-1/4 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-2xl border border-white flex items-center gap-2 sm:gap-3 z-20 scale-90 sm:scale-100">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center text-green-500 text-base sm:text-lg shadow-inner">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">Mijozlar</p>
+                            <p class="text-xs sm:text-sm font-black text-gray-900">Buyurtma qabul qilindi! 🎉</p>
+                        </div>
+                    </div>
+
+                    <!-- 2-chi Popup (Sotuv) -->
+                    <div class="notify-badge-2 absolute -right-2 sm:-right-6 lg:-right-12 bottom-10 sm:bottom-1/3 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-2xl border border-white flex items-center gap-2 sm:gap-3 z-20 opacity-0 scale-90 sm:scale-100">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 text-base sm:text-lg shadow-inner">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <p class="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">Qandolatchilar</p>
+                            <p class="text-xs sm:text-sm font-black text-gray-900">+120,000 so'm 💸</p>
+                        </div>
+                    </div>
+
+                    <!-- Telefon RAMKASI (Ichida yuborilgan rasm) -->
+                    <div class="phone-mockup w-[270px] h-[560px] bg-black relative z-10">
+                        <div class="phone-notch"></div>
+                        <!-- Haqiqiy ilova skrinshoti -->
+                        <img src="Yammiy.png" alt="Yammiy ilovasi" class="w-full h-full object-cover">
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT: Menyular o'zgarishi uchun -->
+    <script>
+        function switchTab(tabId) {
+            // 1. Barcha seksiyalarni yashirish
+            const sections = ['section-mijozlar', 'section-qandolatchilar', 'section-aloqa'];
+            sections.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('block');
+            });
+
+            // 2. Barcha menyu tugmalaridan aktiv holatni olib tashlash
+            const tabs = ['tab-mijozlar', 'tab-qandolatchilar', 'tab-aloqa'];
+            tabs.forEach(id => {
+                document.getElementById(id).classList.remove('active');
+                document.getElementById(id).classList.add('text-gray-500');
+            });
+
+            // 3. Tanlangan seksiyani ko'rsatish
+            const activeSection = document.getElementById('section-' + tabId);
+            activeSection.classList.remove('hidden');
+            activeSection.classList.add('block');
+            
+            // Animatsiyani qayta ishga tushirish uchun trick
+            activeSection.classList.remove('fade-in');
+            void activeSection.offsetWidth; // trigger reflow
+            activeSection.classList.add('fade-in');
+
+            // 4. Tanlangan menyuni aktivlashtirish
+            const activeTab = document.getElementById('tab-' + tabId);
+            activeTab.classList.add('active');
+            activeTab.classList.remove('text-gray-500');
+        }
+    </script>
+</body>
+</html>
